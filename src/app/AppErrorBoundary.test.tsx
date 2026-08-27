@@ -29,9 +29,9 @@ describe("AppErrorBoundary", () => {
     );
 
     expect(screen.getByRole("alert")).toBeDefined();
-    expect(screen.getByText("Something went wrong")).toBeDefined();
+    expect(screen.getByText("应用运行异常")).toBeDefined();
     expect(screen.getByText("Simulated rendering explosion")).toBeDefined();
-    expect(screen.getByText("Reload Application")).toBeDefined();
+    expect(screen.getByText("重新加载应用")).toBeDefined();
 
     spy.mockRestore();
   });

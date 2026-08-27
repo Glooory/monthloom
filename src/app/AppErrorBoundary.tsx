@@ -61,9 +61,9 @@ export class AppErrorBoundary extends Component<Props, State> {
               boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)",
             }}
           >
-            <h2 style={{ color: "#EF4444", marginTop: 0, fontSize: "20px" }}>Something went wrong</h2>
+            <h2 style={{ color: "#EF4444", marginTop: 0, fontSize: "20px" }}>应用运行异常</h2>
             <p style={{ color: "#94A3B8", fontSize: "14px", lineHeight: 1.5, margin: "12px 0 20px" }}>
-              Monthloom encountered an unexpected error while rendering. Your saved project data in IndexedDB has not been deleted.
+              Monthloom 在渲染时遇到未预期的错误。您保存在本地数据库中的项目数据未受影响。
             </p>
             <pre
               style={{
@@ -94,7 +94,7 @@ export class AppErrorBoundary extends Component<Props, State> {
                 cursor: "pointer",
               }}
             >
-              Reload Application
+              重新加载应用
             </button>
           </div>
         </div>

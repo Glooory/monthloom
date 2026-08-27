@@ -22,10 +22,10 @@ export const FullYearPreviewControls: React.FC<FullYearPreviewControlsProps> = (
         fontSize: "13px",
       }}
     >
-      <strong style={{ color: "#38bdf8" }}>Full-year Preview (13 Pages)</strong>
+      <strong style={{ color: "#38bdf8" }}>全年预览（13 页）</strong>
       <span style={{ color: "#475569" }}>|</span>
       <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <span>Target Year:</span>
+        <span>目标年份：</span>
         <input
           type="number"
           style={{

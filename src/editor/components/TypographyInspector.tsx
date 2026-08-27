@@ -73,11 +73,11 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
 
   return (
     <div className="inspector-section">
-      <div className="section-heading">Typography</div>
+      <div className="section-heading">文字排版</div>
 
       <div className="field-group">
         <div className="field-row">
-          <span className="field-label">Font Family</span>
+          <span className="field-label">字体族</span>
           <input
             type="text"
             className="field-input"
@@ -92,7 +92,7 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
         </div>
 
         <div className="field-row">
-          <span className="field-label">Weight</span>
+          <span className="field-label">字重</span>
           <select
             className="field-input"
             value={typography.fontWeight}
@@ -104,17 +104,17 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
               }
             }}
           >
-            <option value={300}>300 - Light</option>
-            <option value={400}>400 - Regular</option>
-            <option value={500}>500 - Medium</option>
-            <option value={600}>600 - SemiBold</option>
-            <option value={700}>700 - Bold</option>
-            <option value={900}>900 - Black</option>
+            <option value={300}>300 - 细体 (Light)</option>
+            <option value={400}>400 - 常规 (Regular)</option>
+            <option value={500}>500 - 中粗 (Medium)</option>
+            <option value={600}>600 - 半粗 (SemiBold)</option>
+            <option value={700}>700 - 粗体 (Bold)</option>
+            <option value={900}>900 - 特粗 (Black)</option>
           </select>
         </div>
 
         <div className="field-row">
-          <span className="field-label">Style</span>
+          <span className="field-label">字形样式</span>
           <select
             className="field-input"
             value={typography.fontStyle}
@@ -126,13 +126,13 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
               }
             }}
           >
-            <option value="normal">Normal</option>
-            <option value="italic">Italic</option>
+            <option value="normal">常规 (Normal)</option>
+            <option value="italic">斜体 (Italic)</option>
           </select>
         </div>
 
         <div className="field-row">
-          <span className="field-label">Size</span>
+          <span className="field-label">字号大小</span>
           <input
             type="number"
             className="field-input field-input-number"
@@ -147,7 +147,7 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
         </div>
 
         <div className="field-row">
-          <span className="field-label">Letter Spacing</span>
+          <span className="field-label">字间距</span>
           <input
             type="number"
             className="field-input field-input-number"
@@ -162,7 +162,7 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
         </div>
 
         <div className="field-row">
-          <span className="field-label">Opacity</span>
+          <span className="field-label">不透明度</span>
           <input
             type="number"
             step="0.05"

@@ -40,9 +40,9 @@ export const PersistenceControls: React.FC = () => {
     try {
       await projectOperations.saveCurrentProject();
       await reloadLists();
-      showStatus("Project saved successfully!");
+      showStatus("项目保存成功！");
     } catch (err) {
-      showStatus(`Error saving project: ${err instanceof Error ? err.message : String(err)}`);
+      showStatus(`保存项目失败：${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -50,20 +50,20 @@ export const PersistenceControls: React.FC = () => {
     try {
       await projectOperations.loadProject(id);
       setShowProjectsModal(false);
-      showStatus("Project loaded!");
+      showStatus("项目加载成功！");
     } catch (err) {
-      showStatus(`Error loading project: ${err instanceof Error ? err.message : String(err)}`);
+      showStatus(`加载项目失败：${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
   const handleDeleteProject = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this project?")) return;
+    if (!confirm("确定要删除该项目吗？")) return;
     try {
       await projectOperations.deleteProject(id);
       await reloadLists();
-      showStatus("Project deleted.");
+      showStatus("项目已删除。");
     } catch (err) {
-      showStatus(`Error deleting project: ${err instanceof Error ? err.message : String(err)}`);
+      showStatus(`删除项目失败：${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -73,9 +73,9 @@ export const PersistenceControls: React.FC = () => {
       await templateOperations.saveCurrentTemplate(templateNameInput.trim());
       setTemplateNameInput("");
       await reloadLists();
-      showStatus("Template saved!");
+      showStatus("模板保存成功！");
     } catch (err) {
-      showStatus(`Error saving template: ${err instanceof Error ? err.message : String(err)}`);
+      showStatus(`保存模板失败：${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -83,20 +83,20 @@ export const PersistenceControls: React.FC = () => {
     try {
       await templateOperations.applyTemplate(id);
       setShowTemplatesModal(false);
-      showStatus("Template applied!");
+      showStatus("模板应用成功！");
     } catch (err) {
-      showStatus(`Error applying template: ${err instanceof Error ? err.message : String(err)}`);
+      showStatus(`应用模板失败：${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
   const handleDeleteTemplate = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this template?")) return;
+    if (!confirm("确定要删除该模板吗？")) return;
     try {
       await templateOperations.deleteTemplate(id);
       await reloadLists();
-      showStatus("Template deleted.");
+      showStatus("模板已删除。");
     } catch (err) {
-      showStatus(`Error deleting template: ${err instanceof Error ? err.message : String(err)}`);
+      showStatus(`删除模板失败：${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -119,9 +119,9 @@ export const PersistenceControls: React.FC = () => {
       a.download = `${snapshot.name.toLowerCase().replace(/\s+/g, "-")}.monthloom`;
       a.click();
       URL.revokeObjectURL(url);
-      showStatus("Exported .monthloom bundle!");
+      showStatus("已导出 .monthloom 项目包！");
     } catch (err) {
-      showStatus(`Error exporting bundle: ${err instanceof Error ? err.message : String(err)}`);
+      showStatus(`导出项目包失败：${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -133,12 +133,12 @@ export const PersistenceControls: React.FC = () => {
       await reloadLists();
       if (result.type === "project") {
         await projectOperations.loadProject(result.id);
-        showStatus(`Imported and loaded project: ${result.name}`);
+        showStatus(`已导入并加载项目：${result.name}`);
       } else {
-        showStatus(`Imported template: ${result.name}`);
+        showStatus(`已导入模板：${result.name}`);
       }
     } catch (err) {
-      showStatus(`Import failed: ${err instanceof Error ? err.message : String(err)}`);
+      showStatus(`导入失败：${err instanceof Error ? err.message : String(err)}`);
     }
     e.target.value = "";
   };
@@ -157,7 +157,7 @@ export const PersistenceControls: React.FC = () => {
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ fontWeight: 600, fontSize: "14px", color: "#1F2937" }}>
-          Projects & Templates
+          项目与模板
         </div>
         {statusMessage && (
           <div style={{ fontSize: "12px", color: "#059669", fontWeight: 500 }}>
@@ -182,7 +182,7 @@ export const PersistenceControls: React.FC = () => {
             cursor: "pointer",
           }}
         >
-          Save Project
+          保存项目
         </button>
 
         <button
@@ -200,7 +200,7 @@ export const PersistenceControls: React.FC = () => {
             cursor: "pointer",
           }}
         >
-          Open Project ({projectList.length})
+          打开项目 ({projectList.length})
         </button>
 
         <button
@@ -218,7 +218,7 @@ export const PersistenceControls: React.FC = () => {
             cursor: "pointer",
           }}
         >
-          Templates ({templateList.length})
+          模板库 ({templateList.length})
         </button>
 
         <button
@@ -233,7 +233,7 @@ export const PersistenceControls: React.FC = () => {
             cursor: "pointer",
           }}
         >
-          Export .monthloom
+          导出项目包 (.monthloom)
         </button>
 
         <input
@@ -255,7 +255,7 @@ export const PersistenceControls: React.FC = () => {
             cursor: "pointer",
           }}
         >
-          Import .monthloom
+          导入项目包 (.monthloom)
         </button>
       </div>
 
@@ -263,7 +263,7 @@ export const PersistenceControls: React.FC = () => {
       <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "4px" }}>
         <input
           type="text"
-          placeholder="New template name..."
+          placeholder="新模板名称..."
           value={templateNameInput}
           onChange={(e) => setTemplateNameInput(e.target.value)}
           style={{
@@ -286,7 +286,7 @@ export const PersistenceControls: React.FC = () => {
             cursor: "pointer",
           }}
         >
-          Save as Template
+          存为模板
         </button>
       </div>
 
@@ -320,7 +320,7 @@ export const PersistenceControls: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "16px" }}>
-              <div style={{ fontWeight: 600, fontSize: "16px" }}>Saved Projects</div>
+              <div style={{ fontWeight: 600, fontSize: "16px" }}>已保存的项目</div>
               <button
                 type="button"
                 onClick={() => setShowProjectsModal(false)}
@@ -330,7 +330,7 @@ export const PersistenceControls: React.FC = () => {
               </button>
             </div>
             {projectList.length === 0 ? (
-              <div style={{ color: "#6B7280", fontSize: "13px" }}>No saved projects yet.</div>
+              <div style={{ color: "#6B7280", fontSize: "13px" }}>暂无已保存的项目。</div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {projectList.map((p) => (
@@ -348,7 +348,7 @@ export const PersistenceControls: React.FC = () => {
                     <div>
                       <div style={{ fontWeight: 500, fontSize: "14px" }}>{p.name}</div>
                       <div style={{ fontSize: "12px", color: "#6B7280" }}>
-                        Year: {p.targetYear} • {new Date(p.updatedAt).toLocaleDateString()}
+                        年份：{p.targetYear} • {new Date(p.updatedAt).toLocaleDateString()}
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: "6px" }}>
@@ -365,7 +365,7 @@ export const PersistenceControls: React.FC = () => {
                           cursor: "pointer",
                         }}
                       >
-                        Load
+                        加载
                       </button>
                       <button
                         type="button"
@@ -380,7 +380,7 @@ export const PersistenceControls: React.FC = () => {
                           cursor: "pointer",
                         }}
                       >
-                        Delete
+                        删除
                       </button>
                     </div>
                   </div>
@@ -421,7 +421,7 @@ export const PersistenceControls: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "16px" }}>
-              <div style={{ fontWeight: 600, fontSize: "16px" }}>Reusable Templates</div>
+              <div style={{ fontWeight: 600, fontSize: "16px" }}>模板库</div>
               <button
                 type="button"
                 onClick={() => setShowTemplatesModal(false)}
@@ -431,7 +431,7 @@ export const PersistenceControls: React.FC = () => {
               </button>
             </div>
             {templateList.length === 0 ? (
-              <div style={{ color: "#6B7280", fontSize: "13px" }}>No saved templates yet.</div>
+              <div style={{ color: "#6B7280", fontSize: "13px" }}>暂无已保存的模板。</div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {templateList.map((t) => (
@@ -449,7 +449,7 @@ export const PersistenceControls: React.FC = () => {
                     <div>
                       <div style={{ fontWeight: 500, fontSize: "14px" }}>{t.name}</div>
                       <div style={{ fontSize: "12px", color: "#6B7280" }}>
-                        Saved: {new Date(t.updatedAt).toLocaleDateString()}
+                        保存于：{new Date(t.updatedAt).toLocaleDateString()}
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: "6px" }}>
@@ -466,7 +466,7 @@ export const PersistenceControls: React.FC = () => {
                           cursor: "pointer",
                         }}
                       >
-                        Apply
+                        应用
                       </button>
                       <button
                         type="button"
@@ -481,7 +481,7 @@ export const PersistenceControls: React.FC = () => {
                           cursor: "pointer",
                         }}
                       >
-                        Delete
+                        删除
                       </button>
                     </div>
                   </div>

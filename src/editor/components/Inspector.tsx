@@ -31,18 +31,18 @@ export interface InspectorProps {
 }
 
 const SEMANTIC_TITLES: Record<string, string> = {
-  "main.date": "Date Template",
-  "main.weekday": "Weekday Row",
-  "main.chinaHolidayName": "China Holiday Name",
-  "main.japanHolidayName": "Japan Holiday Name",
-  "main.chinaHolidayMarker": "China Holiday Marker",
-  "main.chinaWorkdayMarker": "China Workday Marker",
-  "main.grid": "Main Date Grid",
-  "mini.monthLabel": "Mini Month Label",
-  "mini.weekday": "Mini Weekday Row",
-  "mini.date": "Mini Date Template",
-  "mini.holidayDot": "Mini Holiday Dot",
-  "mini.workdayDot": "Mini Workday Dot",
+  "main.date": "主日历日期",
+  "main.weekday": "星期标题行",
+  "main.chinaHolidayName": "中国节假日名称",
+  "main.japanHolidayName": "日本节假日名称",
+  "main.chinaHolidayMarker": "中国休假角标",
+  "main.chinaWorkdayMarker": "中国班/补班角标",
+  "main.grid": "日期网格",
+  "mini.monthLabel": "附日历月份标题",
+  "mini.weekday": "附日历星期行",
+  "mini.date": "附日历日期",
+  "mini.holidayDot": "附日历休假圆点",
+  "mini.workdayDot": "附日历班期圆点",
 };
 
 export const Inspector: React.FC<InspectorProps> = ({
@@ -55,7 +55,7 @@ export const Inspector: React.FC<InspectorProps> = ({
     return (
       <div className="editor-inspector">
         <div className="inspector-empty">
-          Click any element on the calendar to inspect and edit its template properties.
+          点击日历中的任意元素即可查看并编辑模板属性。
         </div>
       </div>
     );
@@ -98,7 +98,7 @@ export const Inspector: React.FC<InspectorProps> = ({
     <div className="editor-inspector">
       <div className="inspector-header">
         <h3 className="inspector-title">{title}</h3>
-        <p className="inspector-subtitle">Selected instance: {instanceKey}</p>
+        <p className="inspector-subtitle">当前选中：{instanceKey}</p>
       </div>
 
       {/* 1. Position */}

@@ -47,11 +47,11 @@ export const App: React.FC = () => {
       <div className="monthloom-header-title">
         <span className="monthloom-logo">Monthloom</span>
         <span className="monthloom-header-meta">
-          Target Year: <strong>{targetYear}</strong> | 13-Page Vertical Calendar
+          目标年份：<strong>{targetYear}</strong> | 13页竖版挂历
         </span>
       </div>
       <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "13px" }}>
-        <span style={{ color: "#94A3B8" }}>Editor Preview Month:</span>
+        <span style={{ color: "#94A3B8" }}>编辑预览月份：</span>
         <select
           style={{
             background: "#1E293B",
@@ -67,12 +67,12 @@ export const App: React.FC = () => {
             setEditingMonth({ year: y, month: m });
           }}
         >
-          <option value={`${targetYear}-1`}>{targetYear}-01 (1st Main Month)</option>
-          <option value={`${targetYear}-5`}>{targetYear}-05 (Main Month)</option>
-          <option value={`${targetYear}-12`}>{targetYear}-12 (12th Main Month)</option>
-          <option value={`${targetYear + 1}-1`}>{targetYear + 1}-01 (13th Main Month)</option>
-          <option value={`${targetYear - 1}-12`}>{targetYear - 1}-12 (1st Mini Month)</option>
-          <option value={`${targetYear + 1}-2`}>{targetYear + 1}-02 (15th Mini Month)</option>
+          <option value={`${targetYear}-1`}>{targetYear}年01月（主日历首月）</option>
+          <option value={`${targetYear}-5`}>{targetYear}年05月（主日历）</option>
+          <option value={`${targetYear}-12`}>{targetYear}年12月（主日历第12月）</option>
+          <option value={`${targetYear + 1}-1`}>{targetYear + 1}年01月（主日历第13月）</option>
+          <option value={`${targetYear - 1}-12`}>{targetYear - 1}年12月（附日历首月）</option>
+          <option value={`${targetYear + 1}-2`}>{targetYear + 1}年02月（附日历第15月）</option>
         </select>
       </label>
     </>

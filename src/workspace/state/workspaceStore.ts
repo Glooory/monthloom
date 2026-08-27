@@ -23,7 +23,7 @@ export type WorkspaceState = {
 };
 
 const DEFAULT_YEAR = 2027;
-const DEFAULT_NAME = "Untitled Project";
+const DEFAULT_NAME = "未命名项目";
 
 export const useWorkspaceStore = create<WorkspaceState>((set) => ({
   currentProjectId: null,

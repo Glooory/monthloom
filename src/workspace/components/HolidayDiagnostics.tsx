@@ -26,7 +26,7 @@ export const HolidayDiagnostics: React.FC<HolidayDiagnosticsProps> = ({
         color: "#92400E",
       }}
     >
-      <div style={{ fontWeight: 600 }}>Holiday Diagnostics & Coverage</div>
+      <div style={{ fontWeight: 600 }}>节假日覆盖诊断</div>
       <ul style={{ margin: 0, paddingLeft: "16px" }}>
         {diagnostics.map((d, i) => (
           <li key={i} style={{ color: d.level === "error" ? "#B91C1C" : "#92400E" }}>

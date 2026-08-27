@@ -28,10 +28,10 @@ export const BorderInspector: React.FC<BorderInspectorProps> = ({
 
   return (
     <div className="inspector-section">
-      <div className="section-heading">Grid Border</div>
+      <div className="section-heading">网格边框</div>
       <div className="field-group">
         <div className="field-row">
-          <span className="field-label">Width</span>
+          <span className="field-label">边框粗细</span>
           <input
             type="number"
             min="0"
@@ -47,7 +47,7 @@ export const BorderInspector: React.FC<BorderInspectorProps> = ({
         </div>
 
         <div className="field-row">
-          <span className="field-label">Color</span>
+          <span className="field-label">边框颜色</span>
           <div className="color-input-container">
             <input
               type="color"

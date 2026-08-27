@@ -121,33 +121,33 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
   return (
     <div className="page-preview-settings" style={{ padding: "12px 16px", background: "#0f172a", borderTop: "1px solid #1e293b", color: "#f8fafc" }}>
       <div style={{ fontWeight: 600, fontSize: "13px", marginBottom: 12, color: "#38bdf8" }}>
-        Page Preview Layout Settings
+        页面版面与背景设置
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
         <NumberField
-          label="Page Width"
+          label="页面宽度"
           value={layout.width}
           step={10}
           min={100}
           onChange={(width) => updateLayout({ width })}
         />
         <NumberField
-          label="Page Height"
+          label="页面高度"
           value={layout.height}
           step={10}
           min={100}
           onChange={(height) => updateLayout({ height })}
         />
         <NumberField
-          label="Padding"
+          label="页面边距"
           value={layout.padding}
           step={5}
           min={0}
           onChange={(padding) => updateLayout({ padding })}
         />
         <NumberField
-          label="Left Col Ratio"
+          label="主日历宽度比"
           value={layout.leftColumnRatio}
           step={0.02}
           min={0.05}
@@ -155,14 +155,14 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
           onChange={(leftColumnRatio) => updateLayout({ leftColumnRatio })}
         />
         <NumberField
-          label="Column Gap"
+          label="栏间距"
           value={layout.columnGap}
           step={2}
           min={0}
           onChange={(columnGap) => updateLayout({ columnGap })}
         />
         <NumberField
-          label="Mini Height Ratio"
+          label="附日历高度比"
           value={layout.miniHeightRatio}
           step={0.02}
           min={0.05}
@@ -170,7 +170,7 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
           onChange={(miniHeightRatio) => updateLayout({ miniHeightRatio })}
         />
         <NumberField
-          label="Mini Gap"
+          label="附日历间距"
           value={layout.miniGap}
           step={2}
           min={0}
@@ -179,7 +179,7 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
       </div>
 
       <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 12 }}>
-        <span style={{ fontSize: "12px", color: "#94a3b8" }}>Background Image:</span>
+        <span style={{ fontSize: "12px", color: "#94a3b8" }}>背景底图：</span>
         <input
           ref={fileInputRef}
           type="file"
@@ -200,7 +200,7 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
           }}
           onClick={() => fileInputRef.current?.click()}
         >
-          {config.backgroundAssetId ? "Replace Background" : "Upload Background"}
+          {config.backgroundAssetId ? "替换背景图" : "上传背景图"}
         </button>
         {config.backgroundAssetId && (
           <button
@@ -216,7 +216,7 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
             }}
             onClick={handleClearBackground}
           >
-            Clear Background
+            清除背景图
           </button>
         )}
       </div>

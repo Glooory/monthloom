@@ -50,7 +50,7 @@ export const HolidayImportControls: React.FC<HolidayImportControlsProps> = ({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
       <div style={{ fontWeight: 600, fontSize: "13px", color: "#374151" }}>
-        Holiday Datasets
+        节假日数据
       </div>
 
       <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
@@ -74,7 +74,7 @@ export const HolidayImportControls: React.FC<HolidayImportControlsProps> = ({
             cursor: "pointer",
           }}
         >
-          {chinaDataset ? "Replace China JSON" : "Import China JSON"}
+          {chinaDataset ? "替换中国节假日 (JSON)" : "导入中国节假日 (JSON)"}
         </button>
         {chinaDataset && (
           <button
@@ -89,7 +89,7 @@ export const HolidayImportControls: React.FC<HolidayImportControlsProps> = ({
               cursor: "pointer",
             }}
           >
-            Clear ({chinaDataset.entries.length} days)
+            清除 ({chinaDataset.entries.length} 天)
           </button>
         )}
       </div>
@@ -115,7 +115,7 @@ export const HolidayImportControls: React.FC<HolidayImportControlsProps> = ({
             cursor: "pointer",
           }}
         >
-          {japanDataset ? "Replace Japan JSON" : "Import Japan JSON"}
+          {japanDataset ? "替换日本节假日 (JSON)" : "导入日本节假日 (JSON)"}
         </button>
         {japanDataset && (
           <button
@@ -130,7 +130,7 @@ export const HolidayImportControls: React.FC<HolidayImportControlsProps> = ({
               cursor: "pointer",
             }}
           >
-            Clear ({japanDataset.entries.length} days)
+            清除 ({japanDataset.entries.length} 天)
           </button>
         )}
       </div>

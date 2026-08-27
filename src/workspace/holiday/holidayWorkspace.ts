@@ -35,7 +35,7 @@ export function getWorkspaceHolidayDiagnostics(args: {
     diagnostics.push({
       level: "warning",
       code: "china-dataset-missing",
-      message: "China holiday dataset not loaded.",
+      message: "未加载中国节假日数据。",
     });
   } else {
     diagnostics.push(
@@ -52,7 +52,7 @@ export function getWorkspaceHolidayDiagnostics(args: {
     diagnostics.push({
       level: "warning",
       code: "japan-dataset-missing",
-      message: "Japan holiday dataset not loaded.",
+      message: "未加载日本节假日数据。",
     });
   } else {
     diagnostics.push(

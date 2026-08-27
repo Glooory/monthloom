@@ -19,10 +19,10 @@ export const ColorInspector: React.FC<ColorInspectorProps> = ({
   if (isDateElement && calendarColors && onChangeCalendarColors) {
     return (
       <div className="inspector-section">
-        <div className="section-heading">Date Colors</div>
+        <div className="section-heading">日期颜色</div>
         <div className="field-group">
           <div className="field-row">
-            <span className="field-label">Default</span>
+            <span className="field-label">工作日</span>
             <div className="color-input-container">
               <input
                 type="color"
@@ -37,7 +37,7 @@ export const ColorInspector: React.FC<ColorInspectorProps> = ({
           </div>
 
           <div className="field-row">
-            <span className="field-label">Sunday</span>
+            <span className="field-label">周日</span>
             <div className="color-input-container">
               <input
                 type="color"
@@ -52,7 +52,7 @@ export const ColorInspector: React.FC<ColorInspectorProps> = ({
           </div>
 
           <div className="field-row">
-            <span className="field-label">Saturday</span>
+            <span className="field-label">周六</span>
             <div className="color-input-container">
               <input
                 type="color"
@@ -67,7 +67,7 @@ export const ColorInspector: React.FC<ColorInspectorProps> = ({
           </div>
 
           <div className="field-row">
-            <span className="field-label">Japan Holiday</span>
+            <span className="field-label">日本节假日</span>
             <div className="color-input-container">
               <input
                 type="color"
@@ -88,9 +88,9 @@ export const ColorInspector: React.FC<ColorInspectorProps> = ({
   if (color && onChangeColor) {
     return (
       <div className="inspector-section">
-        <div className="section-heading">Color</div>
+        <div className="section-heading">颜色</div>
         <div className="field-row">
-          <span className="field-label">Text Color</span>
+          <span className="field-label">文本颜色</span>
           <div className="color-input-container">
             <input
               type="color"

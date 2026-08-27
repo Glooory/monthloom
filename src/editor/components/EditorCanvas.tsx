@@ -53,7 +53,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   if (!svgDocument || !scene) {
     return (
       <div className="editor-canvas-container">
-        <div style={{ color: "#94a3b8" }}>Rendering preview...</div>
+        <div style={{ color: "#94a3b8" }}>正在渲染预览...</div>
       </div>
     );
   }

@@ -84,7 +84,7 @@ export const BatchExportPanel: React.FC = () => {
       }}
     >
       <div style={{ fontWeight: 600, fontSize: "14px", color: "#1F2937" }}>
-        Formal Batch SVG Export
+        正式批量导出 SVG
       </div>
 
       <div style={{ display: "flex", gap: "16px", fontSize: "13px", color: "#374151" }}>
@@ -96,7 +96,7 @@ export const BatchExportPanel: React.FC = () => {
             checked={exportMode === "outlined"}
             onChange={() => setExportMode("outlined")}
           />
-          Outlined (Vector Paths, Self-contained)
+          转曲轮廓（矢量路径，独立无外部字体依赖）
         </label>
         <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
           <input
@@ -106,13 +106,13 @@ export const BatchExportPanel: React.FC = () => {
             checked={exportMode === "editable"}
             onChange={() => setExportMode("editable")}
           />
-          Editable (&lt;text&gt; Elements)
+          可编辑文本（保留 &lt;text&gt; 元素）
         </label>
       </div>
 
       {errorMsg && (
         <div style={{ fontSize: "12px", color: "#DC2626", backgroundColor: "#FEE2E2", padding: "6px 10px", borderRadius: "4px" }}>
-          Export Error: {errorMsg}
+          导出失败：{errorMsg}
         </div>
       )}
 
@@ -132,10 +132,10 @@ export const BatchExportPanel: React.FC = () => {
             cursor: isExporting ? "not-allowed" : "pointer",
           }}
         >
-          {isExporting ? "Exporting..." : "Export 28 SVGs"}
+          {isExporting ? "正在导出..." : "批量导出 28 张 SVG"}
         </button>
         <span style={{ fontSize: "12px", color: "#6B7280" }}>
-          Target Year: {targetYear} (13 Main + 15 Mini)
+          目标年份：{targetYear}（13 个主日历 + 15 个附日历）
         </span>
       </div>
     </div>

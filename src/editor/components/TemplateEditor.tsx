@@ -277,7 +277,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     <div className="monthloom-editor">
       {fontError && (
         <div className="font-error-banner">
-          <span>Failed to load font: {fontError.message}</span>
+          <span>字体加载失败：{fontError.message}</span>
         </div>
       )}
 

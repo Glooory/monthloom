@@ -39,7 +39,7 @@ describe("PagePreview", () => {
 
     expect(screen.getByText("2027-1")).toBeDefined();
 
-    const bgImg = screen.getByAltText("Page background");
+    const bgImg = screen.getByAltText("页面背景图");
     expect(bgImg).toBeDefined();
     expect(bgImg.getAttribute("src")).toBe("data:image/png;base64,AAAA");
 

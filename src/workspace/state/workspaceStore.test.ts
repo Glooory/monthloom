@@ -6,10 +6,10 @@ describe("workspaceStore", () => {
     useWorkspaceStore.getState().resetWorkspace();
   });
 
-  it("initializes with default year 2027 and Untitled Project", () => {
+  it("initializes with default year 2027 and 未命名项目", () => {
     const state = useWorkspaceStore.getState();
     expect(state.targetYear).toBe(2027);
-    expect(state.projectName).toBe("Untitled Project");
+    expect(state.projectName).toBe("未命名项目");
     expect(state.currentProjectId).toBeNull();
     expect(state.chinaHolidayDataset).toBeNull();
     expect(state.japanHolidayDataset).toBeNull();

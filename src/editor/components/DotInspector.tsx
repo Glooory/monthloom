@@ -17,11 +17,11 @@ export const DotInspector: React.FC<DotInspectorProps> = ({ dot, onChangeDot }) 
 
   return (
     <div className="inspector-section">
-      <div className="section-heading">Dot Marker</div>
+      <div className="section-heading">圆点标记</div>
 
       <div className="field-group">
         <div className="field-row">
-          <span className="field-label">Size (Diameter)</span>
+          <span className="field-label">尺寸 (直径)</span>
           <input
             type="number"
             min="1"
@@ -38,7 +38,7 @@ export const DotInspector: React.FC<DotInspectorProps> = ({ dot, onChangeDot }) 
         </div>
 
         <div className="field-row">
-          <span className="field-label">Color</span>
+          <span className="field-label">圆点颜色</span>
           <div className="color-input-container">
             <input
               type="color"
@@ -51,7 +51,7 @@ export const DotInspector: React.FC<DotInspectorProps> = ({ dot, onChangeDot }) 
         </div>
 
         <div className="field-row">
-          <span className="field-label">Opacity</span>
+          <span className="field-label">不透明度</span>
           <input
             type="number"
             step="0.05"

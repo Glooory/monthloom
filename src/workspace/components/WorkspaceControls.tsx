@@ -48,12 +48,12 @@ export const WorkspaceControls: React.FC = () => {
             padding: "4px 8px",
             width: "220px",
           }}
-          aria-label="Project Name"
+          aria-label="项目名称"
         />
 
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
           <label htmlFor="target-year-input" style={{ fontSize: "12px", color: "#4B5563" }}>
-            Target Year:
+            目标年份：
           </label>
           <input
             id="target-year-input"

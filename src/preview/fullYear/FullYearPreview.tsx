@@ -179,7 +179,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
     return (
       <div className="full-year-preview-container">
         <div style={{ color: "#ef4444", padding: 16 }}>
-          Failed to render Full-year Preview: {error.message}
+          全年预览渲染失败：{error.message}
         </div>
       </div>
     );
@@ -206,7 +206,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
       )}
 
       {loading && !documents && (
-        <div style={{ color: "#94a3b8", padding: 32 }}>Rendering 13 pages...</div>
+        <div style={{ color: "#94a3b8", padding: 32 }}>正在渲染 13 页日历...</div>
       )}
 
       {documents &&

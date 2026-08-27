@@ -85,24 +85,24 @@ export const MarkerInspector: React.FC<MarkerInspectorProps> = ({
 
   return (
     <div className="inspector-section">
-      <div className="section-heading">Marker</div>
+      <div className="section-heading">角标标记</div>
 
       <div className="field-row" style={{ marginBottom: 12 }}>
-        <span className="field-label">Type</span>
+        <span className="field-label">类型</span>
         <div style={{ display: "flex", gap: 6 }}>
           <button
             type="button"
             className={`toolbar-btn ${marker.type === "text" ? "active" : ""}`}
             onClick={() => toggleType("text")}
           >
-            Text
+            文字
           </button>
           <button
             type="button"
             className={`toolbar-btn ${marker.type === "image" ? "active" : ""}`}
             onClick={() => toggleType("image")}
           >
-            Image
+            图片
           </button>
         </div>
       </div>
@@ -110,7 +110,7 @@ export const MarkerInspector: React.FC<MarkerInspectorProps> = ({
       {marker.type === "text" && (
         <>
           <div className="field-row" style={{ marginBottom: 12 }}>
-            <span className="field-label">Label</span>
+            <span className="field-label">文本内容</span>
             <input
               type="text"
               className="field-input"
@@ -150,7 +150,7 @@ export const MarkerInspector: React.FC<MarkerInspectorProps> = ({
       {marker.type === "image" && (
         <div className="field-group">
           <div className="field-row">
-            <span className="field-label">Image File</span>
+            <span className="field-label">图片文件</span>
             <input
               type="file"
               accept="image/*"
@@ -160,7 +160,7 @@ export const MarkerInspector: React.FC<MarkerInspectorProps> = ({
           </div>
 
           <div className="field-row">
-            <span className="field-label">Width</span>
+            <span className="field-label">宽度</span>
             <input
               type="number"
               className="field-input field-input-number"
@@ -176,7 +176,7 @@ export const MarkerInspector: React.FC<MarkerInspectorProps> = ({
           </div>
 
           <div className="field-row">
-            <span className="field-label">Height</span>
+            <span className="field-label">高度</span>
             <input
               type="number"
               className="field-input field-input-number"
@@ -192,7 +192,7 @@ export const MarkerInspector: React.FC<MarkerInspectorProps> = ({
           </div>
 
           <div className="field-row">
-            <span className="field-label">Opacity</span>
+            <span className="field-label">不透明度</span>
             <input
               type="number"
               step="0.05"
