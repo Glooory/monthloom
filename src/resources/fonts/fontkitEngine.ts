@@ -1,10 +1,7 @@
-import * as fontkitModule from "fontkit";
+import * as fontkit from "fontkit";
 import type { FontDescriptor } from "../../domain/template/font";
 import type { Typography } from "../../domain/template/primitives";
 import type { TextMeasurer, TextMetrics } from "../../rendering/layout/textMetrics";
-
-// Handle ESM / CJS module compatibility for fontkit
-const fk = (fontkitModule as unknown as { default?: typeof fontkitModule }).default || fontkitModule;
 
 export type ResolvedFontFace = Readonly<{
   fontId: string;
@@ -55,7 +52,7 @@ export function parseFontkitFace(args: {
 }): ResolvedFontFace {
   const { fontId, descriptor, bytes } = args;
   const buffer = new Uint8Array(bytes);
-  const parsed = fk.create(buffer as unknown as Buffer);
+  const parsed = fontkit.create(buffer as unknown as Buffer);
 
   if (!parsed) {
     throw new Error(`Failed to parse font binary with fontkit for fontId: "${fontId}"`);

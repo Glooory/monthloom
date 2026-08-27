@@ -1,0 +1,178 @@
+.phase3-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #1f2937;
+}
+
+.phase3-header {
+  margin-bottom: 24px;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 16px;
+}
+
+.phase3-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: #111827;
+}
+
+.phase3-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.phase3-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.phase3-control-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.phase3-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.phase3-select {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  background-color: #ffffff;
+}
+
+.phase3-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.phase3-btn-primary {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+.phase3-btn-primary:hover {
+  background-color: #1d4ed8;
+}
+
+.phase3-btn-secondary {
+  background-color: #ffffff;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+.phase3-btn-secondary:hover {
+  background-color: #f3f4f6;
+}
+
+.phase3-btn-export {
+  background-color: #059669;
+  color: #ffffff;
+}
+
+.phase3-btn-export:hover {
+  background-color: #047857;
+}
+
+.phase3-export-group {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.phase3-error-banner {
+  padding: 12px 16px;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  border-radius: 6px;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.phase3-previews {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+@media (min-width: 1024px) {
+  .phase3-previews {
+    grid-template-columns: 740px 1fr;
+  }
+}
+
+.phase3-preview-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.phase3-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.phase3-preview-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.phase3-preview-info {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.phase3-svg-wrapper {
+  display: inline-block;
+  background-color: #ffffff;
+  border: 1px dashed #d1d5db;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.phase3-diagnostics {
+  margin-top: 32px;
+  padding: 16px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.phase3-diagnostics h3 {
+  font-size: 14px;
+  margin: 0 0 8px 0;
+  color: #334155;
+}
+
+.phase3-diagnostics pre {
+  font-size: 12px;
+  margin: 0;
+  color: #64748b;
+  overflow-x: auto;
+}

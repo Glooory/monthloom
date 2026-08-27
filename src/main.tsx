@@ -1,10 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { App } from "./spike/App";
-import "./spike/spike.css";
+import { Phase3Verification } from "./verification/phase3/Phase3Verification";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
+    <Phase3Verification />
   </React.StrictMode>,
 );
+
