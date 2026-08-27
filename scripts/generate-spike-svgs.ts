@@ -27,7 +27,10 @@ async function generate() {
 
   const font = parseFont(fontBytes);
   const markerBuf = fs.readFileSync("public/spike-marker.png");
-  const markerDataUri = arrayBufferToDataUri(markerBuf.buffer, "image/png");
+  const markerDataUri = arrayBufferToDataUri(
+    new Uint8Array(markerBuf.buffer, markerBuf.byteOffset, markerBuf.byteLength),
+    "image/png",
+  );
 
   if (!fs.existsSync("docs/spike")) {
     fs.mkdirSync("docs/spike", { recursive: true });
