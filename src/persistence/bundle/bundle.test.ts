@@ -105,5 +105,80 @@ describe(".monthloom Bundle Roundtrip", () => {
         db: targetDb,
       }),
     ).rejects.toThrow();
+
+    // Verify targetDb has 0 projects and 0 assets
+    const targetProjectRepo = new ProjectRepository(targetDb);
+    const targetAssetRepo = new AssetRepository(targetDb);
+    expect(await targetProjectRepo.list()).toHaveLength(0);
+    expect(await targetAssetRepo.getAll()).toHaveLength(0);
+  });
+
+  it("rolls back all assets if project saving fails within transaction", async () => {
+    const assetRepo = new AssetRepository(sourceDb);
+    await assetRepo.save({
+      id: "source-marker-atomic",
+      mimeType: "image/png",
+      data: new Uint8Array([1, 2, 3]),
+      createdAt: new Date().toISOString(),
+    });
+
+    const defaultDoc = createDefaultEditorDocument();
+    const docWithAsset = {
+      ...defaultDoc,
+      mainTemplate: {
+        ...defaultDoc.mainTemplate,
+        chinaMarkers: {
+          ...defaultDoc.mainTemplate.chinaMarkers,
+          holiday: {
+            type: "image" as const,
+            assetId: "source-marker-atomic",
+            position: { anchor: "top-right" as const, offsetX: -8, offsetY: 8 },
+            width: 14,
+            height: 14,
+            opacity: 1,
+          },
+        },
+      },
+    };
+
+    const project: ProjectSnapshotV1 = {
+      version: 1,
+      type: "project",
+      id: "source-proj-atomic",
+      name: "Source Project",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      targetYear: 2027,
+      chinaHolidayDataset: null,
+      japanHolidayDataset: null,
+      document: docWithAsset,
+    };
+
+    const bundleBlob = await createMonthloomBundle({
+      snapshot: project,
+      db: sourceDb,
+    });
+
+    // Mock projectRepo save failure on targetDb to test transaction rollback
+    const originalPut = targetDb.projects.put.bind(targetDb.projects);
+    targetDb.projects.put = (() => {
+      throw new Error("Simulated storage write error");
+    }) as unknown as typeof targetDb.projects.put;
+
+    await expect(
+      importMonthloomBundle({
+        bundleData: bundleBlob,
+        db: targetDb,
+      }),
+    ).rejects.toThrow("Simulated storage write error");
+
+    // Restore method
+    targetDb.projects.put = originalPut;
+
+    // Verify 0 assets and 0 projects persisted in targetDb due to transaction rollback
+    const targetAssetRepo = new AssetRepository(targetDb);
+    const targetProjectRepo = new ProjectRepository(targetDb);
+    expect(await targetAssetRepo.getAll()).toHaveLength(0);
+    expect(await targetProjectRepo.list()).toHaveLength(0);
   });
 });

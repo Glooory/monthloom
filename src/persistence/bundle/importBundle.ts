@@ -83,17 +83,19 @@ export async function importMonthloomBundle(args: {
     const remappedDocument = remapDocumentAssetIds(validatedProject.document, assetIdMap);
     const newProjectId = `project-${crypto.randomUUID()}`;
 
-    // Save all assets
-    for (const asset of assetsToSave) {
-      await assetRepo.save(asset);
-    }
+    await db.transaction("rw", [db.assets, db.projects], async () => {
+      // Save all assets
+      for (const asset of assetsToSave) {
+        await assetRepo.save(asset);
+      }
 
-    // Save project
-    await projectRepo.save({
-      ...validatedProject,
-      id: newProjectId,
-      updatedAt: now,
-      document: remappedDocument,
+      // Save project
+      await projectRepo.save({
+        ...validatedProject,
+        id: newProjectId,
+        updatedAt: now,
+        document: remappedDocument,
+      });
     });
 
     return {
@@ -106,17 +108,19 @@ export async function importMonthloomBundle(args: {
     const remappedDocument = remapDocumentAssetIds(validatedTemplate.document, assetIdMap);
     const newTemplateId = `template-${crypto.randomUUID()}`;
 
-    // Save all assets
-    for (const asset of assetsToSave) {
-      await assetRepo.save(asset);
-    }
+    await db.transaction("rw", [db.assets, db.templates], async () => {
+      // Save all assets
+      for (const asset of assetsToSave) {
+        await assetRepo.save(asset);
+      }
 
-    // Save template
-    await templateRepo.save({
-      ...validatedTemplate,
-      id: newTemplateId,
-      updatedAt: now,
-      document: remappedDocument,
+      // Save template
+      await templateRepo.save({
+        ...validatedTemplate,
+        id: newTemplateId,
+        updatedAt: now,
+        document: remappedDocument,
+      });
     });
 
     return {
