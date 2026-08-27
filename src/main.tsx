@@ -1,9 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { Phase6Verification } from "./verification/phase6/Phase6Verification";
+import { App } from "./app/App";
+import { AppErrorBoundary } from "./app/AppErrorBoundary";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <Phase6Verification />
+    <AppErrorBoundary>
+      <App />
+    </AppErrorBoundary>
   </React.StrictMode>,
 );

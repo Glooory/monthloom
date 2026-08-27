@@ -3,9 +3,10 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  base: process.env.GITHUB_ACTIONS ? "/monthloom/" : "/",
+  base: process.env.NODE_ENV === "production" || process.env.GITHUB_ACTIONS ? "/monthloom/" : "/",
   // @ts-expect-error vitest config
   test: {
     environment: "jsdom",
+    globals: true,
   },
 });
