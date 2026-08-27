@@ -1,5 +1,6 @@
 import type { MainTemplate } from "../../domain/template/mainTemplate";
 import type { MiniTemplate } from "../../domain/template/miniTemplate";
+import type { PagePreviewConfig } from "../../domain/pagePreview/types";
 import type { FontCatalog } from "../../resources/fonts/types";
 
 export type CalendarColors = MainTemplate["colors"];
@@ -27,6 +28,7 @@ export type EditorDocument = Readonly<{
   mainTemplate: MainTemplate;
   miniTemplate: MiniTemplate;
   fontCatalog: FontCatalog;
+  pagePreview: PagePreviewConfig;
 }>;
 
 export type EditorSelection = Readonly<{

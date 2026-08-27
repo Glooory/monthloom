@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { temporal } from "zundo";
+import { DEFAULT_PAGE_PREVIEW_CONFIG } from "../../domain/pagePreview/defaults";
 import { DEFAULT_MAIN_TEMPLATE, DEFAULT_MINI_TEMPLATE } from "../../domain/template/defaults";
 import type { EditorDocument } from "../model/types";
 import type { FontCatalog } from "../../resources/fonts/types";
@@ -154,6 +155,7 @@ export function createDefaultEditorDocument(): EditorDocument {
     mainTemplate,
     miniTemplate,
     fontCatalog: DEFAULT_FONT_CATALOG,
+    pagePreview: DEFAULT_PAGE_PREVIEW_CONFIG,
   };
 }
 
