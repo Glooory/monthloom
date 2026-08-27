@@ -24,6 +24,7 @@ export type Rect = Readonly<{
 export type SceneTextNode = Readonly<{
   kind: "text";
   semanticId: SemanticElementId;
+  instanceKey?: string;
   text: string;
 
   originX: number;
@@ -46,22 +47,28 @@ export type SceneTextNode = Readonly<{
 export type SceneImageNode = Readonly<{
   kind: "image";
   semanticId: SemanticElementId;
+  instanceKey?: string;
   assetId: string;
   x: number;
   y: number;
   width: number;
   height: number;
   opacity: number;
+  cell?: Rect;
+  position?: Position;
 }>;
 
 export type SceneDotNode = Readonly<{
   kind: "dot";
   semanticId: SemanticElementId;
+  instanceKey?: string;
   cx: number;
   cy: number;
   radius: number;
   color: string;
   opacity: number;
+  cell?: Rect;
+  position?: Position;
 }>;
 
 export type SceneLineNode = Readonly<{

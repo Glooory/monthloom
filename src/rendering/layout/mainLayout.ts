@@ -82,6 +82,7 @@ export function layoutMain(args: {
     nodes.push({
       kind: "text",
       semanticId: "main.weekday",
+      instanceKey: `main.weekday:${c}`,
       text,
       originX: pos.originX,
       baselineY: pos.baselineY,
@@ -134,6 +135,8 @@ export function layoutMain(args: {
         ? 1
         : template.adjacentMonthOpacity;
 
+      const dateKey = `${cellData.date.year}-${String(cellData.date.month).padStart(2, "0")}-${String(cellData.date.day).padStart(2, "0")}`;
+
       // Date text
       const dateText = String(cellData.date.day);
       const dateColor = resolveDateColor(cellData, template.colors);
@@ -147,6 +150,7 @@ export function layoutMain(args: {
       nodes.push({
         kind: "text",
         semanticId: "main.date",
+        instanceKey: `main.date:${dateKey}`,
         text: dateText,
         originX: datePos.originX,
         baselineY: datePos.baselineY,
@@ -182,6 +186,7 @@ export function layoutMain(args: {
           nodes.push({
             kind: "text",
             semanticId,
+            instanceKey: `${semanticId}:${dateKey}`,
             text: markerTemplate.value,
             originX: markerPos.originX,
             baselineY: markerPos.baselineY,
@@ -197,12 +202,15 @@ export function layoutMain(args: {
           nodes.push({
             kind: "image",
             semanticId,
+            instanceKey: `${semanticId}:${dateKey}`,
             assetId: markerTemplate.assetId,
             x: imgBounds.x,
             y: imgBounds.y,
             width: markerTemplate.width,
             height: markerTemplate.height,
             opacity: markerTemplate.opacity * opacityMultiplier,
+            cell: cellRect,
+            position: markerTemplate.position,
           });
         }
       }
@@ -220,6 +228,7 @@ export function layoutMain(args: {
         nodes.push({
           kind: "text",
           semanticId: "main.chinaHolidayName",
+          instanceKey: `main.chinaHolidayName:${dateKey}`,
           text: chinaNameText,
           originX: chinaNamePos.originX,
           baselineY: chinaNamePos.baselineY,
@@ -245,6 +254,7 @@ export function layoutMain(args: {
         nodes.push({
           kind: "text",
           semanticId: "main.japanHolidayName",
+          instanceKey: `main.japanHolidayName:${dateKey}`,
           text: japanNameText,
           originX: japanNamePos.originX,
           baselineY: japanNamePos.baselineY,

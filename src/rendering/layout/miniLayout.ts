@@ -44,6 +44,7 @@ export function layoutMini(args: {
   nodes.push({
     kind: "text",
     semanticId: "mini.monthLabel",
+    instanceKey: `mini.monthLabel:${calendar.year}-${String(calendar.month).padStart(2, "0")}`,
     text: monthLabelText,
     originX: monthLabelPos.originX,
     baselineY: monthLabelPos.baselineY,
@@ -78,6 +79,7 @@ export function layoutMini(args: {
     nodes.push({
       kind: "text",
       semanticId: "mini.weekday",
+      instanceKey: `mini.weekday:${c}`,
       text,
       originX: weekdayPos.originX,
       baselineY: weekdayPos.baselineY,
@@ -113,6 +115,8 @@ export function layoutMini(args: {
         continue;
       }
 
+      const dateKey = `${cellData.date.year}-${String(cellData.date.month).padStart(2, "0")}-${String(cellData.date.day).padStart(2, "0")}`;
+
       // Current month date
       const dateText = String(cellData.date.day);
       const dateColor = resolveDateColor(cellData, template.colors);
@@ -126,6 +130,7 @@ export function layoutMini(args: {
       nodes.push({
         kind: "text",
         semanticId: "mini.date",
+        instanceKey: `mini.date:${dateKey}`,
         text: dateText,
         originX: datePos.originX,
         baselineY: datePos.baselineY,
@@ -156,11 +161,14 @@ export function layoutMini(args: {
         nodes.push({
           kind: "dot",
           semanticId,
+          instanceKey: `${semanticId}:${dateKey}`,
           cx: dotCenter.x,
           cy: dotCenter.y,
           radius: dotTemplate.size / 2,
           color: dotTemplate.color,
           opacity: dotTemplate.opacity,
+          cell: cellRect,
+          position: dotTemplate.position,
         });
       }
     }
