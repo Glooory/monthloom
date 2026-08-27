@@ -1,35 +1,31 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { fetchGoogleFontBytes } from "./fonts/googleFonts";
 import { parseFont, type SpikeFont } from "./fonts/fontkitAdapter";
-import { SAMPLE_TEXTS, WEEKDAYS } from "./testData";
-
-type SampleDiagnostics = {
-  text: string;
-  glyphCount: number;
-  glyphIds: number[];
-  advanceWidth: number;
-  samplePath?: string;
-};
+import { arrayBufferToDataUri } from "./assets/embedImage";
+import { buildSpikeSvg } from "./render/buildSpikeSvg";
+import { SvgPreview } from "./svg/SvgPreview";
+import { serializeSvg } from "./svg/serializeSvg";
+import {
+  SPIKE_VIEW_WIDTH,
+  SPIKE_VIEW_HEIGHT,
+  WEEKDAYS,
+  SAMPLE_TEXTS,
+} from "./testData";
 
 export function App() {
-  const [fontStatus, setFontStatus] = useState<{
-    css: "idle" | "loading" | "loaded" | "failed";
-    binaryBytes: number;
-    unitsPerEm?: number;
-    ascent?: number;
-    descent?: number;
-    error?: string;
-  }>({
-    css: "idle",
-    binaryBytes: 0,
-  });
-
-  const [diagnostics, setDiagnostics] = useState<SampleDiagnostics[]>([]);
+  const [font, setFont] = useState<SpikeFont | null>(null);
+  const [markerDataUri, setMarkerDataUri] = useState<string>("");
+  const [strokeWidth, setStrokeWidth] = useState<number>(1);
+  const [fontBytesCount, setFontBytesCount] = useState<number>(0);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    async function loadSampleFont() {
-      setFontStatus({ css: "loading", binaryBytes: 0 });
+    async function initSpike() {
       try {
+        setLoading(true);
+
+        // 1. Fetch Google Font binary
         const textSubset = [
           ...WEEKDAYS,
           SAMPLE_TEXTS.singleDigit,
@@ -40,83 +36,108 @@ export function App() {
           SAMPLE_TEXTS.marker,
         ].join("");
 
-        const bytes = await fetchGoogleFontBytes({
+        const fontBytes = await fetchGoogleFontBytes({
           family: "Noto Sans JP",
           weight: 400,
           style: "normal",
           text: textSubset,
         });
 
-        const font: SpikeFont = parseFont(bytes);
+        setFontBytesCount(fontBytes.byteLength);
+        const parsedFont = parseFont(fontBytes);
+        setFont(parsedFont);
 
-        setFontStatus({
-          css: "loaded",
-          binaryBytes: bytes.byteLength,
-          unitsPerEm: font.unitsPerEm,
-          ascent: font.ascent,
-          descent: font.descent,
-        });
-
-        const testStrings = [
-          SAMPLE_TEXTS.singleDigit,
-          SAMPLE_TEXTS.doubleDigit,
-          SAMPLE_TEXTS.chinese,
-          SAMPLE_TEXTS.japanese,
-          SAMPLE_TEXTS.japaneseShort,
-          SAMPLE_TEXTS.marker,
-        ];
-
-        const diag = testStrings.map((str) => {
-          const run = font.layout(str);
-          return {
-            text: str,
-            glyphCount: run.glyphs.length,
-            glyphIds: run.glyphs.map((g) => g.id),
-            advanceWidth: run.advanceWidth,
-            samplePath: run.glyphs[0]?.pathData,
-          };
-        });
-
-        setDiagnostics(diag);
+        // 2. Fetch Spike marker image
+        const markerUrl = `${import.meta.env.BASE_URL}spike-marker.png`;
+        const markerRes = await fetch(markerUrl);
+        if (markerRes.ok) {
+          const markerBuffer = await markerRes.arrayBuffer();
+          const uri = arrayBufferToDataUri(markerBuffer, "image/png");
+          setMarkerDataUri(uri);
+        }
       } catch (err: unknown) {
-        setFontStatus({
-          css: "failed",
-          binaryBytes: 0,
-          error: err instanceof Error ? err.message : String(err),
-        });
+        setError(err instanceof Error ? err.message : String(err));
+      } finally {
+        setLoading(false);
       }
     }
 
-    loadSampleFont();
+    initSpike();
   }, []);
+
+  const svgDocument = useMemo(() => {
+    if (!font) return null;
+    return buildSpikeSvg({
+      strokeWidth,
+      font,
+      markerDataUri,
+    });
+  }, [font, strokeWidth, markerDataUri]);
+
+  const handleExport = () => {
+    if (!svgDocument) return;
+    const svgString = serializeSvg(svgDocument);
+    const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `monthloom-rendering-spike-stroke-${strokeWidth}.svg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <main>
       <h1>Monthloom Rendering Spike</h1>
+
+      <div className="controls">
+        <label>
+          <strong>Stroke Width: </strong>
+          <select
+            value={strokeWidth}
+            onChange={(e) => setStrokeWidth(parseFloat(e.target.value))}
+          >
+            <option value={0.5}>0.5 px</option>
+            <option value={1}>1.0 px</option>
+            <option value={2}>2.0 px</option>
+          </select>
+        </label>
+
+        <button
+          className="primary"
+          onClick={handleExport}
+          disabled={!svgDocument}
+        >
+          Export SVG (Stroke {strokeWidth})
+        </button>
+      </div>
+
       <div className="diagnostics">
-        <div><strong>Font Metrics &amp; Loading:</strong></div>
-        <div>Font CSS: {fontStatus.css}</div>
-        <div>Font binary: {fontStatus.binaryBytes} bytes</div>
-        {fontStatus.unitsPerEm !== undefined && (
+        <div><strong>Runtime Diagnostics:</strong></div>
+        <div>SVG size: {SPIKE_VIEW_WIDTH} × {SPIKE_VIEW_HEIGHT}</div>
+        <div>viewBox: 0 0 {SPIKE_VIEW_WIDTH} {SPIKE_VIEW_HEIGHT}</div>
+        <div>stroke: {strokeWidth}px</div>
+        <div>font bytes: {fontBytesCount} bytes</div>
+        {font && (
           <>
-            <div>unitsPerEm: {fontStatus.unitsPerEm}</div>
-            <div>ascent: {fontStatus.ascent}</div>
-            <div>descent: {fontStatus.descent}</div>
+            <div>font unitsPerEm: {font.unitsPerEm}</div>
+            <div>font ascent: {font.ascent}</div>
+            <div>font descent: {font.descent}</div>
           </>
         )}
-        {fontStatus.error && <div style={{ color: "red" }}>Error: {fontStatus.error}</div>}
+        <div>image marker: {markerDataUri ? "embedded data URI" : "none"}</div>
+        {error && <div style={{ color: "red" }}>Error: {error}</div>}
       </div>
 
-      <div className="diagnostics">
-        <div><strong>Glyph Run Diagnostics:</strong></div>
-        {diagnostics.map((d) => (
-          <div key={d.text}>
-            "{d.text}" &rarr; {d.glyphCount} glyphs (IDs: [{d.glyphIds.join(", ")}]), advance: {d.advanceWidth}
-          </div>
-        ))}
-      </div>
+      {loading && <p>Loading Google Fonts &amp; resources...</p>}
 
-      <p>Rendering pipeline in progress...</p>
+      {svgDocument && (
+        <div className="preview-container">
+          <SvgPreview document={svgDocument} />
+        </div>
+      )}
     </main>
   );
 }
