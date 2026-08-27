@@ -1,0 +1,34 @@
+import type { MarkerTemplate, TextElementTemplate } from "./primitives";
+
+export type MainTemplate = Readonly<{
+  width: number;
+  height: number;
+
+  weekdayRow: Readonly<{
+    height: number;
+    weekday: TextElementTemplate;
+  }>;
+
+  dateGrid: Readonly<{
+    borderWidth: number;
+    borderColor: string;
+  }>;
+
+  date: TextElementTemplate;
+  chinaHolidayName: TextElementTemplate;
+  japanHolidayName: TextElementTemplate;
+
+  chinaMarkers: Readonly<{
+    holiday: MarkerTemplate;
+    workday: MarkerTemplate;
+  }>;
+
+  colors: Readonly<{
+    default: string;
+    sunday: string;
+    saturday: string;
+    japanHoliday: string;
+  }>;
+
+  adjacentMonthOpacity: number;
+}>;

@@ -94,4 +94,27 @@ describe("Template Primitives", () => {
 
     expect(localFont.source.type).toBe("local");
   });
+
+  it("provides valid DEFAULT_MAIN_TEMPLATE and DEFAULT_MINI_TEMPLATE", async () => {
+    const { DEFAULT_MAIN_TEMPLATE, DEFAULT_MINI_TEMPLATE } = await import("./defaults");
+
+    expect(DEFAULT_MAIN_TEMPLATE.width).toBeGreaterThan(0);
+    expect(DEFAULT_MAIN_TEMPLATE.height).toBeGreaterThan(0);
+    expect(DEFAULT_MAIN_TEMPLATE.weekdayRow.height).toBeGreaterThan(0);
+    expect(DEFAULT_MAIN_TEMPLATE.weekdayRow.height).toBeLessThan(DEFAULT_MAIN_TEMPLATE.height);
+    expect(DEFAULT_MAIN_TEMPLATE.dateGrid.borderWidth).toBeGreaterThanOrEqual(0);
+    expect(DEFAULT_MAIN_TEMPLATE.adjacentMonthOpacity).toBeGreaterThan(0);
+    expect(DEFAULT_MAIN_TEMPLATE.adjacentMonthOpacity).toBeLessThanOrEqual(1);
+
+    expect(DEFAULT_MINI_TEMPLATE.width).toBeGreaterThan(0);
+    expect(DEFAULT_MINI_TEMPLATE.height).toBeGreaterThan(0);
+    expect(DEFAULT_MINI_TEMPLATE.monthRow.height).toBeGreaterThan(0);
+    expect(DEFAULT_MINI_TEMPLATE.weekdayRow.height).toBeGreaterThan(0);
+    expect(
+      DEFAULT_MINI_TEMPLATE.monthRow.height + DEFAULT_MINI_TEMPLATE.weekdayRow.height,
+    ).toBeLessThan(DEFAULT_MINI_TEMPLATE.height);
+    expect(DEFAULT_MINI_TEMPLATE.markers.holidayDot.size).toBeGreaterThan(0);
+    expect(DEFAULT_MINI_TEMPLATE.markers.workdayDot.size).toBeGreaterThan(0);
+  });
 });
+

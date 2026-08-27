@@ -1,0 +1,143 @@
+import type { CalendarMonth } from "../../domain/calendar/types";
+import type { MiniTemplate } from "../../domain/template/miniTemplate";
+import type { Rect, RenderNode, RenderScene } from "../scene/types";
+import { applyOffset, getAnchorPoint } from "./anchors";
+import { resolveDateColor } from "./colorRules";
+import { createGridGeometry } from "./geometry";
+import type { TextMeasurer } from "./textMetrics";
+
+const DEFAULT_MINI_WEEKDAYS: readonly string[] = ["S", "M", "T", "W", "T", "F", "S"];
+
+export function layoutMini(args: {
+  calendar: CalendarMonth;
+  template: MiniTemplate;
+  textMeasurer: TextMeasurer;
+  weekdays?: readonly string[];
+}): RenderScene {
+  const { calendar, template, weekdays = DEFAULT_MINI_WEEKDAYS } = args;
+
+  const width = template.width;
+  const height = template.height;
+  const monthRowHeight = template.monthRow.height;
+  const weekdayRowHeight = template.weekdayRow.height;
+  const dateGridHeight = height - monthRowHeight - weekdayRowHeight;
+  const dateGridY = monthRowHeight + weekdayRowHeight;
+
+  const nodes: RenderNode[] = [];
+
+  // 1. Month Row (borderless)
+  const monthCellRect: Rect = {
+    x: 0,
+    y: 0,
+    width,
+    height: monthRowHeight,
+  };
+
+  const monthLabelText = `${calendar.year}-${calendar.month}`;
+  nodes.push({
+    kind: "text",
+    semanticId: "mini.monthLabel",
+    text: monthLabelText,
+    cell: monthCellRect,
+    position: template.monthRow.label.position,
+    typography: template.monthRow.label.typography,
+    color: template.monthRow.label.typography.color,
+    opacity: template.monthRow.label.typography.opacity,
+  });
+
+  // 2. Weekday Row (borderless)
+  const weekdayGrid = createGridGeometry({
+    x: 0,
+    y: monthRowHeight,
+    width,
+    height: weekdayRowHeight,
+    columns: 7,
+    rows: 1,
+  });
+
+  for (let c = 0; c < 7; c++) {
+    const text = weekdays[c] ?? "";
+    const cellRect = weekdayGrid.cells[c];
+    nodes.push({
+      kind: "text",
+      semanticId: "mini.weekday",
+      text,
+      cell: cellRect,
+      position: template.weekdayRow.weekday.position,
+      typography: template.weekdayRow.weekday.typography,
+      color: template.weekdayRow.weekday.typography.color,
+      opacity: template.weekdayRow.weekday.typography.opacity,
+    });
+  }
+
+  // 3. Date Grid (borderless)
+  const dateGrid = createGridGeometry({
+    x: 0,
+    y: dateGridY,
+    width,
+    height: dateGridHeight,
+    columns: 7,
+    rows: calendar.weekCount,
+  });
+
+  let cellIndex = 0;
+  for (let w = 0; w < calendar.weeks.length; w++) {
+    const week = calendar.weeks[w];
+    for (let d = 0; d < week.length; d++) {
+      const cellData = week[d];
+      const cellRect = dateGrid.cells[cellIndex];
+      cellIndex++;
+
+      // Adjacent month cells render nothing in Mini calendar
+      if (!cellData.inCurrentMonth) {
+        continue;
+      }
+
+      // Current month date
+      const dateColor = resolveDateColor(cellData, template.colors);
+      nodes.push({
+        kind: "text",
+        semanticId: "mini.date",
+        text: String(cellData.date.day),
+        cell: cellRect,
+        position: template.date.position,
+        typography: template.date.typography,
+        color: dateColor,
+        opacity: template.date.typography.opacity,
+      });
+
+      // China holiday dot / workday dot
+      if (cellData.holiday?.china?.type) {
+        const markerType = cellData.holiday.china.type;
+        const dotTemplate =
+          markerType === "holiday"
+            ? template.markers.holidayDot
+            : template.markers.workdayDot;
+
+        const semanticId =
+          markerType === "holiday" ? "mini.holidayDot" : "mini.workdayDot";
+
+        const dotCenter = applyOffset(
+          getAnchorPoint(cellRect, dotTemplate.position.anchor),
+          dotTemplate.position,
+        );
+
+        nodes.push({
+          kind: "dot",
+          semanticId,
+          cx: dotCenter.x,
+          cy: dotCenter.y,
+          radius: dotTemplate.size / 2,
+          color: dotTemplate.color,
+          opacity: dotTemplate.opacity,
+        });
+      }
+    }
+  }
+
+  return {
+    width,
+    height,
+    nodes,
+  };
+}

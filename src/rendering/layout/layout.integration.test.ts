@@ -1,0 +1,220 @@
+import { describe, expect, it } from "vitest";
+import { generateCalendarMonth } from "../../domain/calendar/generateCalendarMonth";
+import { parseChinaTimorHolidayYear } from "../../domain/holiday/adapters/chinaTimorHolidayAdapter";
+import { parseJapanHolidaysJp } from "../../domain/holiday/adapters/japanHolidaysJpAdapter";
+import { buildHolidayIndex } from "../../domain/holiday/holidayIndex";
+import { DEFAULT_MAIN_TEMPLATE, DEFAULT_MINI_TEMPLATE } from "../../domain/template/defaults";
+import type { MainTemplate } from "../../domain/template/mainTemplate";
+import { layoutMain } from "./mainLayout";
+import { layoutMini } from "./miniLayout";
+import type { TextMeasurer } from "./textMetrics";
+
+describe("Domain -> Layout Integration", () => {
+  const fakeMeasurer: TextMeasurer = {
+    measure: (text, typography) => ({
+      width: text.length * (typography.fontSize * 0.6),
+      ascent: typography.fontSize * 0.8,
+      descent: -typography.fontSize * 0.2,
+    }),
+  };
+
+  // Step 1: Build real adapter fixtures
+  const rawChinaData = {
+    code: 0,
+    holiday: {
+      "04-30": { holiday: false, name: "工作日", date: "2027-04-30" }, // adjacent previous
+      "05-01": { holiday: true, name: "劳动节", date: "2027-05-01" },
+      "05-05": { holiday: true, name: "端午节", date: "2027-05-05" }, // coexists with Japan
+      "05-08": { holiday: false, name: "补班", date: "2027-05-08" },
+      "06-05": { holiday: true, name: "芒种", date: "2027-06-05" }, // adjacent next
+    },
+  };
+
+  const rawJapanData = {
+    "2027-05-03": "憲法記念日",
+    "2027-05-04": "みどりの日",
+    "2027-05-05": "こどもの日", // coexists with China
+  };
+
+  const chinaDataset = parseChinaTimorHolidayYear(rawChinaData);
+  const japanDataset = parseJapanHolidaysJp(rawJapanData);
+  const holidayIndex = buildHolidayIndex([chinaDataset, japanDataset]);
+
+  // 2027-05 has 6 calendar weeks (May 1 is Saturday -> row 1 has only 1 day, May 31 is Monday -> row 6)
+  const calendar = generateCalendarMonth(2027, 5, holidayIndex);
+
+  it("converts CalendarMonth + MainTemplate into a full semantic Main RenderScene", () => {
+    expect(calendar.weekCount).toBe(6);
+
+    const scene = layoutMain({
+      calendar,
+      template: DEFAULT_MAIN_TEMPLATE,
+      textMeasurer: fakeMeasurer,
+    });
+
+    expect(scene.width).toBe(DEFAULT_MAIN_TEMPLATE.width);
+    expect(scene.height).toBe(DEFAULT_MAIN_TEMPLATE.height);
+
+    // 1. Weekday nodes
+    const weekdays = scene.nodes.filter((n) => n.semanticId === "main.weekday");
+    expect(weekdays).toHaveLength(7);
+
+    // 2. Grid border nodes (1 rect + 6 vertical + 5 horizontal = 12)
+    const gridNodes = scene.nodes.filter((n) => n.semanticId === "main.grid");
+    expect(gridNodes).toHaveLength(12);
+
+    // 3. Date nodes (42 total in a 6-week month)
+    const dateNodes = scene.nodes.filter((n) => n.semanticId === "main.date");
+    expect(dateNodes).toHaveLength(42);
+
+    // 4. China holiday & workday markers
+    const holidayMarkers = scene.nodes.filter(
+      (n) => n.semanticId === "main.chinaHolidayMarker",
+    );
+    // 05-01, 05-05, and adjacent 06-05
+    expect(holidayMarkers.length).toBeGreaterThanOrEqual(3);
+
+    const workdayMarkers = scene.nodes.filter(
+      (n) => n.semanticId === "main.chinaWorkdayMarker",
+    );
+    // 05-08 and adjacent 04-30
+    expect(workdayMarkers.length).toBeGreaterThanOrEqual(2);
+
+    // 5. China holiday names & Japan holiday names
+    const chinaHolidayNames = scene.nodes.filter(
+      (n) => n.semanticId === "main.chinaHolidayName",
+    );
+    expect(chinaHolidayNames.length).toBeGreaterThanOrEqual(2);
+
+    const japanHolidayNames = scene.nodes.filter(
+      (n) => n.semanticId === "main.japanHolidayName",
+    );
+    expect(japanHolidayNames).toHaveLength(3); // 05-03, 05-04, 05-05
+
+    // 6. Coexistence on 2027-05-05
+    const may5DateNode = scene.nodes.find(
+      (n) => n.semanticId === "main.date" && n.kind === "text" && n.text === "5",
+    );
+    expect(may5DateNode).toBeDefined();
+    if (may5DateNode && may5DateNode.kind === "text") {
+      expect(may5DateNode.color).toBe(DEFAULT_MAIN_TEMPLATE.colors.japanHoliday);
+    }
+
+    const may5ChinaName = scene.nodes.find(
+      (n) =>
+        n.semanticId === "main.chinaHolidayName" &&
+        n.kind === "text" &&
+        n.text === "端午节",
+    );
+    expect(may5ChinaName).toBeDefined();
+
+    const may5JapanName = scene.nodes.find(
+      (n) =>
+        n.semanticId === "main.japanHolidayName" &&
+        n.kind === "text" &&
+        n.text === "こどもの日",
+    );
+    expect(may5JapanName).toBeDefined();
+
+    // 7. Adjacent month opacity applies to adjacent date content
+    const apr30WorkdayMarker = scene.nodes.find(
+      (n) =>
+        n.semanticId === "main.chinaWorkdayMarker" &&
+        n.kind === "text" &&
+        n.cell.x === 500 && // Friday is column 5 -> x = 500
+        n.cell.y === 50, // Row 0 -> y = 50
+    );
+    expect(apr30WorkdayMarker).toBeDefined();
+    if (apr30WorkdayMarker && apr30WorkdayMarker.kind === "text") {
+      expect(apr30WorkdayMarker.opacity).toBe(
+        DEFAULT_MAIN_TEMPLATE.chinaMarkers.workday.type === "text"
+          ? DEFAULT_MAIN_TEMPLATE.chinaMarkers.workday.typography.opacity *
+              DEFAULT_MAIN_TEMPLATE.adjacentMonthOpacity
+          : 0.4,
+      );
+    }
+  });
+
+  it("converts CalendarMonth + MiniTemplate into a full semantic Mini RenderScene", () => {
+    const scene = layoutMini({
+      calendar,
+      template: DEFAULT_MINI_TEMPLATE,
+      textMeasurer: fakeMeasurer,
+    });
+
+    expect(scene.width).toBe(DEFAULT_MINI_TEMPLATE.width);
+    expect(scene.height).toBe(DEFAULT_MINI_TEMPLATE.height);
+
+    // 1. Month Label
+    const monthLabel = scene.nodes.find((n) => n.semanticId === "mini.monthLabel");
+    expect(monthLabel).toBeDefined();
+    if (monthLabel && monthLabel.kind === "text") {
+      expect(monthLabel.text).toBe("2027-5");
+    }
+
+    // 2. Weekdays
+    const weekdays = scene.nodes.filter((n) => n.semanticId === "mini.weekday");
+    expect(weekdays).toHaveLength(7);
+
+    // 3. Date nodes: ONLY 31 current-month days
+    const dateNodes = scene.nodes.filter((n) => n.semanticId === "mini.date");
+    expect(dateNodes).toHaveLength(31);
+
+    // 4. No Japan holiday name nodes
+    const holidayNames = scene.nodes.filter(
+      (n) =>
+        n.semanticId === ("main.japanHolidayName" as string) ||
+        n.semanticId === ("main.chinaHolidayName" as string),
+    );
+    expect(holidayNames).toHaveLength(0);
+
+    // 5. China dots: only for current month
+    // 05-01 (holiday), 05-05 (holiday) -> 2 holiday dots
+    // 05-08 (workday) -> 1 workday dot
+    const holidayDots = scene.nodes.filter((n) => n.semanticId === "mini.holidayDot");
+    expect(holidayDots).toHaveLength(2);
+
+    const workdayDots = scene.nodes.filter((n) => n.semanticId === "mini.workdayDot");
+    expect(workdayDots).toHaveLength(1);
+
+    // 6. 2027-05-05 date color is Japan holiday color
+    const may5DateNode = scene.nodes.find(
+      (n) => n.semanticId === "mini.date" && n.kind === "text" && n.text === "5",
+    );
+    expect(may5DateNode).toBeDefined();
+    if (may5DateNode && may5DateNode.kind === "text") {
+      expect(may5DateNode.color).toBe(DEFAULT_MINI_TEMPLATE.colors.japanHoliday);
+    }
+  });
+
+  it("applies template configuration changes uniformly across all cells without date-specific overrides", () => {
+    const customTemplate: MainTemplate = {
+      ...DEFAULT_MAIN_TEMPLATE,
+      date: {
+        position: { anchor: "center", offsetX: 4, offsetY: -4 },
+        typography: {
+          ...DEFAULT_MAIN_TEMPLATE.date.typography,
+          fontSize: 22,
+        },
+      },
+    };
+
+    const scene = layoutMain({
+      calendar,
+      template: customTemplate,
+      textMeasurer: fakeMeasurer,
+    });
+
+    const dateNodes = scene.nodes.filter((n) => n.semanticId === "main.date");
+    expect(dateNodes).toHaveLength(42);
+
+    for (const node of dateNodes) {
+      if (node.kind === "text") {
+        expect(node.position.anchor).toBe("center");
+        expect(node.position.offsetX).toBe(4);
+        expect(node.position.offsetY).toBe(-4);
+        expect(node.typography.fontSize).toBe(22);
+      }
+    }
+  });
+});
