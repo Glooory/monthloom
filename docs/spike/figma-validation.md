@@ -24,20 +24,20 @@
 
 | Stroke | Size | Grid | Text | Image | Result |
 | --- | --- | --- | --- | --- | --- |
-| 0.5 | 700 × 500 | Single-pass grid, stroke inset | Outlined upright paths (SC + JP) | Embedded PNG visible | Pending |
-| 1 | 700 × 500 | Single-pass grid, stroke inset | Outlined upright paths (SC + JP) | Embedded PNG visible | Pending |
-| 2 | 700 × 500 | Single-pass grid, stroke inset | Outlined upright paths (SC + JP) | Embedded PNG visible | Pending |
+| 0.5 | 700 × 500 | Single-pass grid, stroke inset | Outlined upright paths (SC + JP) | Embedded PNG visible | PASS |
+| 1 | 700 × 500 | Single-pass grid, stroke inset | Outlined upright paths (SC + JP) | Embedded PNG visible | PASS |
+| 2 | 700 × 500 | Single-pass grid, stroke inset | Outlined upright paths (SC + JP) | Embedded PNG visible | PASS |
 
 ## Text Position Checks
 
 | Text | Font | Browser | Figma | Result |
 | --- | --- | --- | --- | --- |
-| 1 | Noto Sans JP | Top-Left (Row 0, Col 0) | Match | Pending |
-| 31 | Noto Sans JP | Top-Left (Row 4, Col 3) | Match | Pending |
-| 春节 | Noto Sans SC | Center (Row 1, Col 2) | Match | Pending |
-| 假 | Noto Sans SC | Top-Right (Row 1, Col 2) | Match | Pending |
-| 憲法記念日 | Noto Sans JP | Bottom-Right (Row 2, Col 4) | Match | Pending |
-| 文化の日 | Noto Sans JP | Top-Left + Offset (Row 3, Col 1) | Match | Pending |
+| 1 | Noto Sans JP | Top-Left (Row 0, Col 0) | Match | PASS |
+| 31 | Noto Sans JP | Top-Left (Row 4, Col 3) | Match | PASS |
+| 春节 | Noto Sans SC | Center (Row 1, Col 2) | Match | PASS |
+| 假 | Noto Sans SC | Top-Right (Row 1, Col 2) | Match | PASS |
+| 憲法記念日 | Noto Sans JP | Bottom-Right (Row 2, Col 4) | Match | PASS |
+| 文化の日 | Noto Sans JP | Top-Left + Offset (Row 3, Col 1) | Match | PASS |
 
 ## Issues & Resolutions
 
@@ -50,5 +50,4 @@
 
 ## Decision
 
-- [ ] ACCEPT — proceed to formal Monthloom implementation
-- [ ] REJECT — revise technical design before proceeding
+[-] ACCEPT — proceed to formal Monthloom implementation
