@@ -69,6 +69,7 @@ export function buildGridBorderNodes(args: {
     height: bounds.height - strokeWidth,
     stroke: strokeColor,
     strokeWidth,
+    fill: "none",
   });
 
   const cellWidth = bounds.width / columns;

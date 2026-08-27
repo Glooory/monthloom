@@ -74,6 +74,7 @@ describe("Grid Geometry", () => {
       expect(outerRect.height).toBe(449);
       expect(outerRect.stroke).toBe("#E5E7EB");
       expect(outerRect.strokeWidth).toBe(1);
+      expect(outerRect.fill).toBe("none");
     }
 
     const lines = borderNodes.filter((n) => n.kind === "line");

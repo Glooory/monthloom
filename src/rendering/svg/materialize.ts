@@ -36,7 +36,7 @@ function materializeRect(node: SceneRectNode): SvgNode {
     height: node.height,
     stroke: node.stroke,
     strokeWidth: node.strokeWidth,
-    fill: node.fill,
+    fill: node.fill ?? "none",
   };
 }
 
