@@ -13,12 +13,14 @@ import {
 
 export type BuildSpikeSvgOptions = {
   strokeWidth: number;
-  font: SpikeFont;
+  fontJP: SpikeFont;
+  fontSC?: SpikeFont;
   markerDataUri?: string;
 };
 
 export function buildSpikeSvg(options: BuildSpikeSvgOptions): SvgDocument {
-  const { strokeWidth, font, markerDataUri } = options;
+  const { strokeWidth, fontJP, fontSC, markerDataUri } = options;
+  const chineseFont = fontSC ?? fontJP;
   const nodes: SvgNode[] = [];
 
   const colWidth = SPIKE_VIEW_WIDTH / 7;
@@ -34,7 +36,7 @@ export function buildSpikeSvg(options: BuildSpikeSvgOptions): SvgDocument {
 
     const run = layoutOutlinedText({
       text: day,
-      font,
+      font: fontJP,
       fontSize: 16,
       cell: {
         x: index * colWidth,
@@ -78,7 +80,7 @@ export function buildSpikeSvg(options: BuildSpikeSvgOptions): SvgDocument {
   // "1" in Cell (row 0, col 0)
   const num1Run = layoutOutlinedText({
     text: SAMPLE_TEXTS.singleDigit,
-    font,
+    font: fontJP,
     fontSize: 22,
     cell: getCell(0, 0),
     position: {
@@ -93,7 +95,7 @@ export function buildSpikeSvg(options: BuildSpikeSvgOptions): SvgDocument {
   // "31" in Cell (row 4, col 3)
   const num31Run = layoutOutlinedText({
     text: SAMPLE_TEXTS.doubleDigit,
-    font,
+    font: fontJP,
     fontSize: 22,
     cell: getCell(4, 3),
     position: {
@@ -106,10 +108,10 @@ export function buildSpikeSvg(options: BuildSpikeSvgOptions): SvgDocument {
   nodes.push(...num31Run.paths);
 
   // 4. CJK samples
-  // "春节" in Cell (row 1, col 2) - centered
+  // "春节" in Cell (row 1, col 2) - centered, using Chinese font
   const cjkSpringRun = layoutOutlinedText({
     text: SAMPLE_TEXTS.chinese,
-    font,
+    font: chineseFont,
     fontSize: 15,
     cell: getCell(1, 2),
     position: {
@@ -121,10 +123,10 @@ export function buildSpikeSvg(options: BuildSpikeSvgOptions): SvgDocument {
   });
   nodes.push(...cjkSpringRun.paths);
 
-  // "憲法記念日" in Cell (row 2, col 4) - bottom-right
+  // "憲法記念日" in Cell (row 2, col 4) - bottom-right, using Japanese font
   const cjkKenpouRun = layoutOutlinedText({
     text: SAMPLE_TEXTS.japanese,
-    font,
+    font: fontJP,
     fontSize: 12,
     cell: getCell(2, 4),
     position: {
@@ -136,10 +138,10 @@ export function buildSpikeSvg(options: BuildSpikeSvgOptions): SvgDocument {
   });
   nodes.push(...cjkKenpouRun.paths);
 
-  // "文化の日" in Cell (row 3, col 1) - top-left with offset
+  // "文化の日" in Cell (row 3, col 1) - top-left with offset, using Japanese font
   const cjkBunkaRun = layoutOutlinedText({
     text: SAMPLE_TEXTS.japaneseShort,
-    font,
+    font: fontJP,
     fontSize: 12,
     cell: getCell(3, 1),
     position: {
@@ -151,10 +153,10 @@ export function buildSpikeSvg(options: BuildSpikeSvgOptions): SvgDocument {
   });
   nodes.push(...cjkBunkaRun.paths);
 
-  // 5. Text Marker "假" in Cell (row 1, col 2) - top-right
+  // 5. Text Marker "假" in Cell (row 1, col 2) - top-right, using Chinese font
   const textMarkerRun = layoutOutlinedText({
     text: SAMPLE_TEXTS.marker,
-    font,
+    font: chineseFont,
     fontSize: 11,
     cell: getCell(1, 2),
     position: {

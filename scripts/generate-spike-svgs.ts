@@ -7,25 +7,37 @@ import { serializeSvg } from "../src/spike/svg/serializeSvg";
 import { WEEKDAYS, SAMPLE_TEXTS } from "../src/spike/testData";
 
 async function generate() {
-  const textSubset = [
+  const jpSubset = [
     ...WEEKDAYS,
     SAMPLE_TEXTS.singleDigit,
     SAMPLE_TEXTS.doubleDigit,
-    SAMPLE_TEXTS.chinese,
     SAMPLE_TEXTS.japanese,
     SAMPLE_TEXTS.japaneseShort,
+  ].join("");
+
+  const scSubset = [
+    SAMPLE_TEXTS.chinese,
     SAMPLE_TEXTS.marker,
   ].join("");
 
   console.log("Fetching font binary for Noto Sans JP...");
-  const fontBytes = await fetchGoogleFontBytes({
+  const jpBytes = await fetchGoogleFontBytes({
     family: "Noto Sans JP",
     weight: 400,
     style: "normal",
-    text: textSubset,
+    text: jpSubset,
   });
+  const fontJP = parseFont(jpBytes);
 
-  const font = parseFont(fontBytes);
+  console.log("Fetching font binary for Noto Sans SC...");
+  const scBytes = await fetchGoogleFontBytes({
+    family: "Noto Sans SC",
+    weight: 400,
+    style: "normal",
+    text: scSubset,
+  });
+  const fontSC = parseFont(scBytes);
+
   const markerBuf = fs.readFileSync("public/spike-marker.png");
   const markerDataUri = arrayBufferToDataUri(
     new Uint8Array(markerBuf.buffer, markerBuf.byteOffset, markerBuf.byteLength),
@@ -37,7 +49,7 @@ async function generate() {
   }
 
   for (const strokeWidth of [0.5, 1, 2]) {
-    const doc = buildSpikeSvg({ strokeWidth, font, markerDataUri });
+    const doc = buildSpikeSvg({ strokeWidth, fontJP, fontSC, markerDataUri });
     const svg = serializeSvg(doc);
     const filename = `docs/spike/monthloom-rendering-spike-stroke-${strokeWidth}.svg`;
     fs.writeFileSync(filename, svg);
