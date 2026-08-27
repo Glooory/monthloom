@@ -6,14 +6,16 @@ import {
   type ResolvedFontFace,
 } from "./fontkitEngine";
 import type { FontCatalog, FontTextRequirements } from "./types";
+import { persistentFontCache, PersistentFontCache } from "./fontCache";
 
 export async function resolveFontEngine(args: {
   catalog: FontCatalog;
   requirements: FontTextRequirements;
   assetResolver?: BinaryAssetResolver;
   fetchImpl?: typeof fetch;
+  fontCache?: PersistentFontCache;
 }): Promise<ResolvedFontEngine> {
-  const { catalog, requirements, assetResolver, fetchImpl } = args;
+  const { catalog, requirements, assetResolver, fetchImpl, fontCache = persistentFontCache } = args;
   const faces = new Map<string, ResolvedFontFace>();
   const byteCache = new Map<string, Promise<ArrayBuffer>>();
 
@@ -29,15 +31,34 @@ export async function resolveFontEngine(args: {
       const cacheKey = `google:${descriptor.family}:${descriptor.weight}:${descriptor.style}:${text}`;
       let cached = byteCache.get(cacheKey);
       if (!cached) {
-        cached = fetchGoogleFontBinary(
-          {
-            family: descriptor.family,
-            weight: descriptor.weight,
-            style: descriptor.style,
-            text,
-          },
-          fetchImpl,
-        );
+        cached = (async () => {
+          if (fontCache) {
+            const cachedBytes = await fontCache.get(cacheKey);
+            if (cachedBytes) return cachedBytes;
+          }
+          const fetchedBytes = await fetchGoogleFontBinary(
+            {
+              family: descriptor.family,
+              weight: descriptor.weight,
+              style: descriptor.style,
+              text,
+            },
+            fetchImpl,
+          );
+          if (fontCache) {
+            await fontCache.set(
+              cacheKey,
+              {
+                family: descriptor.family,
+                weight: descriptor.weight,
+                style: descriptor.style,
+                format: "ttf",
+              },
+              fetchedBytes,
+            );
+          }
+          return fetchedBytes;
+        })();
         byteCache.set(cacheKey, cached);
       }
       bytesPromise = cached;

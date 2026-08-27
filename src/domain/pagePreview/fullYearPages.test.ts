@@ -44,7 +44,7 @@ describe("getFullYearPageDefinitions", () => {
     });
   });
 
-  it("ensures preview-only February does not alter formal Phase 1 mini month scope", () => {
+  it("aligns page mini references with the 15 formal mini months", () => {
     const pages = getFullYearPageDefinitions(2027);
     const lastPage = pages[12];
     expect(lastPage.nextMiniMonth).toEqual({ year: 2028, month: 2 });
@@ -55,9 +55,10 @@ describe("getFullYearPageDefinitions", () => {
     expect(formalMainMonths[12]).toEqual({ year: 2028, month: 1 });
 
     const formalMiniMonths = getMiniMonths(2027);
-    expect(formalMiniMonths).toHaveLength(14);
+    expect(formalMiniMonths).toHaveLength(15);
     expect(formalMiniMonths[0]).toEqual({ year: 2026, month: 12 });
     expect(formalMiniMonths[13]).toEqual({ year: 2028, month: 1 });
-    expect(formalMiniMonths.some((m) => m.year === 2028 && m.month === 2)).toBe(false);
+    expect(formalMiniMonths[14]).toEqual({ year: 2028, month: 2 });
+    expect(formalMiniMonths.some((m) => m.year === 2028 && m.month === 2)).toBe(true);
   });
 });

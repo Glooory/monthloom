@@ -14,7 +14,7 @@
 - Last page = 2028-1: PASS/FAIL
 - Final Previous Mini = 2027-12: PASS/FAIL
 - Final Next Mini = 2028-2 (leap-year February): PASS/FAIL
-- Formal Mini sequence remains 14 (excludes 2028-2 from formal scope): PASS/FAIL
+- Formal Mini sequence is 15 (includes 2028-2 in formal scope): PASS/FAIL
 
 ## Page Layout
 
@@ -56,7 +56,7 @@
 - Adjacent Main holiday state renders: PASS/FAIL
 - Previous December Mini works (2026-12): PASS/FAIL
 - Next January Mini works (2028-1): PASS/FAIL
-- Preview-only 2028-2 holiday state renders: PASS/FAIL
+- Next February Mini works (2028-2): PASS/FAIL
 - Coverage diagnostic banner displays: PASS/FAIL
 
 ## Regression

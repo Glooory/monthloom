@@ -1,6 +1,6 @@
 # Monthloom Phase 5 — Full-year Page Preview Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Note (Superseded):** The original Preview-only February concept in this historical plan has been superseded by `docs/plans/2026-08-27-monthloom-mini-scope-correction-phase6-plan.md`. Y+1 February is now formal 15th Mini month.
 
 **Goal:** Build Monthloom's production 13-page full-year Preview that composes Background + Main + Previous Mini + Next Mini for every formal Main month, using configurable page layout, shared production SVG rendering, one preview-only next-year February Mini, layout warnings, and efficient reuse of calendars/fonts/Mini documents.
 

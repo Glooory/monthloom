@@ -1,6 +1,6 @@
 # Monthloom Phase 1 — Calendar Domain Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Note (Superseded):** The original 14 Mini / Preview-only February concept in this historical plan has been superseded by `docs/plans/2026-08-27-monthloom-mini-scope-correction-phase6-plan.md`. Formal Mini scope is now 15 months (including Y+1 February).
 
 **Goal:** Build Monthloom's production Calendar Domain: timezone-safe date primitives, 4/5/6-week calendar generation with adjacent dates, normalized China/Japan holiday models and adapters, holiday lookup, required rendering coverage calculation, and explicit coverage diagnostics.
 

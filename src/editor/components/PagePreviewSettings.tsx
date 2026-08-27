@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import type { PageLayout, PagePreviewConfig } from "../../domain/pagePreview/types";
-import type { MemoryAssetStore } from "../assets/memoryAssetStore";
+export interface AssetStoreLike {
+  addImage(file: File | Blob): Promise<string>;
+}
 
 export interface PagePreviewSettingsProps {
   config: PagePreviewConfig;
   onChange: (next: PagePreviewConfig) => void;
-  assetStore?: MemoryAssetStore;
+  assetStore?: AssetStoreLike;
 }
 
 interface NumberFieldProps {

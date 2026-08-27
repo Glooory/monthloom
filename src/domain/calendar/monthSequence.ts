@@ -21,14 +21,9 @@ export function getMiniMonths(targetYear: number): readonly YearMonth[] {
     months.push({ year: targetYear, month: m });
   }
   months.push({ year: targetYear + 1, month: 1 });
+  months.push({ year: targetYear + 1, month: 2 });
 
   return months;
-}
-
-export function getPreviewExtraMiniMonths(
-  targetYear: number,
-): readonly YearMonth[] {
-  return [{ year: targetYear + 1, month: 2 }];
 }
 
 export function calculateRequiredHolidayRange(targetYear: number): DateRange {
@@ -44,18 +39,8 @@ export function calculateRequiredHolidayRange(targetYear: number): DateRange {
     }
   }
 
-  // 2. Formal Mini months (first and last days)
+  // 2. Formal Mini months (first and last days, 15 months)
   for (const month of getMiniMonths(targetYear)) {
-    dates.push({ year: month.year, month: month.month, day: 1 });
-    dates.push({
-      year: month.year,
-      month: month.month,
-      day: daysInMonth(month.year, month.month),
-    });
-  }
-
-  // 3. Preview-only Mini months (first and last days)
-  for (const month of getPreviewExtraMiniMonths(targetYear)) {
     dates.push({ year: month.year, month: month.month, day: 1 });
     dates.push({
       year: month.year,

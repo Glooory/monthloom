@@ -34,7 +34,7 @@ export const PHASE5_FIXTURE_HOLIDAYS_MAP: HolidayIndex = new Map<string, Holiday
   // 2028-01 (Formal 13th month)
   ["2028-01-01", { china: { type: "holiday", name: "元旦" }, japan: { name: "元日" } }],
 
-  // 2028-02 (Preview-only leap-year February)
+  // 2028-02 (Formal 15th mini month, leap-year February)
   ["2028-02-11", { japan: { name: "建国記念の日" } }],
   ["2028-02-29", { china: { type: "holiday", name: "闰日" } }],
 ]);

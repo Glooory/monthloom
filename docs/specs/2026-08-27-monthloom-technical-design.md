@@ -1622,16 +1622,17 @@ mini/
   2028-1.svg
 ```
 
-Total:
+Total (Superseded: Originally 14 Mini / 27 files; Corrected to 15 Mini / 28 files):
 
 ```text
 13 Main SVG
-14 Mini SVG
+15 Mini SVG (including Y+1 February, e.g. 2028-2)
+= 28 Total SVG files
 ```
 
 Month numbers are not zero-padded.
 
-A 27-file ZIP does not require streaming ZIP architecture.
+A 28-file ZIP does not require streaming ZIP architecture.
 
 ---
 
@@ -2017,7 +2018,7 @@ Implement:
 Page layout
 Previous Mini
 Next Mini
-Temporary Y+1 February Mini
+Formal Y+1 February Mini (15th Mini)
 Background image
 Preview scaling
 Layout warnings
@@ -2040,7 +2041,7 @@ Schema version
 Migration
 Template import/export
 13 Main SVG export
-14 Mini SVG export
+15 Mini SVG export (28 Total SVG files)
 ZIP
 ```
 

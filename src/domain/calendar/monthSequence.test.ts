@@ -3,7 +3,6 @@ import {
   calculateRequiredHolidayRange,
   getMainMonths,
   getMiniMonths,
-  getPreviewExtraMiniMonths,
 } from "./monthSequence";
 
 describe("monthSequence", () => {
@@ -28,10 +27,10 @@ describe("monthSequence", () => {
     ]);
   });
 
-  it("returns the 14 formal Mini months for a target year", () => {
+  it("returns the 15 formal Mini months for a target year", () => {
     const miniMonths = getMiniMonths(2027);
 
-    expect(miniMonths).toHaveLength(14);
+    expect(miniMonths).toHaveLength(15);
     expect(miniMonths).toEqual([
       { year: 2026, month: 12 },
       { year: 2027, month: 1 },
@@ -47,13 +46,8 @@ describe("monthSequence", () => {
       { year: 2027, month: 11 },
       { year: 2027, month: 12 },
       { year: 2028, month: 1 },
+      { year: 2028, month: 2 },
     ]);
-  });
-
-  it("returns the Preview-only extra Mini months", () => {
-    const previewExtra = getPreviewExtraMiniMonths(2027);
-
-    expect(previewExtra).toEqual([{ year: 2028, month: 2 }]);
   });
 
   it("calculates the required holiday date range for 2027 (including leap-year 2028-02)", () => {
@@ -68,5 +62,16 @@ describe("monthSequence", () => {
       start: { year: 2025, month: 12, day: 1 },
       end: { year: 2027, month: 2, day: 28 },
     });
+  });
+
+  it("locks repository-wide formal scope: 13 Main + 15 Mini = 28 total with Y+1 February included", () => {
+    const mainMonths = getMainMonths(2027);
+    const miniMonths = getMiniMonths(2027);
+
+    expect(mainMonths).toHaveLength(13);
+    expect(miniMonths).toHaveLength(15);
+    expect(mainMonths.length + miniMonths.length).toBe(28);
+
+    expect(miniMonths.some((m) => m.year === 2028 && m.month === 2)).toBe(true);
   });
 });
