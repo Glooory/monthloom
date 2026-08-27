@@ -5,7 +5,7 @@ import type { Rect, RenderNode, RenderScene } from "../scene/types";
 import { applyOffset, getAnchorPoint } from "./anchors";
 import { resolveDateColor } from "./colorRules";
 import { buildGridBorderNodes, createGridGeometry } from "./geometry";
-import type { TextMeasurer } from "./textMetrics";
+import { positionText, type TextMeasurer } from "./textMetrics";
 
 const DEFAULT_MAIN_WEEKDAYS: readonly string[] = [
   "Sun",
@@ -50,7 +50,7 @@ export function layoutMain(args: {
   textMeasurer: TextMeasurer;
   weekdays?: readonly string[];
 }): RenderScene {
-  const { calendar, template, weekdays = DEFAULT_MAIN_WEEKDAYS } = args;
+  const { calendar, template, textMeasurer, weekdays = DEFAULT_MAIN_WEEKDAYS } = args;
 
   const width = template.width;
   const height = template.height;
@@ -72,10 +72,20 @@ export function layoutMain(args: {
   for (let c = 0; c < 7; c++) {
     const text = weekdays[c] ?? "";
     const cellRect = weekdayGrid.cells[c];
+    const pos = positionText({
+      text,
+      cell: cellRect,
+      position: template.weekdayRow.weekday.position,
+      typography: template.weekdayRow.weekday.typography,
+      measurer: textMeasurer,
+    });
     nodes.push({
       kind: "text",
       semanticId: "main.weekday",
       text,
+      originX: pos.originX,
+      baselineY: pos.baselineY,
+      metrics: pos.metrics,
       cell: cellRect,
       position: template.weekdayRow.weekday.position,
       typography: template.weekdayRow.weekday.typography,
@@ -125,11 +135,22 @@ export function layoutMain(args: {
         : template.adjacentMonthOpacity;
 
       // Date text
+      const dateText = String(cellData.date.day);
       const dateColor = resolveDateColor(cellData, template.colors);
+      const datePos = positionText({
+        text: dateText,
+        cell: cellRect,
+        position: template.date.position,
+        typography: template.date.typography,
+        measurer: textMeasurer,
+      });
       nodes.push({
         kind: "text",
         semanticId: "main.date",
-        text: String(cellData.date.day),
+        text: dateText,
+        originX: datePos.originX,
+        baselineY: datePos.baselineY,
+        metrics: datePos.metrics,
         cell: cellRect,
         position: template.date.position,
         typography: template.date.typography,
@@ -151,10 +172,20 @@ export function layoutMain(args: {
             : "main.chinaWorkdayMarker";
 
         if (markerTemplate.type === "text") {
+          const markerPos = positionText({
+            text: markerTemplate.value,
+            cell: cellRect,
+            position: markerTemplate.position,
+            typography: markerTemplate.typography,
+            measurer: textMeasurer,
+          });
           nodes.push({
             kind: "text",
             semanticId,
             text: markerTemplate.value,
+            originX: markerPos.originX,
+            baselineY: markerPos.baselineY,
+            metrics: markerPos.metrics,
             cell: cellRect,
             position: markerTemplate.position,
             typography: markerTemplate.typography,
@@ -178,10 +209,21 @@ export function layoutMain(args: {
 
       // China Holiday Name
       if (cellData.holiday?.china?.name) {
+        const chinaNameText = cellData.holiday.china.name;
+        const chinaNamePos = positionText({
+          text: chinaNameText,
+          cell: cellRect,
+          position: template.chinaHolidayName.position,
+          typography: template.chinaHolidayName.typography,
+          measurer: textMeasurer,
+        });
         nodes.push({
           kind: "text",
           semanticId: "main.chinaHolidayName",
-          text: cellData.holiday.china.name,
+          text: chinaNameText,
+          originX: chinaNamePos.originX,
+          baselineY: chinaNamePos.baselineY,
+          metrics: chinaNamePos.metrics,
           cell: cellRect,
           position: template.chinaHolidayName.position,
           typography: template.chinaHolidayName.typography,
@@ -192,10 +234,21 @@ export function layoutMain(args: {
 
       // Japan Holiday Name
       if (cellData.holiday?.japan?.name) {
+        const japanNameText = cellData.holiday.japan.name;
+        const japanNamePos = positionText({
+          text: japanNameText,
+          cell: cellRect,
+          position: template.japanHolidayName.position,
+          typography: template.japanHolidayName.typography,
+          measurer: textMeasurer,
+        });
         nodes.push({
           kind: "text",
           semanticId: "main.japanHolidayName",
-          text: cellData.holiday.japan.name,
+          text: japanNameText,
+          originX: japanNamePos.originX,
+          baselineY: japanNamePos.baselineY,
+          metrics: japanNamePos.metrics,
           cell: cellRect,
           position: template.japanHolidayName.position,
           typography: template.japanHolidayName.typography,
@@ -212,3 +265,4 @@ export function layoutMain(args: {
     nodes,
   };
 }
+

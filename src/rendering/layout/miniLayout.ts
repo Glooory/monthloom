@@ -4,7 +4,7 @@ import type { Rect, RenderNode, RenderScene } from "../scene/types";
 import { applyOffset, getAnchorPoint } from "./anchors";
 import { resolveDateColor } from "./colorRules";
 import { createGridGeometry } from "./geometry";
-import type { TextMeasurer } from "./textMetrics";
+import { positionText, type TextMeasurer } from "./textMetrics";
 
 const DEFAULT_MINI_WEEKDAYS: readonly string[] = ["S", "M", "T", "W", "T", "F", "S"];
 
@@ -14,7 +14,7 @@ export function layoutMini(args: {
   textMeasurer: TextMeasurer;
   weekdays?: readonly string[];
 }): RenderScene {
-  const { calendar, template, weekdays = DEFAULT_MINI_WEEKDAYS } = args;
+  const { calendar, template, textMeasurer, weekdays = DEFAULT_MINI_WEEKDAYS } = args;
 
   const width = template.width;
   const height = template.height;
@@ -34,10 +34,20 @@ export function layoutMini(args: {
   };
 
   const monthLabelText = `${calendar.year}-${calendar.month}`;
+  const monthLabelPos = positionText({
+    text: monthLabelText,
+    cell: monthCellRect,
+    position: template.monthRow.label.position,
+    typography: template.monthRow.label.typography,
+    measurer: textMeasurer,
+  });
   nodes.push({
     kind: "text",
     semanticId: "mini.monthLabel",
     text: monthLabelText,
+    originX: monthLabelPos.originX,
+    baselineY: monthLabelPos.baselineY,
+    metrics: monthLabelPos.metrics,
     cell: monthCellRect,
     position: template.monthRow.label.position,
     typography: template.monthRow.label.typography,
@@ -58,10 +68,20 @@ export function layoutMini(args: {
   for (let c = 0; c < 7; c++) {
     const text = weekdays[c] ?? "";
     const cellRect = weekdayGrid.cells[c];
+    const weekdayPos = positionText({
+      text,
+      cell: cellRect,
+      position: template.weekdayRow.weekday.position,
+      typography: template.weekdayRow.weekday.typography,
+      measurer: textMeasurer,
+    });
     nodes.push({
       kind: "text",
       semanticId: "mini.weekday",
       text,
+      originX: weekdayPos.originX,
+      baselineY: weekdayPos.baselineY,
+      metrics: weekdayPos.metrics,
       cell: cellRect,
       position: template.weekdayRow.weekday.position,
       typography: template.weekdayRow.weekday.typography,
@@ -94,11 +114,22 @@ export function layoutMini(args: {
       }
 
       // Current month date
+      const dateText = String(cellData.date.day);
       const dateColor = resolveDateColor(cellData, template.colors);
+      const datePos = positionText({
+        text: dateText,
+        cell: cellRect,
+        position: template.date.position,
+        typography: template.date.typography,
+        measurer: textMeasurer,
+      });
       nodes.push({
         kind: "text",
         semanticId: "mini.date",
-        text: String(cellData.date.day),
+        text: dateText,
+        originX: datePos.originX,
+        baselineY: datePos.baselineY,
+        metrics: datePos.metrics,
         cell: cellRect,
         position: template.date.position,
         typography: template.date.typography,
@@ -141,3 +172,4 @@ export function layoutMini(args: {
     nodes,
   };
 }
+

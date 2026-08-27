@@ -50,6 +50,17 @@ describe("Main Layout", () => {
     // Date nodes (all 35 cells in a 5-week month)
     const dateNodes = scene.nodes.filter((n) => n.semanticId === "main.date");
     expect(dateNodes).toHaveLength(35);
+    const firstDateNode = dateNodes[0];
+    expect(firstDateNode?.kind).toBe("text");
+    if (firstDateNode && firstDateNode.kind === "text") {
+      expect(typeof firstDateNode.originX).toBe("number");
+      expect(typeof firstDateNode.baselineY).toBe("number");
+      expect(firstDateNode.metrics).toEqual({
+        width: firstDateNode.text.length * (firstDateNode.typography.fontSize * 0.6),
+        ascent: firstDateNode.typography.fontSize * 0.8,
+        descent: -firstDateNode.typography.fontSize * 0.2,
+      });
+    }
   });
 
   it("applies adjacent-month opacity to dates and holiday elements but not to grid or weekdays", () => {

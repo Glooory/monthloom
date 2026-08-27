@@ -53,6 +53,17 @@ describe("Mini Layout", () => {
     // Date nodes: ONLY current month dates in 2027-02 (28 days in non-leap year Feb)
     const dateNodes = scene.nodes.filter((n) => n.semanticId === "mini.date");
     expect(dateNodes).toHaveLength(28);
+    const firstDateNode = dateNodes[0];
+    expect(firstDateNode?.kind).toBe("text");
+    if (firstDateNode && firstDateNode.kind === "text") {
+      expect(typeof firstDateNode.originX).toBe("number");
+      expect(typeof firstDateNode.baselineY).toBe("number");
+      expect(firstDateNode.metrics).toEqual({
+        width: firstDateNode.text.length * (firstDateNode.typography.fontSize * 0.6),
+        ascent: firstDateNode.typography.fontSize * 0.8,
+        descent: -firstDateNode.typography.fontSize * 0.2,
+      });
+    }
   });
 
   it("formats month label as YYYY-M without zero padding", () => {

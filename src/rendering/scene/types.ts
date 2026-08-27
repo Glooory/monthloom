@@ -25,8 +25,19 @@ export type SceneTextNode = Readonly<{
   kind: "text";
   semanticId: SemanticElementId;
   text: string;
+
+  originX: number;
+  baselineY: number;
+  metrics: Readonly<{
+    width: number;
+    ascent: number;
+    descent: number;
+  }>;
+
+  // Retained semantic positioning context for the later Editor.
   cell: Rect;
   position: Position;
+
   typography: Typography;
   color: string;
   opacity: number;
