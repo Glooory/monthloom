@@ -1,10 +1,11 @@
 import type { CalendarMonth } from "../../domain/calendar/types";
+import type { DayOfWeek } from "../../domain/date/types";
 import type { MainTemplate } from "../../domain/template/mainTemplate";
 import type { ImageMarkerTemplate } from "../../domain/template/primitives";
 import type { Rect, RenderNode, RenderScene } from "../scene/types";
 import { DEFAULT_MAIN_WEEKDAYS } from "../../domain/template/defaults";
 import { applyOffset, getAnchorPoint } from "./anchors";
-import { resolveDateColor } from "./colorRules";
+import { resolveDateColor, resolveWeekdayColor } from "./colorRules";
 import { buildGridBorderNodes, createGridGeometry } from "./geometry";
 import { positionText, type TextMeasurer } from "./textMetrics";
 
@@ -43,6 +44,7 @@ export function layoutMain(args: {
 }): RenderScene {
   const { calendar, template, textMeasurer } = args;
   const weekdays = args.weekdays ?? template.weekdayRow.labels ?? DEFAULT_MAIN_WEEKDAYS;
+  const startOfWeek = calendar.startOfWeek ?? template.weekdayRow.startOfWeek ?? 0;
 
   const width = template.width;
   const height = template.height;
@@ -51,7 +53,19 @@ export function layoutMain(args: {
 
   const nodes: RenderNode[] = [];
 
-  // 1. Weekday row (borderless)
+  // 1. Weekday row
+  if (template.weekdayRow.showBorder && (template.weekdayRow.borderWidth ?? 1) > 0) {
+    const weekdayBorderNodes = buildGridBorderNodes({
+      bounds: { x: 0, y: 0, width, height: weekdayRowHeight },
+      columns: 7,
+      rows: 1,
+      strokeWidth: template.weekdayRow.borderWidth ?? 1,
+      strokeColor: template.weekdayRow.borderColor ?? "#E5E7EB",
+      semanticId: "main.grid",
+    });
+    nodes.push(...weekdayBorderNodes);
+  }
+
   const weekdayGrid = createGridGeometry({
     x: 0,
     y: 0,
@@ -62,7 +76,8 @@ export function layoutMain(args: {
   });
 
   for (let c = 0; c < 7; c++) {
-    const text = weekdays[c] ?? "";
+    const dayOfWeek = (startOfWeek === 1 ? (c + 1) % 7 : c) as DayOfWeek;
+    const text = weekdays[dayOfWeek] ?? "";
     const cellRect = weekdayGrid.cells[c];
     const pos = positionText({
       text,
@@ -70,6 +85,11 @@ export function layoutMain(args: {
       position: template.weekdayRow.weekday.position,
       typography: template.weekdayRow.weekday.typography,
       measurer: textMeasurer,
+    });
+    const color = resolveWeekdayColor(dayOfWeek, {
+      default: template.weekdayRow.colors?.default ?? template.weekdayRow.weekday.typography.color,
+      sunday: template.weekdayRow.colors?.sunday ?? template.colors.sunday,
+      saturday: template.weekdayRow.colors?.saturday ?? template.colors.saturday,
     });
     nodes.push({
       kind: "text",
@@ -82,7 +102,7 @@ export function layoutMain(args: {
       cell: cellRect,
       position: template.weekdayRow.weekday.position,
       typography: template.weekdayRow.weekday.typography,
-      color: template.weekdayRow.weekday.typography.color,
+      color,
       opacity: template.weekdayRow.weekday.typography.opacity,
     });
   }

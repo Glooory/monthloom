@@ -36,6 +36,8 @@ export const BatchExportPanel: React.FC = () => {
       const calendarSet = createFormalExportCalendarSet({
         targetYear,
         holidayIndex,
+        mainStartOfWeek: document.mainTemplate.weekdayRow.startOfWeek ?? 0,
+        miniStartOfWeek: document.miniTemplate.weekdayRow.startOfWeek ?? 0,
       });
 
       // 3. Collect merged font requirements across all 28 calendars

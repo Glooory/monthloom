@@ -28,6 +28,10 @@ export const DEFAULT_MAIN_TEMPLATE: MainTemplate = {
   weekdayRow: {
     height: 50,
     labels: DEFAULT_MAIN_WEEKDAYS,
+    startOfWeek: 0,
+    showBorder: false,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
     weekday: {
       position: { anchor: "center", offsetX: 0, offsetY: 0 },
       typography: {
@@ -150,6 +154,10 @@ export const DEFAULT_MINI_TEMPLATE: MiniTemplate = {
   weekdayRow: {
     height: 30,
     labels: DEFAULT_MINI_WEEKDAYS,
+    startOfWeek: 0,
+    showBorder: false,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
     weekday: {
       position: { anchor: "center", offsetX: 0, offsetY: 0 },
       typography: {

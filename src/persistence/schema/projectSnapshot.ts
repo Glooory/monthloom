@@ -103,12 +103,23 @@ const dotMarkerStyleSchema = z.object({
   opacity: z.number().optional(),
 });
 
+const weekdayColorsSchema = z.object({
+  default: z.string().optional(),
+  sunday: z.string().optional(),
+  saturday: z.string().optional(),
+});
+
 const mainTemplateSchema = z.object({
   width: z.number(),
   height: z.number(),
   weekdayRow: z.object({
     height: z.number(),
     labels: z.array(z.string()).optional(),
+    startOfWeek: z.union([z.literal(0), z.literal(1)]).optional(),
+    showBorder: z.boolean().optional(),
+    borderWidth: z.number().optional(),
+    borderColor: z.string().optional(),
+    colors: weekdayColorsSchema.optional(),
     weekday: z.object({
       position: positionOffsetSchema,
       typography: typographySchema,
@@ -156,6 +167,11 @@ const miniTemplateSchema = z.object({
   weekdayRow: z.object({
     height: z.number(),
     labels: z.array(z.string()).optional(),
+    startOfWeek: z.union([z.literal(0), z.literal(1)]).optional(),
+    showBorder: z.boolean().optional(),
+    borderWidth: z.number().optional(),
+    borderColor: z.string().optional(),
+    colors: weekdayColorsSchema.optional(),
     weekday: z.object({
       position: positionOffsetSchema,
       typography: typographySchema,

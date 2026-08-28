@@ -103,6 +103,17 @@ export interface TranslationDictionary {
   };
   weekday: {
     sectionTitle: string;
+    startOfWeekHeading: string;
+    startOfWeekSunday: string;
+    startOfWeekMonday: string;
+    borderHeading: string;
+    showBorderLabel: string;
+    borderWidthLabel: string;
+    borderColorLabel: string;
+    colorsHeading: string;
+    defaultColorLabel: string;
+    sundayColorLabel: string;
+    saturdayColorLabel: string;
     quickPresetsLabel: string;
     presets: {
       shortEn: string;

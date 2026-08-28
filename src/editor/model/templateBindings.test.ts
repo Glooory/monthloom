@@ -15,6 +15,8 @@ import {
   setDotDetails,
   getWeekdayLabels,
   setWeekdayLabels,
+  getWeekdayRowSettings,
+  setWeekdayRowSettings,
 } from "./templateBindings";
 import type { PositionableSemanticId } from "./types";
 
@@ -149,5 +151,35 @@ describe("templateBindings", () => {
     const updatedMini = setWeekdayLabels(updatedMain, "mini", customMini);
     expect(getWeekdayLabels(updatedMini, "mini")).toEqual(customMini);
     expect(getWeekdayLabels(updatedMini, "main")).toEqual(customMain);
+  });
+
+  it("handles full weekday row settings get and set (startOfWeek, border, colors)", () => {
+    const doc = createDefaultEditorDocument();
+
+    const initialSettings = getWeekdayRowSettings(doc, "main");
+    expect(initialSettings.startOfWeek).toBe(0);
+    expect(initialSettings.showBorder).toBe(false);
+    expect(initialSettings.colors.sunday).toBe("#DC2626");
+
+    const updated = setWeekdayRowSettings(doc, "main", {
+      startOfWeek: 1,
+      showBorder: true,
+      borderWidth: 2,
+      borderColor: "#000000",
+      colors: {
+        default: "#111111",
+        sunday: "#E11D48",
+        saturday: "#2563EB",
+      },
+    });
+
+    const updatedSettings = getWeekdayRowSettings(updated, "main");
+    expect(updatedSettings.startOfWeek).toBe(1);
+    expect(updatedSettings.showBorder).toBe(true);
+    expect(updatedSettings.borderWidth).toBe(2);
+    expect(updatedSettings.borderColor).toBe("#000000");
+    expect(updatedSettings.colors.default).toBe("#111111");
+    expect(updatedSettings.colors.sunday).toBe("#E11D48");
+    expect(updatedSettings.colors.saturday).toBe("#2563EB");
   });
 });

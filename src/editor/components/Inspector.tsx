@@ -15,8 +15,8 @@ import {
   getDotDetails,
   setDotDetails,
   updateFontDescriptor,
-  getWeekdayLabels,
-  setWeekdayLabels,
+  getWeekdayRowSettings,
+  setWeekdayRowSettings,
 } from "../model/templateBindings";
 import { PositionInspector } from "./PositionInspector";
 import { TypographyInspector } from "./TypographyInspector";
@@ -94,7 +94,7 @@ export const Inspector: React.FC<InspectorProps> = ({
 
   const isWeekday = semanticId === "main.weekday" || semanticId === "mini.weekday";
   const weekdayType = semanticId.startsWith("main") ? "main" : "mini";
-  const weekdayLabels = isWeekday ? getWeekdayLabels(document, weekdayType) : undefined;
+  const weekdaySettings = isWeekday ? getWeekdayRowSettings(document, weekdayType) : undefined;
   const parsedIndex = isWeekday && instanceKey.includes(":") ? parseInt(instanceKey.split(":")[1], 10) : NaN;
   const selectedWeekdayIndex = Number.isNaN(parsedIndex) ? undefined : parsedIndex;
 
@@ -108,13 +108,13 @@ export const Inspector: React.FC<InspectorProps> = ({
         <p className="inspector-subtitle">{t.inspector.currentSelection}{instanceKey}</p>
       </div>
 
-      {/* Weekday Custom Labels */}
-      {isWeekday && weekdayLabels && (
+      {/* Weekday Row Settings */}
+      {isWeekday && weekdaySettings && (
         <WeekdayInspector
-          labels={weekdayLabels}
+          settings={weekdaySettings}
           selectedIndex={selectedWeekdayIndex}
-          onChangeLabels={(nextLabels) =>
-            onCommitDocument(setWeekdayLabels(document, weekdayType, nextLabels))
+          onChangeSettings={(nextSettings) =>
+            onCommitDocument(setWeekdayRowSettings(document, weekdayType, nextSettings))
           }
         />
       )}
@@ -164,7 +164,7 @@ export const Inspector: React.FC<InspectorProps> = ({
           }
         />
       )}
-      {!isDate && typography && (
+      {!isDate && !isWeekday && typography && (
         <ColorInspector
           color={typography.color}
           onChangeColor={(color) =>

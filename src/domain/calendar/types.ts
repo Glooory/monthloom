@@ -20,4 +20,5 @@ export type CalendarMonth = Readonly<{
   month: number;
   weekCount: 4 | 5 | 6;
   weeks: readonly CalendarWeek[];
+  startOfWeek?: 0 | 1;
 }>;

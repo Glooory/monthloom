@@ -126,6 +126,17 @@ export const zh: TranslationDictionary = {
   },
   weekday: {
     sectionTitle: "星期标题设置",
+    startOfWeekHeading: "星期起始列",
+    startOfWeekSunday: "周日开始 (Sunday)",
+    startOfWeekMonday: "周一开始 (Monday)",
+    borderHeading: "星期行边框",
+    showBorderLabel: "显示边框",
+    borderWidthLabel: "边框粗细",
+    borderColorLabel: "边框颜色",
+    colorsHeading: "星期文字颜色",
+    defaultColorLabel: "工作日 (默认)",
+    sundayColorLabel: "周日文字",
+    saturdayColorLabel: "周六文字",
     quickPresetsLabel: "常用预设",
     presets: {
       shortEn: "英文缩写",

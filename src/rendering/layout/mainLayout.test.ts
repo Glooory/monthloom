@@ -325,5 +325,70 @@ describe("Main Layout", () => {
       "六",
     ]);
   });
+
+  it("handles startOfWeek: 1 (Monday start) mapping columns and colors correctly", () => {
+    const calendar = generateCalendarMonth(2027, 1, undefined, 1);
+    const template: MainTemplate = {
+      ...DEFAULT_MAIN_TEMPLATE,
+      weekdayRow: {
+        ...DEFAULT_MAIN_TEMPLATE.weekdayRow,
+        startOfWeek: 1,
+        labels: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+        colors: {
+          default: "#333333",
+          sunday: "#FF0000",
+          saturday: "#0000FF",
+        },
+      },
+    };
+
+    const scene = layoutMain({
+      calendar,
+      template,
+      textMeasurer: fakeMeasurer,
+    });
+
+    const weekdays = scene.nodes.filter((n) => n.semanticId === "main.weekday");
+    // Column 0 is Mon, Col 5 is Sat, Col 6 is Sun
+    expect(weekdays.map((w) => (w.kind === "text" ? w.text : ""))).toEqual([
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat",
+      "Sun",
+    ]);
+
+    // Check weekday colors
+    if (weekdays[0].kind === "text") expect(weekdays[0].color).toBe("#333333"); // Mon
+    if (weekdays[5].kind === "text") expect(weekdays[5].color).toBe("#0000FF"); // Sat
+    if (weekdays[6].kind === "text") expect(weekdays[6].color).toBe("#FF0000"); // Sun
+  });
+
+  it("renders border lines for weekday row when showBorder is true", () => {
+    const calendar = generateCalendarMonth(2027, 1);
+    const template: MainTemplate = {
+      ...DEFAULT_MAIN_TEMPLATE,
+      weekdayRow: {
+        ...DEFAULT_MAIN_TEMPLATE.weekdayRow,
+        showBorder: true,
+        borderWidth: 2,
+        borderColor: "#999999",
+      },
+    };
+
+    const scene = layoutMain({
+      calendar,
+      template,
+      textMeasurer: fakeMeasurer,
+    });
+
+    const borderNodes = scene.nodes.filter(
+      (n) => n.semanticId === "main.grid" && (n.kind === "rect" || n.kind === "line"),
+    );
+    // 11 date grid borders + 7 weekday row borders = 18 border nodes
+    expect(borderNodes.length).toBeGreaterThan(11);
+  });
 });
 

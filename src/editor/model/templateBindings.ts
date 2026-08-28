@@ -471,6 +471,97 @@ export function updateFontDescriptor(
   };
 }
 
+export type WeekdayRowSettings = Readonly<{
+  labels: readonly string[];
+  startOfWeek: 0 | 1;
+  showBorder: boolean;
+  borderWidth: number;
+  borderColor: string;
+  colors: Readonly<{
+    default?: string;
+    sunday?: string;
+    saturday?: string;
+  }>;
+}>;
+
+export function getWeekdayRowSettings(
+  document: EditorDocument,
+  templateType: "main" | "mini",
+): WeekdayRowSettings {
+  const row = templateType === "main" ? document.mainTemplate.weekdayRow : document.miniTemplate.weekdayRow;
+  const templateColors = templateType === "main" ? document.mainTemplate.colors : document.miniTemplate.colors;
+  const defaultLabels = templateType === "main" ? DEFAULT_MAIN_WEEKDAYS : DEFAULT_MINI_WEEKDAYS;
+
+  return {
+    labels: row.labels ?? defaultLabels,
+    startOfWeek: row.startOfWeek ?? 0,
+    showBorder: row.showBorder ?? false,
+    borderWidth: row.borderWidth ?? 1,
+    borderColor: row.borderColor ?? "#E5E7EB",
+    colors: {
+      default: row.colors?.default ?? row.weekday.typography.color,
+      sunday: row.colors?.sunday ?? templateColors.sunday,
+      saturday: row.colors?.saturday ?? templateColors.saturday,
+    },
+  };
+}
+
+export function setWeekdayRowSettings(
+  document: EditorDocument,
+  templateType: "main" | "mini",
+  settings: Partial<WeekdayRowSettings>,
+): EditorDocument {
+  if (templateType === "main") {
+    const current = document.mainTemplate.weekdayRow;
+    const nextTypography = settings.colors?.default
+      ? { ...current.weekday.typography, color: settings.colors.default }
+      : current.weekday.typography;
+    return {
+      ...document,
+      mainTemplate: {
+        ...document.mainTemplate,
+        weekdayRow: {
+          ...current,
+          labels: settings.labels !== undefined ? settings.labels : current.labels,
+          startOfWeek: settings.startOfWeek !== undefined ? settings.startOfWeek : current.startOfWeek,
+          showBorder: settings.showBorder !== undefined ? settings.showBorder : current.showBorder,
+          borderWidth: settings.borderWidth !== undefined ? settings.borderWidth : current.borderWidth,
+          borderColor: settings.borderColor !== undefined ? settings.borderColor : current.borderColor,
+          colors: settings.colors !== undefined ? { ...current.colors, ...settings.colors } : current.colors,
+          weekday: {
+            ...current.weekday,
+            typography: nextTypography,
+          },
+        },
+      },
+    };
+  } else {
+    const current = document.miniTemplate.weekdayRow;
+    const nextTypography = settings.colors?.default
+      ? { ...current.weekday.typography, color: settings.colors.default }
+      : current.weekday.typography;
+    return {
+      ...document,
+      miniTemplate: {
+        ...document.miniTemplate,
+        weekdayRow: {
+          ...current,
+          labels: settings.labels !== undefined ? settings.labels : current.labels,
+          startOfWeek: settings.startOfWeek !== undefined ? settings.startOfWeek : current.startOfWeek,
+          showBorder: settings.showBorder !== undefined ? settings.showBorder : current.showBorder,
+          borderWidth: settings.borderWidth !== undefined ? settings.borderWidth : current.borderWidth,
+          borderColor: settings.borderColor !== undefined ? settings.borderColor : current.borderColor,
+          colors: settings.colors !== undefined ? { ...current.colors, ...settings.colors } : current.colors,
+          weekday: {
+            ...current.weekday,
+            typography: nextTypography,
+          },
+        },
+      },
+    };
+  }
+}
+
 export function getWeekdayLabels(
   document: EditorDocument,
   templateType: "main" | "mini",
@@ -487,28 +578,7 @@ export function setWeekdayLabels(
   templateType: "main" | "mini",
   labels: readonly string[],
 ): EditorDocument {
-  if (templateType === "main") {
-    return {
-      ...document,
-      mainTemplate: {
-        ...document.mainTemplate,
-        weekdayRow: {
-          ...document.mainTemplate.weekdayRow,
-          labels,
-        },
-      },
-    };
-  } else {
-    return {
-      ...document,
-      miniTemplate: {
-        ...document.miniTemplate,
-        weekdayRow: {
-          ...document.miniTemplate.weekdayRow,
-          labels,
-        },
-      },
-    };
-  }
+  return setWeekdayRowSettings(document, templateType, { labels });
 }
+
 

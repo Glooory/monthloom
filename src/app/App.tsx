@@ -4,6 +4,7 @@ import { TemplateEditor } from "../editor/components/TemplateEditor";
 import { PagePreviewSettings } from "../editor/components/PagePreviewSettings";
 import { FullYearPreview } from "../preview/fullYear/FullYearPreview";
 import { useDocumentStore } from "../editor/state/documentStore";
+import { useUiStore } from "../editor/state/uiStore";
 import { useWorkspaceStore } from "../workspace/state/workspaceStore";
 import { persistentAssetStore } from "../editor/assets/persistentAssetStore";
 import { WorkspaceControls } from "../workspace/components/WorkspaceControls";
@@ -49,10 +50,17 @@ export const App: React.FC = () => {
     japanHolidayDataset,
   });
 
+  const activeTemplate = useUiStore((state) => state.activeTemplate);
+  const currentStartOfWeek =
+    activeTemplate === "main"
+      ? document.mainTemplate.weekdayRow.startOfWeek ?? 0
+      : document.miniTemplate.weekdayRow.startOfWeek ?? 0;
+
   const editorCalendar = generateCalendarMonth(
     editingMonth.year,
     editingMonth.month,
     holidayIndex,
+    currentStartOfWeek,
   );
 
   const header = (

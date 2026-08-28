@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useI18n } from "../../shared/i18n/i18nStore";
+import type { WeekdayRowSettings } from "../model/templateBindings";
 
 export interface WeekdayInspectorProps {
-  labels: readonly string[];
+  settings: WeekdayRowSettings;
   selectedIndex?: number;
-  onChangeLabels: (nextLabels: readonly string[]) => void;
+  onChangeSettings: (nextSettings: Partial<WeekdayRowSettings>) => void;
 }
 
 export const WeekdayInspector: React.FC<WeekdayInspectorProps> = ({
-  labels,
+  settings,
   selectedIndex,
-  onChangeLabels,
+  onChangeSettings,
 }) => {
   const { t } = useI18n();
 
@@ -26,7 +27,7 @@ export const WeekdayInspector: React.FC<WeekdayInspectorProps> = ({
   ];
 
   const [draftLabels, setDraftLabels] = useState<string[]>(() => {
-    const list = [...labels];
+    const list = [...settings.labels];
     while (list.length < 7) {
       list.push("");
     }
@@ -34,23 +35,23 @@ export const WeekdayInspector: React.FC<WeekdayInspectorProps> = ({
   });
 
   useEffect(() => {
-    const list = [...labels];
+    const list = [...settings.labels];
     while (list.length < 7) {
       list.push("");
     }
     setDraftLabels(list.slice(0, 7));
-  }, [labels]);
+  }, [settings.labels]);
 
   const handleInputChange = (index: number, val: string) => {
     const updated = [...draftLabels];
     updated[index] = val;
     setDraftLabels(updated);
-    onChangeLabels(updated);
+    onChangeSettings({ labels: updated });
   };
 
   const handlePresetSelect = (presetValues: readonly string[]) => {
     setDraftLabels([...presetValues]);
-    onChangeLabels(presetValues);
+    onChangeSettings({ labels: presetValues });
   };
 
   const isCurrentPreset = (presetValues: readonly string[]) => {
@@ -60,11 +61,170 @@ export const WeekdayInspector: React.FC<WeekdayInspectorProps> = ({
 
   return (
     <div className="inspector-section weekday-inspector">
-      <div className="inspector-section-title">{t.weekday.sectionTitle}</div>
+      <div className="section-heading">{t.weekday.sectionTitle}</div>
 
-      {/* Preset Quick Actions */}
-      <div className="weekday-presets-container">
-        <label className="inspector-label" style={{ marginBottom: "6px", display: "block" }}>
+      {/* 1. Start of Week (Sunday vs Monday) */}
+      <div className="field-group">
+        <label className="field-label">{t.weekday.startOfWeekHeading}</label>
+        <div className="weekday-segmented-control">
+          <button
+            type="button"
+            className={`weekday-segment-btn ${settings.startOfWeek === 0 ? "active" : ""}`}
+            onClick={() => onChangeSettings({ startOfWeek: 0 })}
+          >
+            {t.weekday.startOfWeekSunday}
+          </button>
+          <button
+            type="button"
+            className={`weekday-segment-btn ${settings.startOfWeek === 1 ? "active" : ""}`}
+            onClick={() => onChangeSettings({ startOfWeek: 1 })}
+          >
+            {t.weekday.startOfWeekMonday}
+          </button>
+        </div>
+      </div>
+
+      {/* 2. Border settings */}
+      <div className="field-group" style={{ marginTop: "8px" }}>
+        <div className="field-row">
+          <label className="field-label">{t.weekday.showBorderLabel}</label>
+          <input
+            type="checkbox"
+            checked={settings.showBorder}
+            onChange={(e) => onChangeSettings({ showBorder: e.target.checked })}
+            style={{ width: "16px", height: "16px", cursor: "pointer" }}
+          />
+        </div>
+
+        {settings.showBorder && (
+          <div className="weekday-border-options">
+            <div className="field-row">
+              <label className="field-label">{t.weekday.borderWidthLabel}</label>
+              <input
+                type="number"
+                min="0.5"
+                max="10"
+                step="0.5"
+                className="field-input field-input-number"
+                value={settings.borderWidth}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  if (!Number.isNaN(val) && val > 0) {
+                    onChangeSettings({ borderWidth: val });
+                  }
+                }}
+              />
+            </div>
+            <div className="field-row">
+              <label className="field-label">{t.weekday.borderColorLabel}</label>
+              <div className="color-input-container">
+                <input
+                  type="color"
+                  className="color-picker-input"
+                  value={settings.borderColor}
+                  onChange={(e) => onChangeSettings({ borderColor: e.target.value })}
+                />
+                <input
+                  type="text"
+                  className="field-input"
+                  value={settings.borderColor}
+                  onChange={(e) => onChangeSettings({ borderColor: e.target.value })}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 3. Text Colors (Default, Sunday, Saturday) */}
+      <div className="field-group" style={{ marginTop: "8px" }}>
+        <label className="field-label" style={{ fontWeight: 600 }}>{t.weekday.colorsHeading}</label>
+        
+        {/* Default Color */}
+        <div className="field-row">
+          <label className="field-label">{t.weekday.defaultColorLabel}</label>
+          <div className="color-input-container">
+            <input
+              type="color"
+              className="color-picker-input"
+              value={settings.colors.default ?? "#374151"}
+              onChange={(e) =>
+                onChangeSettings({
+                  colors: { ...settings.colors, default: e.target.value },
+                })
+              }
+            />
+            <input
+              type="text"
+              className="field-input"
+              value={settings.colors.default ?? "#374151"}
+              onChange={(e) =>
+                onChangeSettings({
+                  colors: { ...settings.colors, default: e.target.value },
+                })
+              }
+            />
+          </div>
+        </div>
+
+        {/* Sunday Color */}
+        <div className="field-row">
+          <label className="field-label">{t.weekday.sundayColorLabel}</label>
+          <div className="color-input-container">
+            <input
+              type="color"
+              className="color-picker-input"
+              value={settings.colors.sunday ?? "#DC2626"}
+              onChange={(e) =>
+                onChangeSettings({
+                  colors: { ...settings.colors, sunday: e.target.value },
+                })
+              }
+            />
+            <input
+              type="text"
+              className="field-input"
+              value={settings.colors.sunday ?? "#DC2626"}
+              onChange={(e) =>
+                onChangeSettings({
+                  colors: { ...settings.colors, sunday: e.target.value },
+                })
+              }
+            />
+          </div>
+        </div>
+
+        {/* Saturday Color */}
+        <div className="field-row">
+          <label className="field-label">{t.weekday.saturdayColorLabel}</label>
+          <div className="color-input-container">
+            <input
+              type="color"
+              className="color-picker-input"
+              value={settings.colors.saturday ?? "#2563EB"}
+              onChange={(e) =>
+                onChangeSettings({
+                  colors: { ...settings.colors, saturday: e.target.value },
+                })
+              }
+            />
+            <input
+              type="text"
+              className="field-input"
+              value={settings.colors.saturday ?? "#2563EB"}
+              onChange={(e) =>
+                onChangeSettings({
+                  colors: { ...settings.colors, saturday: e.target.value },
+                })
+              }
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Preset Quick Actions */}
+      <div className="weekday-presets-container" style={{ marginTop: "8px" }}>
+        <label className="field-label" style={{ marginBottom: "6px", display: "block" }}>
           {t.weekday.quickPresetsLabel}
         </label>
         <div className="weekday-presets-grid">
@@ -86,14 +246,17 @@ export const WeekdayInspector: React.FC<WeekdayInspectorProps> = ({
         </div>
       </div>
 
-      {/* 7 Day Inputs */}
-      <div className="weekday-inputs-container">
-        <label className="inspector-label" style={{ marginBottom: "6px", display: "block" }}>
+      {/* 5. 7 Day Inputs */}
+      <div className="weekday-inputs-container" style={{ marginTop: "8px" }}>
+        <label className="field-label" style={{ marginBottom: "6px", display: "block" }}>
           {t.weekday.columnsLabel}
         </label>
         <div className="weekday-inputs-grid">
           {t.weekday.dayLabels.map((dayName, idx) => {
-            const isHighlighted = selectedIndex === idx;
+            // In Sunday-start: idx matches column idx
+            // In Monday-start: column idx 0 is Mon (idx 1), column idx 6 is Sun (idx 0)
+            const colIndex = settings.startOfWeek === 1 ? (idx === 0 ? 6 : idx - 1) : idx;
+            const isHighlighted = selectedIndex === colIndex;
             return (
               <div
                 key={idx}
@@ -102,7 +265,7 @@ export const WeekdayInspector: React.FC<WeekdayInspectorProps> = ({
                 <span className="weekday-col-header">{dayName}</span>
                 <input
                   type="text"
-                  className="inspector-input weekday-col-input"
+                  className="field-input weekday-col-input"
                   value={draftLabels[idx] ?? ""}
                   onChange={(e) => handleInputChange(idx, e.target.value)}
                   placeholder={t.weekday.columnPlaceholder(idx)}

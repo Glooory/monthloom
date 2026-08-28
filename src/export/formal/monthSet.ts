@@ -7,8 +7,10 @@ import type { FormalExportCalendarSet } from "./types";
 export function createFormalExportCalendarSet(args: {
   targetYear: number;
   holidayIndex?: HolidayIndex;
+  mainStartOfWeek?: 0 | 1;
+  miniStartOfWeek?: 0 | 1;
 }): FormalExportCalendarSet {
-  const { targetYear, holidayIndex } = args;
+  const { targetYear, holidayIndex, mainStartOfWeek = 0, miniStartOfWeek = 0 } = args;
 
   const mainCalendars = new Map<string, CalendarMonth>();
   const miniCalendars = new Map<string, CalendarMonth>();
@@ -18,7 +20,7 @@ export function createFormalExportCalendarSet(args: {
     const key = `${ym.year}-${ym.month}`;
     mainCalendars.set(
       key,
-      generateCalendarMonth(ym.year, ym.month, holidayIndex),
+      generateCalendarMonth(ym.year, ym.month, holidayIndex, mainStartOfWeek),
     );
   }
 
@@ -27,7 +29,7 @@ export function createFormalExportCalendarSet(args: {
     const key = `${ym.year}-${ym.month}`;
     miniCalendars.set(
       key,
-      generateCalendarMonth(ym.year, ym.month, holidayIndex),
+      generateCalendarMonth(ym.year, ym.month, holidayIndex, miniStartOfWeek),
     );
   }
 

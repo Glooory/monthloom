@@ -62,10 +62,18 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
   const currentFontKeyRef = useRef<string>("");
   const generationIdRef = useRef(0);
 
+  const mainStartOfWeek = document.mainTemplate.weekdayRow.startOfWeek ?? 0;
+  const miniStartOfWeek = document.miniTemplate.weekdayRow.startOfWeek ?? 0;
+
   // 1. Calendar set (13 pages, 13 main, 15 mini)
   const calendarSet = useMemo(() => {
-    return createFullYearCalendarSet({ targetYear, holidayIndex });
-  }, [targetYear, holidayIndex]);
+    return createFullYearCalendarSet({
+      targetYear,
+      holidayIndex,
+      mainStartOfWeek,
+      miniStartOfWeek,
+    });
+  }, [targetYear, holidayIndex, mainStartOfWeek, miniStartOfWeek]);
 
   // 2. Full-year merged font requirements
   const fontRequirements = useMemo(() => {

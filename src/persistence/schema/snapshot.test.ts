@@ -107,4 +107,46 @@ describe("Snapshot validation", () => {
       "Sa",
     ]);
   });
+
+  it("validates ProjectSnapshot with full weekday row settings", () => {
+    const docWithFullWeekdaySettings = {
+      ...defaultDoc,
+      mainTemplate: {
+        ...defaultDoc.mainTemplate,
+        weekdayRow: {
+          ...defaultDoc.mainTemplate.weekdayRow,
+          labels: ["日", "一", "二", "三", "四", "五", "六"],
+          startOfWeek: 1 as const,
+          showBorder: true,
+          borderWidth: 2,
+          borderColor: "#333333",
+          colors: {
+            default: "#222222",
+            sunday: "#FF0000",
+            saturday: "#0000FF",
+          },
+        },
+      },
+    };
+
+    const snapshot: ProjectSnapshotV1 = {
+      version: 1,
+      type: "project",
+      id: "project-full-weekday",
+      name: "Full Weekday Settings Calendar",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      targetYear: 2027,
+      chinaHolidayDataset: null,
+      japanHolidayDataset: null,
+      document: docWithFullWeekdaySettings,
+    };
+
+    const validated = validateProjectSnapshot(snapshot);
+    expect(validated.document.mainTemplate.weekdayRow.startOfWeek).toBe(1);
+    expect(validated.document.mainTemplate.weekdayRow.showBorder).toBe(true);
+    expect(validated.document.mainTemplate.weekdayRow.borderWidth).toBe(2);
+    expect(validated.document.mainTemplate.weekdayRow.borderColor).toBe("#333333");
+    expect(validated.document.mainTemplate.weekdayRow.colors?.sunday).toBe("#FF0000");
+  });
 });

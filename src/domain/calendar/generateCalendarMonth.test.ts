@@ -98,6 +98,24 @@ describe("generateCalendarMonth", () => {
     });
   });
 
+  it("supports startOfWeek: 1 (Monday start) correctly", () => {
+    // 2027-02-01 is Monday
+    const monthMon = generateCalendarMonth(2027, 2, undefined, 1);
+    expect(monthMon.startOfWeek).toBe(1);
+    // 2027-02-01 is Monday, so col 0 of week 0 is 2027-02-01
+    expect(monthMon.weeks[0][0].date).toEqual({ year: 2027, month: 2, day: 1 });
+    expect(monthMon.weeks[0][0].dayOfWeek).toBe(1);
+    expect(monthMon.weeks[0][0].inCurrentMonth).toBe(true);
+
+    // 2027-01-01 is Friday
+    // With startOfWeek = 1 (Mon start): offset from Mon to Fri is 4 days (Mon Dec 28, Tue 29, Wed 30, Thu 31)
+    const monthJan = generateCalendarMonth(2027, 1, undefined, 1);
+    expect(monthJan.weeks[0][0].date).toEqual({ year: 2026, month: 12, day: 28 });
+    expect(monthJan.weeks[0][0].dayOfWeek).toBe(1);
+    expect(monthJan.weeks[0][4].date).toEqual({ year: 2027, month: 1, day: 1 });
+    expect(monthJan.weeks[0][4].dayOfWeek).toBe(5);
+  });
+
   it("rejects invalid month numbers", () => {
     expect(() => generateCalendarMonth(2027, 0)).toThrow(RangeError);
     expect(() => generateCalendarMonth(2027, 13)).toThrow(RangeError);
