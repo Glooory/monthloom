@@ -2,74 +2,87 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace the fixed China/Japan holiday slots with a global SSOT holiday library, accumulating multi-year data and driving ordered, template-owned holiday layers across Main, Mini, preview, and formal export.
+**Goal:** Replace fixed China/Japan holiday slots with a global SSOT holiday library in IndexedDB, accumulating multi-year data and driving ordered, template-owned holiday layers across Main, Mini, gallery preview, and formal SVG export.
 
-**Architecture:** IndexedDB stores long-lived holiday calendars, source baselines, manual overrides, and coverage independently from projects. `EditorDocument.holidayLayers` stores ordered visual rules that reference global calendar IDs; a pure resolver combines effective records and ordered layers into the single `HolidayIndex` consumed by calendar generation and rendering.
+**Architecture:**
+- **Global Holiday Library (SSOT):** IndexedDB stores long-lived holiday calendars, source baselines, manual overrides, coverage ranges, and synchronization states independently from projects.
+- **Template-Owned Holiday Layers:** `EditorDocument.holidayLayers` stores ordered visual rules referencing global calendar IDs; Main owns name, holiday marker, workday marker, and date colors; Mini owns holiday marker, workday marker, and date colors (Mini never renders holiday names).
+- **Pure Centralized Resolver:** `resolveHolidayIndex({ library, layers })` resolves source baselines + manual overrides for referenced calendars and generates the single `HolidayIndex` consumed by calendar generation, geometry layout, font requirements, and SVG materialization.
+- **Atomic Persistence & Bundles:** `.monthloom` project bundles automatically include the complete global holiday library snapshot and merge non-destructively on import; template bundles contain only layer design without holiday records.
 
 **Tech Stack:** React 18, TypeScript 5.6, Zustand 5, Zundo, Dexie 4, Zod 4, Vitest 2, Testing Library, JSZip, Vite 6
 
 **Spec:** `docs/superpowers/specs/2026-08-28-holiday-library-and-layers-design.md`
 
-## Global Constraints
+---
 
-- Preserve the formal output invariant: 13 Main + 15 Mini = exactly 28 SVG files.
-- Use `LocalDate` and UTC date helpers only; never introduce browser-local date arithmetic.
-- Keep `layoutMain` and `layoutMini` as the only geometry authorities; preview and export consume identical scenes/documents.
-- The global holiday library is the runtime SSOT; projects do not hold holiday-record copies.
-- Template snapshots include holiday-layer design but no holiday records.
-- Project bundles include the complete global holiday library automatically; template bundles do not.
-- Manual holiday overrides always beat synchronized or imported baselines.
-- Later holiday layers override earlier layers only for date text color; all enabled names and markers remain visible.
-- Mini never renders holiday names.
-- Do not add overlap detection or overlap warnings.
-- Do not implement backward compatibility, legacy snapshot readers, database migrations, or dual-write compatibility logic.
-- Do not add dependencies.
-- Unit-test domain, persistence, rendering, and shared behavior; do not add tests for visual-only UI details.
-- Do not launch a browser for validation unless the user explicitly requests it.
+## Global Constraints & Invariants (Do Not Violate)
+
+1. **Formal Output Invariant**: For target year `Y`, formal export must package exactly 28 SVGs (13 Main + 15 Mini). `getMainMonths(Y)` and `getMiniMonths(Y)` in `src/domain/calendar/monthSequence.ts` remain the single source of truth.
+2. **Date Primitives & UTC Arithmetic**: Always use `LocalDate` (`{ year, month, day }`) and UTC date helpers (`Date.UTC`, `getUTCFullYear`, `compareDate`, `addDays`, etc.). Never use browser-local `new Date(year, month, day)`.
+3. **Geometry & Layout Authority**: `layoutMain` and `layoutMini` compute all geometry and scene nodes. SVG materializers, serializers, previews, and batch export consume identical `SvgDocument` / `RenderScene` structures and must never re-calculate layout or re-interpret holiday precedence.
+4. **Global Library SSOT**: The global library is the runtime SSOT; projects and templates hold no holiday-record copies. Modifying the global library immediately affects all projects referencing those calendars.
+5. **Precedence Rules**:
+   - **Baseline vs. Manual Overrides**: Manual overrides (`upsert` / `delete`) strictly override synchronized/imported source baselines. Subsequent sync or import must not overwrite manual overrides.
+   - **Date Text Color vs. Name/Markers**: Later holiday layers in the template layer list override earlier layers **only** for date text colors. Enabled holiday names and markers from all layers coexist and are rendered simultaneously without overlap detection or warnings.
+6. **Mini Calendar Scope**: Mini calendars never display holiday names or name settings. Mini supports holiday markers, workday markers, and date text colors.
+7. **Clean Development Transition**: Do not implement backward compatibility, legacy snapshot migration, dual-write logic, or legacy fallbacks. All tests, fixtures, and schemas adopt the new model directly. Local database is cleanly switched to `MonthloomDB-v2`.
 
 ---
 
-## File Structure
+## File Structure & Module Map
 
 ### New domain modules
-
-- `src/domain/holiday/effectiveRecords.ts` — resolve source baselines plus manual overrides.
-- `src/domain/holiday/resolveHolidayIndex.ts` — combine effective records with ordered layers.
-- `src/domain/holiday/monthloomJson.ts` — validate the public per-calendar interchange format.
-- `src/domain/template/holidayLayer.ts` — holiday-layer visual types and immutable helpers.
+- `src/domain/holiday/types.ts` — Canonical types for calendars, records, overrides, coverage, sync states, library snapshot, and effective records.
+- `src/domain/holiday/effectiveRecords.ts` — Pure resolver combining base records and manual overrides per calendar.
+- `src/domain/holiday/effectiveRecords.test.ts` — Unit tests for baseline/override precedence, deletions, and provenance.
+- `src/domain/holiday/resolveHolidayIndex.ts` — Pure resolver combining effective records and ordered template layers into `HolidayIndex`.
+- `src/domain/holiday/monthloomJson.ts` — Strict parser and serializer for the public single-calendar exchange JSON (`monthloom-holidays` v1).
+- `src/domain/holiday/monthloomJson.test.ts` — Validation and duplicate-detection tests for Monthloom JSON.
+- `src/domain/template/holidayLayer.ts` — Holiday-layer visual types, default layer builders, and immutable manipulation helpers.
+- `src/domain/template/holidayLayer.test.ts` — Unit tests for 1:1 calendar-layer constraints, ordering, and layer mutations.
 
 ### New persistence and application modules
-
-- `src/persistence/db/holidayLibraryRepository.ts` — global library repository and atomic base/override writes.
-- `src/persistence/schema/holidayLibrarySchema.ts` — Zod schemas for stored library snapshots.
-- `src/workspace/holiday/holidayLibraryOperations.ts` — synchronization, import, manual edit, and restore workflows.
-- `src/workspace/state/holidayLibraryStore.ts` — hydrated global library state for React consumers.
+- `src/persistence/db/holidayLibraryRepository.ts` — Dexie repository for atomic base updates, overrides, coverage, sync states, and snapshot queries.
+- `src/persistence/db/holidayLibraryRepository.test.ts` — Integration tests for atomic multi-table updates and rollback.
+- `src/persistence/schema/holidayLibrarySchema.ts` — Zod schemas for the global holiday library snapshot.
+- `src/workspace/holiday/holidayLibraryOperations.ts` — Workflows for remote sync, provider/Monthloom import, manual edits, date ranges, deletion checks, and coverage confirmation.
+- `src/workspace/holiday/holidayLibraryOperations.test.ts` — Tests for synchronization, manual conflict protection, and operations.
+- `src/workspace/state/holidayLibraryStore.ts` — Hydrated Zustand store for global holiday library state.
+- `src/workspace/state/holidayLibraryStore.test.ts` — Tests for library hydration, refreshing, and status transitions.
 
 ### New UI modules
+- `src/workspace/components/HolidayLibraryPanel.tsx` — Global holiday library management panel (card/view).
+- `src/workspace/components/HolidayCalendarList.tsx` — Left sidebar listing built-in and custom calendars with coverage badges.
+- `src/workspace/components/HolidayCalendarDetail.tsx` — Right detail view with year selector, record table, sync/import actions, and manual entry buttons.
+- `src/workspace/components/HolidayRecordDialog.tsx` — Modal form for adding/editing single dates or continuous date ranges.
+- `src/workspace/components/holiday-library.css` — Scoped styling for holiday library manager.
+- `src/editor/model/holidaySemanticId.ts` — Dynamic semantic ID construction and parsing (`main.holiday.${layerId}.${element}`, etc.).
+- `src/editor/model/holidaySemanticId.test.ts` — Tests for round-trip parsing and validation of dynamic semantic IDs.
+- `src/editor/components/HolidayLayerTree.tsx` — Ordered expandable holiday layer list in template editor sidebar.
+- `src/editor/components/HolidayLayerInspector.tsx` — Main and Mini layer style inspector.
+- `src/editor/components/HolidayDateColorInspector.tsx` — Holiday and workday date text color inspector.
 
-- `src/workspace/components/HolidayLibraryPanel.tsx` — global library entry and calendar list.
-- `src/workspace/components/HolidayCalendarList.tsx` — selectable built-in/custom calendar list.
-- `src/workspace/components/HolidayCalendarDetail.tsx` — year-filtered records and actions.
-- `src/workspace/components/HolidayRecordDialog.tsx` — manual add/edit form.
-- `src/editor/model/holidaySemanticId.ts` — dynamic semantic-ID construction and parsing.
-- `src/editor/components/HolidayLayerTree.tsx` — ordered expandable holiday layers.
-- `src/editor/components/HolidayLayerInspector.tsx` — Main/Mini layer style editor.
-- `src/editor/components/HolidayDateColorInspector.tsx` — per-type date-color settings.
-
-### Existing modules with major changes
-
-- `src/domain/holiday/types.ts`, adapters, coverage, and holiday-index tests.
-- `src/domain/template/mainTemplate.ts`, `miniTemplate.ts`, `defaults.ts`, and editor document types.
-- `src/rendering/layout/mainLayout.ts`, `miniLayout.ts`, `colorRules.ts`, and scene semantic IDs.
-- `src/resources/fonts/textRequirements.ts` and editor/preview font requirement callers.
-- `src/editor/model/templateBindings.ts`, selection, dragging, inspector, and layer tree.
-- `src/persistence/db/monthloomDb.ts`, snapshot schemas, bundle import/export, and asset traversal.
-- `src/workspace/state/workspaceStore.ts`, `src/app/App.tsx`, preview, and formal export entry points.
-- `src/shared/i18n/types.ts` and both locale dictionaries.
+### Existing modules with major updates
+- `src/domain/holiday/coverage.ts` & `coverage.test.ts` — Generic coverage diagnostics across target year ranges (`Y-1 Dec` to `Y+1 Feb`).
+- `src/domain/template/mainTemplate.ts`, `miniTemplate.ts`, `defaults.ts` — Removal of fixed China/Japan slots; clean `CalendarBaseColors`.
+- `src/rendering/layout/mainLayout.ts`, `miniLayout.ts`, `colorRules.ts` — Dynamic layer-driven rendering of names, markers, and date colors.
+- `src/resources/fonts/textRequirements.ts` & `textRequirements.test.ts` — Dynamic text collection from enabled holiday layers.
+- `src/editor/model/templateBindings.ts`, `drag.ts`, `hitTargets.ts`, `types.ts` — Dynamic holiday bindings and anchor-relative dragging.
+- `src/editor/components/TemplateEditor.tsx`, `Inspector.tsx`, `MarkerInspector.tsx` — Integration of holiday layer tree and inspectors.
+- `src/persistence/db/monthloomDb.ts` — Database schema `MonthloomDB-v2` with new holiday library tables.
+- `src/persistence/schema/projectSnapshot.ts`, `templateSnapshot.ts` — Clean snapshot schemas with `holidayLayers` and no project holiday datasets.
+- `src/persistence/bundle/manifest.ts`, `exportBundle.ts`, `importBundle.ts` — Bundle manifest v2 with full library snapshot in project packages and non-destructive merge.
+- `src/persistence/assets/referencedAssets.ts`, `remapAssets.ts` — Dynamic asset collection and remapping across all holiday layer markers.
+- `src/workspace/state/workspaceStore.ts` & `src/app/App.tsx` — Clean workspace store; global library hydration and unified `holidayIndex` derivation.
+- `src/preview/fullYear/FullYearPreview.tsx` & `src/export/components/BatchExportPanel.tsx` — Shared `holidayIndex` and coverage diagnostics.
+- `src/shared/i18n/types.ts`, `locales/zh.ts`, `locales/en.ts` — Full bilingual localization keys for library and layer management.
 
 ---
 
-### Task 1: Canonical holiday-library types and effective records
+## Tasks
+
+### Task 1: Canonical holiday-library types, effective records, and coverage
 
 **Files:**
 - Modify: `src/domain/holiday/types.ts`
@@ -80,15 +93,27 @@
 - Modify: `src/domain/holiday/coverage.test.ts`
 
 **Interfaces:**
-- Produces: `HolidayCalendar`, `HolidayBaseRecord`, `HolidayOverride`, `HolidayCoverage`, `HolidaySyncState`, `HolidayLibrarySnapshot`, `EffectiveHolidayRecord`.
-- Produces: `holidayRecordId(calendarId, date)`, `resolveEffectiveRecords(library, calendarId)`.
-- Consumes: `LocalDate`, `DateRange`, `toISODate`, and current UTC date helpers.
+- Produces: `HolidayCalendar`, `HolidayBaseRecord`, `HolidayOverride`, `HolidayCoverage`, `HolidaySyncState`, `HolidayLibrarySnapshot`, `EffectiveHolidayRecord`, `HolidayBaseUpdate`.
+- Produces: `holidayRecordId(calendarId, date)`, `resolveEffectiveRecords(library, calendarId)`, `calculateRequiredHolidayRange(targetYear)`.
+- Produces: `createCalendarCoverageDiagnostics({ calendar, requiredRange, coverage })`.
 
-- [ ] **Step 1: Replace the country-shaped test fixtures with baseline/override cases**
+- [ ] **Step 1: Write test fixtures and precedence tests for effective records**
 
-Create reusable test builders so later tasks do not invent incompatible fixtures:
-
+Create `src/domain/holiday/testFixtures.ts`:
 ```ts
+import { parseISODate, toISODate } from "../date/date";
+import type { LocalDate } from "../date/types";
+import {
+  holidayRecordId,
+  type HolidayBaseRecord,
+  type HolidayCalendar,
+  type HolidayCoverage,
+  type HolidayLibrarySnapshot,
+  type HolidayOverride,
+  type HolidayRecordType,
+  type HolidaySyncState,
+} from "./types";
+
 export function mustDate(value: string): LocalDate {
   const parsed = parseISODate(value);
   if (!parsed) throw new Error(`Invalid test date: ${value}`);
@@ -158,43 +183,72 @@ export function overrideDelete(
 }
 ```
 
-Each builder uses `holidayRecordId`, `mustDate`, and the fixed timestamp `2026-08-28T00:00:00.000Z`.
-
+Write `src/domain/holiday/effectiveRecords.test.ts`:
 ```ts
-it("keeps a manual modification when the synchronized baseline changes", () => {
-  const library = fixtureLibrary({
-    baseRecords: [base("cn", "2027-01-01", "holiday", "元旦")],
-    overrides: [overrideUpsert("cn", "2027-01-01", "holiday", "New Year")],
+import { describe, expect, it } from "vitest";
+import { resolveEffectiveRecords } from "./effectiveRecords";
+import { base, fixtureLibrary, overrideDelete, overrideUpsert } from "./testFixtures";
+
+describe("resolveEffectiveRecords", () => {
+  it("resolves pure baseline records as provenance 'source'", () => {
+    const library = fixtureLibrary({
+      baseRecords: [base("cn", "2027-01-01", "holiday", "元旦")],
+    });
+    const effective = resolveEffectiveRecords(library, "cn");
+    expect(effective.get("2027-01-01")).toEqual({
+      calendarId: "cn",
+      date: { year: 2027, month: 1, day: 1 },
+      type: "holiday",
+      name: "元旦",
+      provenance: "source",
+    });
   });
 
-  expect(resolveEffectiveRecords(library, "cn").get("2027-01-01")).toMatchObject({
-    type: "holiday",
-    name: "New Year",
-    provenance: "manual-modified",
+  it("prioritizes manual modifications over synchronized baseline", () => {
+    const library = fixtureLibrary({
+      baseRecords: [base("cn", "2027-01-01", "holiday", "元旦")],
+      overrides: [overrideUpsert("cn", "2027-01-01", "holiday", "Custom New Year")],
+    });
+    const effective = resolveEffectiveRecords(library, "cn");
+    expect(effective.get("2027-01-01")).toMatchObject({
+      type: "holiday",
+      name: "Custom New Year",
+      provenance: "manual-modified",
+    });
   });
-});
 
-it("keeps a manual deletion hidden after the baseline is refreshed", () => {
-  const library = fixtureLibrary({
-    baseRecords: [base("cn", "2027-02-06", "workday")],
-    overrides: [overrideDelete("cn", "2027-02-06")],
+  it("marks manual additions not present in baseline as 'manual-added'", () => {
+    const library = fixtureLibrary({
+      overrides: [overrideUpsert("cn", "2027-05-20", "holiday", "Special Day")],
+    });
+    const effective = resolveEffectiveRecords(library, "cn");
+    expect(effective.get("2027-05-20")).toMatchObject({
+      provenance: "manual-added",
+    });
   });
 
-  expect(resolveEffectiveRecords(library, "cn").has("2027-02-06")).toBe(false);
+  it("hides baseline records when a manual delete override exists", () => {
+    const library = fixtureLibrary({
+      baseRecords: [base("cn", "2027-02-06", "workday")],
+      overrides: [overrideDelete("cn", "2027-02-06")],
+    });
+    const effective = resolveEffectiveRecords(library, "cn");
+    expect(effective.has("2027-02-06")).toBe(false);
+  });
 });
 ```
 
-- [ ] **Step 2: Run the focused tests and verify the new interface is missing**
+- [ ] **Step 2: Run tests and verify failure**
 
 Run: `npm test -- src/domain/holiday/effectiveRecords.test.ts`
+Expected: FAIL due to missing files.
 
-Expected: FAIL because `effectiveRecords.ts` and the canonical types do not exist.
+- [ ] **Step 3: Define canonical types in `src/domain/holiday/types.ts`**
 
-- [ ] **Step 3: Define the canonical types and record-ID invariant**
-
-Add these canonical exports alongside the still-referenced development-era `HolidayDataset` types so focused work remains executable. New code must use only the canonical types; Task 11 deletes the obsolete exports after Task 10 switches every caller. This is implementation staging, not a supported compatibility path.
-
+Export:
 ```ts
+import type { DateRange, LocalDate } from "../date/types";
+
 export type HolidayProviderId = "china-timor" | "japan-holidays-jp";
 export type HolidayRecordType = "holiday" | "workday";
 export type HolidayCoverageStatus = "confirmed" | "unconfirmed";
@@ -286,19 +340,31 @@ export type HolidayBaseUpdate = Readonly<{
   replacementRanges: readonly DateRange[];
 }>;
 
+export type HolidayDiagnostic = Readonly<{
+  level: "warning" | "error";
+  code: string;
+  message: string;
+}>;
+
 export function holidayRecordId(calendarId: string, date: LocalDate): string {
-  return `${calendarId}:${toISODate(date)}`;
+  const month = String(date.month).padStart(2, "0");
+  const day = String(date.day).padStart(2, "0");
+  return `${calendarId}:${date.year}-${month}-${day}`;
 }
 ```
 
-- [ ] **Step 4: Implement the pure effective-record resolver**
+- [ ] **Step 4: Implement `resolveEffectiveRecords` in `src/domain/holiday/effectiveRecords.ts`**
 
 ```ts
+import { toISODate } from "../date/date";
+import type { EffectiveHolidayRecord, HolidayLibrarySnapshot } from "./types";
+
 export function resolveEffectiveRecords(
   library: HolidayLibrarySnapshot,
   calendarId: string,
 ): ReadonlyMap<string, EffectiveHolidayRecord> {
   const result = new Map<string, EffectiveHolidayRecord>();
+
   for (const record of library.baseRecords) {
     if (record.calendarId !== calendarId) continue;
     result.set(toISODate(record.date), {
@@ -309,6 +375,7 @@ export function resolveEffectiveRecords(
       provenance: "source",
     });
   }
+
   for (const override of library.overrides) {
     if (override.calendarId !== calendarId) continue;
     const key = toISODate(override.date);
@@ -324,35 +391,97 @@ export function resolveEffectiveRecords(
       provenance: result.has(key) ? "manual-modified" : "manual-added",
     });
   }
+
   return result;
 }
 ```
 
-- [ ] **Step 5: Add generic coverage diagnostics away from provider names**
-
-Add the generic function below. Keep the existing provider-shaped function only until Task 10 switches workspace callers; Task 11 deletes it.
+- [ ] **Step 5: Implement generic coverage diagnostics in `src/domain/holiday/coverage.ts`**
 
 ```ts
+import { addDays, compareDate, toISODate } from "../date/date";
+import type { DateRange, LocalDate } from "../date/types";
+import type { HolidayCalendar, HolidayCoverage, HolidayDiagnostic } from "./types";
+
+export function calculateRequiredHolidayRange(targetYear: number): DateRange {
+  const isNextLeap = (targetYear + 1) % 4 === 0 && ((targetYear + 1) % 100 !== 0 || (targetYear + 1) % 400 === 0);
+  return {
+    start: { year: targetYear - 1, month: 12, day: 1 },
+    end: { year: targetYear + 1, month: 2, day: isNextLeap ? 29 : 28 },
+  };
+}
+
+export function isDateInConfirmedCoverage(
+  date: LocalDate,
+  coverageList: readonly HolidayCoverage[],
+  calendarId: string,
+): boolean {
+  for (const cov of coverageList) {
+    if (cov.calendarId !== calendarId || cov.status !== "confirmed") continue;
+    if (compareDate(cov.start, date) <= 0 && compareDate(date, cov.end) <= 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function getUncoveredCalendarRanges(
+  required: DateRange,
+  coverageList: readonly HolidayCoverage[],
+  calendarId: string,
+): readonly DateRange[] {
+  const gaps: DateRange[] = [];
+  let cursor = required.start;
+  let gapStart: LocalDate | null = null;
+  let gapEnd: LocalDate | null = null;
+
+  while (compareDate(cursor, required.end) <= 0) {
+    if (!isDateInConfirmedCoverage(cursor, coverageList, calendarId)) {
+      if (!gapStart) {
+        gapStart = cursor;
+      }
+      gapEnd = cursor;
+    } else {
+      if (gapStart && gapEnd) {
+        gaps.push({ start: gapStart, end: gapEnd });
+        gapStart = null;
+        gapEnd = null;
+      }
+    }
+    cursor = addDays(cursor, 1);
+  }
+
+  if (gapStart && gapEnd) {
+    gaps.push({ start: gapStart, end: gapEnd });
+  }
+
+  return gaps;
+}
+
 export function createCalendarCoverageDiagnostics(args: {
   calendar: HolidayCalendar;
   requiredRange: DateRange;
   coverage: readonly HolidayCoverage[];
-}): readonly HolidayDiagnostic[];
+}): readonly HolidayDiagnostic[] {
+  const gaps = getUncoveredCalendarRanges(args.requiredRange, args.coverage, args.calendar.id);
+  return gaps.map((gap) => ({
+    level: "warning",
+    code: "holiday-coverage-gap",
+    message: `${args.calendar.name} holiday data does not cover ${toISODate(gap.start)} through ${toISODate(gap.end)}.`,
+  }));
+}
 ```
 
-Test confirmed, unconfirmed, and absent ranges. Missing or future coverage must produce warnings, not errors.
-
-- [ ] **Step 6: Run the focused holiday-domain tests**
+- [ ] **Step 6: Run tests and verify PASS**
 
 Run: `npm test -- src/domain/holiday/effectiveRecords.test.ts src/domain/holiday/coverage.test.ts`
-
 Expected: PASS.
 
-- [ ] **Step 7: Commit the canonical model**
+- [ ] **Step 7: Commit Task 1**
 
 ```bash
-git add src/domain/holiday/types.ts src/domain/holiday/effectiveRecords.ts src/domain/holiday/effectiveRecords.test.ts src/domain/holiday/testFixtures.ts src/domain/holiday/coverage.ts src/domain/holiday/coverage.test.ts
-git commit -m "refactor: define global holiday library domain"
+git add src/domain/holiday
+git commit -m "feat: implement canonical holiday domain, effective records, and coverage"
 ```
 
 ---
@@ -372,36 +501,71 @@ git commit -m "refactor: define global holiday library domain"
 
 **Interfaces:**
 - Produces: `HolidayLayer`, `HolidayLayerMainStyle`, `HolidayLayerMiniStyle`, `HolidayDateColors`, `EnabledMarkerStyle`.
-- Produces: `createDefaultHolidayLayers()` and immutable layer helpers.
+- Produces: `createDefaultHolidayLayers()`, `addHolidayLayer`, `updateHolidayLayer`, `moveHolidayLayer`, `removeHolidayLayer`, `getHolidayLayer`, `rebindHolidayLayer`.
 - Changes: `EditorDocument` gains `holidayLayers: readonly HolidayLayer[]`.
 
-- [ ] **Step 1: Write tests for one-to-one membership and default layers**
+- [ ] **Step 1: Write layer unit tests**
 
+In `src/domain/template/holidayLayer.test.ts`:
 ```ts
-it("creates one China layer and one Japan layer with unique calendar IDs", () => {
-  const layers = createDefaultHolidayLayers();
-  expect(layers.map((layer) => layer.calendarId)).toEqual([
-    BUILTIN_CHINA_CALENDAR_ID,
-    BUILTIN_JAPAN_CALENDAR_ID,
-  ]);
-  expect(new Set(layers.map((layer) => layer.calendarId)).size).toBe(2);
-});
+import { describe, expect, it } from "vitest";
+import { BUILTIN_CHINA_CALENDAR_ID, BUILTIN_JAPAN_CALENDAR_ID } from "../holiday/types";
+import {
+  addHolidayLayer,
+  createDefaultHolidayLayers,
+  moveHolidayLayer,
+  rebindHolidayLayer,
+  removeHolidayLayer,
+  updateHolidayLayer,
+} from "./holidayLayer";
 
-it("rejects adding the same calendar twice to one template", () => {
-  const layers = createDefaultHolidayLayers();
-  expect(() => addHolidayLayer(layers, layers[0])).toThrow(/already has a layer/);
+describe("holidayLayer domain", () => {
+  it("creates default layers for China and Japan with unique calendar IDs", () => {
+    const layers = createDefaultHolidayLayers();
+    expect(layers).toHaveLength(2);
+    expect(layers[0].calendarId).toBe(BUILTIN_CHINA_CALENDAR_ID);
+    expect(layers[1].calendarId).toBe(BUILTIN_JAPAN_CALENDAR_ID);
+    expect(layers[0].main.showName).toBe(true);
+    expect(layers[0].main.holidayMarker.enabled).toBe(true);
+    expect(layers[1].main.dateColors.enabled).toBe(true);
+  });
+
+  it("enforces 1:1 calendar-to-layer constraint in a template", () => {
+    const layers = createDefaultHolidayLayers();
+    expect(() => addHolidayLayer(layers, { ...layers[0], id: "layer-new" })).toThrow(/already has a layer/);
+  });
+
+  it("supports reordering layers", () => {
+    const layers = createDefaultHolidayLayers();
+    const moved = moveHolidayLayer(layers, layers[0].id, 1);
+    expect(moved[0].calendarId).toBe(BUILTIN_JAPAN_CALENDAR_ID);
+    expect(moved[1].calendarId).toBe(BUILTIN_CHINA_CALENDAR_ID);
+  });
+
+  it("supports rebinding a layer to an unassigned calendar", () => {
+    const layers = createDefaultHolidayLayers();
+    const remapped = rebindHolidayLayer(layers, layers[0].id, "custom-calendar-id");
+    expect(remapped[0].calendarId).toBe("custom-calendar-id");
+  });
+
+  it("rejects rebinding to an already assigned calendar", () => {
+    const layers = createDefaultHolidayLayers();
+    expect(() => rebindHolidayLayer(layers, layers[0].id, BUILTIN_JAPAN_CALENDAR_ID)).toThrow();
+  });
 });
 ```
 
-- [ ] **Step 2: Run the focused tests and verify failure**
+- [ ] **Step 2: Run test to verify failure**
 
 Run: `npm test -- src/domain/template/holidayLayer.test.ts`
+Expected: FAIL.
 
-Expected: FAIL because the layer module is missing.
-
-- [ ] **Step 3: Define the final layer interface**
+- [ ] **Step 3: Implement `src/domain/template/holidayLayer.ts`**
 
 ```ts
+import { BUILTIN_CHINA_CALENDAR_ID, BUILTIN_JAPAN_CALENDAR_ID } from "../holiday/types";
+import type { MarkerTemplate, TextElementTemplate } from "./primitives";
+
 export type EnabledMarkerStyle = Readonly<{
   enabled: boolean;
   marker: MarkerTemplate;
@@ -413,122 +577,325 @@ export type HolidayDateColors = Readonly<{
   workday: string;
 }>;
 
+export type HolidayLayerMainStyle = Readonly<{
+  showName: boolean;
+  name: TextElementTemplate;
+  holidayMarker: EnabledMarkerStyle;
+  workdayMarker: EnabledMarkerStyle;
+  dateColors: HolidayDateColors;
+}>;
+
+export type HolidayLayerMiniStyle = Readonly<{
+  holidayMarker: EnabledMarkerStyle;
+  workdayMarker: EnabledMarkerStyle;
+  dateColors: HolidayDateColors;
+}>;
+
 export type HolidayLayer = Readonly<{
   id: string;
   calendarId: string;
   enabled: boolean;
-  main: Readonly<{
-    showName: boolean;
-    name: TextElementTemplate;
-    holidayMarker: EnabledMarkerStyle;
-    workdayMarker: EnabledMarkerStyle;
-    dateColors: HolidayDateColors;
-  }>;
-  mini: Readonly<{
-    holidayMarker: EnabledMarkerStyle;
-    workdayMarker: EnabledMarkerStyle;
-    dateColors: HolidayDateColors;
-  }>;
+  main: HolidayLayerMainStyle;
+  mini: HolidayLayerMiniStyle;
 }>;
-```
 
-Keep the layer array at `EditorDocument.holidayLayers`, because Main and Mini share ordering while owning independent style branches.
+export function createDefaultHolidayLayers(): readonly HolidayLayer[] {
+  return [
+    {
+      id: "builtin-cn-layer",
+      calendarId: BUILTIN_CHINA_CALENDAR_ID,
+      enabled: true,
+      main: {
+        showName: true,
+        name: {
+          position: { anchor: "bottom-left", offsetX: 10, offsetY: -8 },
+          typography: {
+            fontId: "default-sans",
+            fontSize: 11,
+            fontWeight: 400,
+            fontStyle: "normal",
+            letterSpacing: 0,
+            color: "#DC2626",
+            opacity: 1,
+          },
+        },
+        holidayMarker: {
+          enabled: true,
+          marker: {
+            type: "text",
+            value: "休",
+            position: { anchor: "top-right", offsetX: -8, offsetY: 8 },
+            typography: {
+              fontId: "default-sans",
+              fontSize: 10,
+              fontWeight: 500,
+              fontStyle: "normal",
+              letterSpacing: 0,
+              color: "#DC2626",
+              opacity: 1,
+            },
+          },
+        },
+        workdayMarker: {
+          enabled: true,
+          marker: {
+            type: "text",
+            value: "班",
+            position: { anchor: "top-right", offsetX: -8, offsetY: 8 },
+            typography: {
+              fontId: "default-sans",
+              fontSize: 10,
+              fontWeight: 500,
+              fontStyle: "normal",
+              letterSpacing: 0,
+              color: "#4B5563",
+              opacity: 1,
+            },
+          },
+        },
+        dateColors: {
+          enabled: false,
+          holiday: "#DC2626",
+          workday: "#1F2937",
+        },
+      },
+      mini: {
+        holidayMarker: {
+          enabled: true,
+          marker: {
+            type: "text",
+            value: "•",
+            position: { anchor: "top-right", offsetX: -4, offsetY: 4 },
+            typography: {
+              fontId: "default-sans",
+              fontSize: 10,
+              fontWeight: 700,
+              fontStyle: "normal",
+              letterSpacing: 0,
+              color: "#DC2626",
+              opacity: 1,
+            },
+          },
+        },
+        workdayMarker: {
+          enabled: true,
+          marker: {
+            type: "text",
+            value: "•",
+            position: { anchor: "top-right", offsetX: -4, offsetY: 4 },
+            typography: {
+              fontId: "default-sans",
+              fontSize: 10,
+              fontWeight: 700,
+              fontStyle: "normal",
+              letterSpacing: 0,
+              color: "#6B7280",
+              opacity: 1,
+            },
+          },
+        },
+        dateColors: {
+          enabled: false,
+          holiday: "#DC2626",
+          workday: "#1F2937",
+        },
+      },
+    },
+    {
+      id: "builtin-jp-layer",
+      calendarId: BUILTIN_JAPAN_CALENDAR_ID,
+      enabled: true,
+      main: {
+        showName: true,
+        name: {
+          position: { anchor: "bottom-right", offsetX: -10, offsetY: -8 },
+          typography: {
+            fontId: "default-sans",
+            fontSize: 11,
+            fontWeight: 400,
+            fontStyle: "normal",
+            letterSpacing: 0,
+            color: "#DC2626",
+            opacity: 1,
+          },
+        },
+        holidayMarker: {
+          enabled: false,
+          marker: {
+            type: "text",
+            value: "祝",
+            position: { anchor: "top-right", offsetX: -8, offsetY: 8 },
+            typography: {
+              fontId: "default-sans",
+              fontSize: 10,
+              fontWeight: 500,
+              fontStyle: "normal",
+              letterSpacing: 0,
+              color: "#DC2626",
+              opacity: 1,
+            },
+          },
+        },
+        workdayMarker: {
+          enabled: false,
+          marker: {
+            type: "text",
+            value: "",
+            position: { anchor: "top-right", offsetX: -8, offsetY: 8 },
+            typography: {
+              fontId: "default-sans",
+              fontSize: 10,
+              fontWeight: 500,
+              fontStyle: "normal",
+              letterSpacing: 0,
+              color: "#4B5563",
+              opacity: 1,
+            },
+          },
+        },
+        dateColors: {
+          enabled: true,
+          holiday: "#DC2626",
+          workday: "#1F2937",
+        },
+      },
+      mini: {
+        holidayMarker: {
+          enabled: false,
+          marker: {
+            type: "text",
+            value: "•",
+            position: { anchor: "top-right", offsetX: -4, offsetY: 4 },
+            typography: {
+              fontId: "default-sans",
+              fontSize: 10,
+              fontWeight: 700,
+              fontStyle: "normal",
+              letterSpacing: 0,
+              color: "#DC2626",
+              opacity: 1,
+            },
+          },
+        },
+        workdayMarker: {
+          enabled: false,
+          marker: {
+            type: "text",
+            value: "•",
+            position: { anchor: "top-right", offsetX: -4, offsetY: 4 },
+            typography: {
+              fontId: "default-sans",
+              fontSize: 10,
+              fontWeight: 700,
+              fontStyle: "normal",
+              letterSpacing: 0,
+              color: "#6B7280",
+              opacity: 1,
+            },
+          },
+        },
+        dateColors: {
+          enabled: true,
+          holiday: "#DC2626",
+          workday: "#1F2937",
+        },
+      },
+    },
+  ];
+}
 
-- [ ] **Step 4: Add immutable layer helpers**
-
-```ts
 export function addHolidayLayer(
   layers: readonly HolidayLayer[],
   layer: HolidayLayer,
-): readonly HolidayLayer[];
+): readonly HolidayLayer[] {
+  if (layers.some((l) => l.calendarId === layer.calendarId)) {
+    throw new Error(`Template already has a layer referencing calendar: ${layer.calendarId}`);
+  }
+  return [...layers, layer];
+}
 
 export function updateHolidayLayer(
   layers: readonly HolidayLayer[],
   layerId: string,
   update: (layer: HolidayLayer) => HolidayLayer,
-): readonly HolidayLayer[];
+): readonly HolidayLayer[] {
+  return layers.map((l) => (l.id === layerId ? update(l) : l));
+}
 
 export function moveHolidayLayer(
   layers: readonly HolidayLayer[],
   layerId: string,
   direction: -1 | 1,
-): readonly HolidayLayer[];
+): readonly HolidayLayer[] {
+  const index = layers.findIndex((l) => l.id === layerId);
+  if (index === -1) return layers;
+  const targetIndex = index + direction;
+  if (targetIndex < 0 || targetIndex >= layers.length) return layers;
+  const next = [...layers];
+  const [removed] = next.splice(index, 1);
+  next.splice(targetIndex, 0, removed);
+  return next;
+}
 
 export function removeHolidayLayer(
   layers: readonly HolidayLayer[],
   layerId: string,
-): readonly HolidayLayer[];
+): readonly HolidayLayer[] {
+  return layers.filter((l) => l.id !== layerId);
+}
 
 export function getHolidayLayer(
   layers: readonly HolidayLayer[],
   layerId: string,
-): HolidayLayer;
+): HolidayLayer {
+  const found = layers.find((l) => l.id === layerId);
+  if (!found) throw new Error(`Holiday layer not found: ${layerId}`);
+  return found;
+}
 
 export function rebindHolidayLayer(
   layers: readonly HolidayLayer[],
   layerId: string,
-  calendarId: string,
-): readonly HolidayLayer[];
+  newCalendarId: string,
+): readonly HolidayLayer[] {
+  if (layers.some((l) => l.id !== layerId && l.calendarId === newCalendarId)) {
+    throw new Error(`Calendar ${newCalendarId} is already referenced by another layer in this template.`);
+  }
+  return updateHolidayLayer(layers, layerId, (layer) => ({ ...layer, calendarId: newCalendarId }));
+}
 ```
 
-- [ ] **Step 5: Add China/Japan default layers to the default editor document**
+- [ ] **Step 4: Update `EditorDocument` and Zod schemas**
 
-Use fixed calendar IDs and stable layer IDs. Preserve the recognizable current design: China names bottom-left with `休`/`班` markers; Japan names bottom-right with holiday date coloring; Mini uses compact colored text markers and never contains a name style.
-
+In `src/editor/model/types.ts`:
 ```ts
-return {
-  mainTemplate,
-  miniTemplate,
-  holidayLayers: createDefaultHolidayLayers(),
-  fontCatalog: DEFAULT_FONT_CATALOG,
-  pagePreview: DEFAULT_PAGE_PREVIEW_CONFIG,
-};
+export type EditorDocument = Readonly<{
+  mainTemplate: MainTemplate;
+  miniTemplate: MiniTemplate;
+  holidayLayers: readonly HolidayLayer[];
+  fontCatalog: FontCatalog;
+  pagePreview: PagePreviewConfig;
+}>;
 ```
 
-- [ ] **Step 6: Extend the editor-document Zod schema with dynamic layers**
+In `src/domain/template/defaults.ts`:
+Update `createDefaultEditorDocument()` to include `holidayLayers: createDefaultHolidayLayers()`.
 
-Define schemas for `MarkerTemplate`, `HolidayDateColors`, and `HolidayLayer`; require `holidayLayers` in `editorDocumentSchema`. Do not add a fallback or legacy transform.
+- [ ] **Step 5: Run tests and verify PASS**
 
-```ts
-const holidayDateColorsSchema = z.object({
-  enabled: z.boolean(),
-  holiday: z.string(),
-  workday: z.string(),
-});
+Run: `npm test -- src/domain/template/holidayLayer.test.ts src/editor/state/documentStore.test.ts`
+Expected: PASS.
 
-const holidayLayerSchema = z.object({
-  id: z.string(),
-  calendarId: z.string(),
-  enabled: z.boolean(),
-  main: holidayLayerMainStyleSchema,
-  mini: holidayLayerMiniStyleSchema,
-});
-
-export const editorDocumentSchema = z.object({
-  mainTemplate: mainTemplateSchema,
-  miniTemplate: miniTemplateSchema,
-  holidayLayers: z.array(holidayLayerSchema),
-  fontCatalog: fontCatalogSchema,
-  pagePreview: pagePreviewConfigSchema,
-});
-```
-
-- [ ] **Step 7: Run template and document-store tests**
-
-Run: `npm test -- src/domain/template/holidayLayer.test.ts src/domain/template/template.test.ts src/editor/state/documentStore.test.ts src/persistence/schema/snapshot.test.ts`
-
-Expected: PASS after fixtures include `holidayLayers`.
-
-- [ ] **Step 8: Commit the layer model**
+- [ ] **Step 6: Commit Task 2**
 
 ```bash
-git add src/domain/template src/editor/model/types.ts src/editor/state/documentStore.ts src/editor/state/documentStore.test.ts src/persistence/schema/projectSnapshot.ts src/persistence/schema/snapshot.test.ts
-git commit -m "feat: add template-owned holiday layers"
+git add src/domain/template src/editor/model/types.ts src/editor/state/documentStore.ts
+git commit -m "feat: add template-owned holiday layers and defaults"
 ```
 
 ---
 
-### Task 3: Generic holiday resolution and rendering
+### Task 3: Generic holiday resolution and rendering pipeline
 
 **Files:**
 - Create: `src/domain/holiday/resolveHolidayIndex.ts`
@@ -536,7 +903,6 @@ git commit -m "feat: add template-owned holiday layers"
 - Modify: `src/domain/holiday/holidayIndex.test.ts`
 - Modify: `src/domain/calendar/types.ts`
 - Modify: `src/domain/calendar/generateCalendarMonth.ts`
-- Modify: `src/domain/calendar/calendarDomain.integration.test.ts`
 - Modify: `src/rendering/layout/colorRules.ts`
 - Modify: `src/rendering/layout/colorRules.test.ts`
 - Modify: `src/rendering/layout/mainLayout.ts`
@@ -547,74 +913,56 @@ git commit -m "feat: add template-owned holiday layers"
 - Modify: `src/resources/fonts/textRequirements.ts`
 - Modify: `src/resources/fonts/textRequirements.test.ts`
 - Modify: `src/editor/fonts/useEditorFontEngine.ts`
-- Modify: `src/preview/fullYear/fontRequirements.ts`
 - Modify: `src/preview/fullYear/renderDocuments.ts`
 - Modify: `src/export/formal/renderFormalDocuments.ts`
 
 **Interfaces:**
-- Consumes: `HolidayLibrarySnapshot`, `HolidayLayer`, `resolveEffectiveRecords`.
+- Produces: `HolidayOccurrence`, `ResolvedHolidayDate`, `HolidayIndex`.
 - Produces: `resolveHolidayIndex({ library, layers }): HolidayIndex`.
-- Produces: generic dynamic scene semantic IDs containing the layer ID.
+- Produces: Dynamic scene nodes for Main name/markers and Mini markers.
 
-- [ ] **Step 1: Write precedence and coexistence tests**
+- [ ] **Step 1: Write `resolveHolidayIndex` tests**
 
-Create explicit layer/library fixtures in the test file:
-
+In `src/domain/holiday/holidayIndex.test.ts`:
 ```ts
-const [chinaDefault, japanDefault] = createDefaultHolidayLayers();
-const chinaLayer = {
-  ...chinaDefault,
-  calendarId: "cn",
-  main: { ...chinaDefault.main, dateColors: { enabled: true, holiday: "#aa0000", workday: "#333333" } },
-  mini: { ...chinaDefault.mini, dateColors: { enabled: true, holiday: "#bb0000", workday: "#444444" } },
-};
-const japanLayer = {
-  ...japanDefault,
-  calendarId: "jp",
-  main: { ...japanDefault.main, dateColors: { enabled: true, holiday: "#cc0000", workday: "#555555" } },
-  mini: { ...japanDefault.mini, dateColors: { enabled: true, holiday: "#dd0000", workday: "#666666" } },
-};
-const library = fixtureLibrary({
-  baseRecords: [
-    base("cn", "2027-01-01", "holiday", "元旦"),
-    base("jp", "2027-01-01", "holiday", "元日"),
-  ],
-});
-const disabledColorLayer = {
-  ...chinaLayer,
-  main: { ...chinaLayer.main, dateColors: { ...chinaLayer.main.dateColors, enabled: false } },
-  mini: { ...chinaLayer.mini, dateColors: { ...chinaLayer.mini.dateColors, enabled: false } },
-};
-```
+import { describe, expect, it } from "vitest";
+import { createDefaultHolidayLayers } from "../template/holidayLayer";
+import { resolveHolidayIndex } from "./resolveHolidayIndex";
+import { base, fixtureLibrary } from "./testFixtures";
 
-```ts
-it("lets the later matching layer override only the date colors", () => {
-  const index = resolveHolidayIndex({ library, layers: [chinaLayer, japanLayer] });
-  expect(index.get("2027-01-01")).toEqual({
-    occurrences: [
-      { layerId: chinaLayer.id, calendarId: "cn", type: "holiday", name: "元旦" },
-      { layerId: japanLayer.id, calendarId: "jp", type: "holiday", name: "元日" },
-    ],
-    mainDateColor: japanLayer.main.dateColors.holiday,
-    miniDateColor: japanLayer.mini.dateColors.holiday,
+describe("resolveHolidayIndex", () => {
+  it("resolves multi-layer occurrences and later layer date text color override", () => {
+    const [cnLayer, jpLayer] = createDefaultHolidayLayers();
+    const library = fixtureLibrary({
+      baseRecords: [
+        base(cnLayer.calendarId, "2027-01-01", "holiday", "元旦"),
+        base(jpLayer.calendarId, "2027-01-01", "holiday", "元日"),
+      ],
+    });
+
+    const index = resolveHolidayIndex({ library, layers: [cnLayer, jpLayer] });
+    const resolved = index.get("2027-01-01");
+    expect(resolved).toBeDefined();
+    expect(resolved?.occurrences).toHaveLength(2);
+    expect(resolved?.occurrences[0]).toMatchObject({ calendarId: cnLayer.calendarId, name: "元旦" });
+    expect(resolved?.occurrences[1]).toMatchObject({ calendarId: jpLayer.calendarId, name: "元日" });
+    expect(resolved?.mainDateColor).toBe(jpLayer.main.dateColors.holiday);
+    expect(resolved?.miniDateColor).toBe(jpLayer.mini.dateColors.holiday);
   });
 });
-
-it("does not apply colors from a layer with date colors disabled", () => {
-  const index = resolveHolidayIndex({ library, layers: [disabledColorLayer] });
-  expect(index.get("2027-01-01")?.mainDateColor).toBeUndefined();
-});
 ```
 
-- [ ] **Step 2: Run resolver tests and verify failure**
-
-Run: `npm test -- src/domain/holiday/holidayIndex.test.ts`
-
-Expected: FAIL because the fixed `china`/`japan` `HolidayInfo` shape still exists.
-
-- [ ] **Step 3: Define the generic resolved index**
+- [ ] **Step 2: Implement `src/domain/holiday/resolveHolidayIndex.ts`**
 
 ```ts
+import { toISODate } from "../date/date";
+import type { HolidayLayer } from "../template/holidayLayer";
+import { resolveEffectiveRecords } from "./effectiveRecords";
+import type {
+  HolidayLibrarySnapshot,
+  HolidayRecordType,
+} from "./types";
+
 export type HolidayOccurrence = Readonly<{
   layerId: string;
   calendarId: string;
@@ -629,19 +977,77 @@ export type ResolvedHolidayDate = Readonly<{
 }>;
 
 export type HolidayIndex = ReadonlyMap<string, ResolvedHolidayDate>;
+
+export function resolveHolidayIndex(args: {
+  library: HolidayLibrarySnapshot;
+  layers: readonly HolidayLayer[];
+}): HolidayIndex {
+  const { library, layers } = args;
+  const resultMap = new Map<string, {
+    occurrences: HolidayOccurrence[];
+    mainDateColor?: string;
+    miniDateColor?: string;
+  }>();
+
+  for (const layer of layers) {
+    if (!layer.enabled) continue;
+    const effectiveRecords = resolveEffectiveRecords(library, layer.calendarId);
+
+    for (const [isoDate, record] of effectiveRecords) {
+      let entry = resultMap.get(isoDate);
+      if (!entry) {
+        entry = { occurrences: [] };
+        resultMap.set(isoDate, entry);
+      }
+
+      entry.occurrences.push({
+        layerId: layer.id,
+        calendarId: layer.calendarId,
+        type: record.type,
+        ...(record.name ? { name: record.name } : {}),
+      });
+
+      if (layer.main.dateColors.enabled) {
+        entry.mainDateColor =
+          record.type === "holiday"
+            ? layer.main.dateColors.holiday
+            : layer.main.dateColors.workday;
+      }
+
+      if (layer.mini.dateColors.enabled) {
+        entry.miniDateColor =
+          record.type === "holiday"
+            ? layer.mini.dateColors.holiday
+            : layer.mini.dateColors.workday;
+      }
+    }
+  }
+
+  return resultMap;
+}
 ```
 
-Implement `resolveHolidayIndex` by iterating enabled layers in stored order. Append every occurrence; assign `mainDateColor`/`miniDateColor` only when that branch has date colors enabled, allowing later assignments to win.
+- [ ] **Step 3: Update `layoutMain` and `layoutMini` to render dynamic layers**
 
-- [ ] **Step 4: Simplify base calendar colors**
+In `mainLayout.ts`:
+- Accept `holidayLayers?: readonly HolidayLayer[]`.
+- For each cell, iterate `cellData.holiday?.occurrences`.
+- Render holiday name if `occurrence.type === "holiday" && occurrence.name && layer.main.showName` with semanticId `main.holiday.${layer.id}.name`.
+- Render holiday marker or workday marker if `configured.enabled` with semanticId `main.holiday.${layer.id}.holiday-marker` or `main.holiday.${layer.id}.workday-marker`.
 
-Remove `japanHoliday` from Main/Mini base color palettes. Change date-color resolution to:
+In `miniLayout.ts`:
+- Accept `holidayLayers?: readonly HolidayLayer[]`.
+- For each cell, iterate `cellData.holiday?.occurrences`.
+- Render holiday/workday marker if `configured.enabled` with semanticId `mini.holiday.${layer.id}.holiday-marker` or `mini.holiday.${layer.id}.workday-marker`. Mini never renders names.
 
+- [ ] **Step 4: Update `colorRules.ts`**
+
+Update `resolveDateColor`:
 ```ts
 export function resolveDateColor(
   cell: CalendarCell,
   colors: { default: string; sunday: string; saturday: string },
-  target: "main" | "mini",
+  target: "main" | "mini" = "main",
 ): string {
   const holidayColor =
     target === "main" ? cell.holiday?.mainDateColor : cell.holiday?.miniDateColor;
@@ -652,57 +1058,20 @@ export function resolveDateColor(
 }
 ```
 
-- [ ] **Step 5: Render dynamic Main names and markers**
+- [ ] **Step 5: Update font text collection and callers**
 
-Change `layoutMain` to accept `holidayLayers`. Build a `Map<layerId, HolidayLayer>` once, then render every occurrence using its layer style. Use semantic IDs:
+Update `collectMainFontText` and `collectMiniFontText` to accept `holidayLayers` and collect text across all enabled layers. Update `useEditorFontEngine`, `renderDocuments`, and `renderFormalDocuments`.
 
-```ts
-`main.holiday.${layer.id}.name`
-`main.holiday.${layer.id}.holiday-marker`
-`main.holiday.${layer.id}.workday-marker`
-```
+- [ ] **Step 6: Run domain, layout, and render tests**
 
-Only `holiday` records with a name and `showName` render a name. Workday records may render only the workday marker and date color.
+Run: `npm test -- src/domain/holiday src/rendering src/resources/fonts src/preview src/export`
+Expected: PASS.
 
-- [ ] **Step 6: Render dynamic Mini markers without names**
-
-Change `layoutMini` to accept the same `holidayLayers`; render only the applicable enabled marker and resolved Mini date color. No Mini code path may read or emit a name style.
-
-```ts
-for (const occurrence of cellData.holiday?.occurrences ?? []) {
-  const layer = layerById.get(occurrence.layerId);
-  if (!layer?.enabled) continue;
-  const configured = occurrence.type === "holiday"
-    ? layer.mini.holidayMarker
-    : layer.mini.workdayMarker;
-  if (configured.enabled) {
-    nodes.push(...layoutMarker(configured.marker, cellRect, miniMarkerSemanticId(layer.id, occurrence.type)));
-  }
-}
-```
-
-- [ ] **Step 7: Update font requirement collection and render callers**
-
-Change both collectors to accept `holidayLayers`; collect dynamic holiday-name and text-marker characters. Pass layers through editor, preview, and formal render functions:
-
-```ts
-collectMainFontText({ calendar, template, holidayLayers })
-collectMiniFontText({ calendar, template, holidayLayers })
-layoutMain({ calendar, template, holidayLayers, textMeasurer })
-layoutMini({ calendar, template, holidayLayers, textMeasurer })
-```
-
-- [ ] **Step 8: Run domain, layout, font, preview-render, and export-render tests**
-
-Run: `npm test -- src/domain/holiday/holidayIndex.test.ts src/domain/calendar/calendarDomain.integration.test.ts src/rendering/layout src/resources/fonts/textRequirements.test.ts src/preview/fullYear/renderDocuments.test.ts src/export/formal/renderFormalDocuments.test.ts`
-
-Expected: PASS with generic occurrences, dynamic semantic IDs, and no Mini holiday names.
-
-- [ ] **Step 9: Commit the generic rendering pipeline**
+- [ ] **Step 7: Commit Task 3**
 
 ```bash
-git add src/domain/holiday src/domain/calendar src/rendering src/resources/fonts src/editor/fonts src/preview/fullYear src/export/formal
-git commit -m "refactor: render holidays from ordered dynamic layers"
+git add src/domain/holiday src/domain/calendar src/rendering src/resources/fonts src/editor/fonts src/preview src/export
+git commit -m "feat: implement dynamic holiday rendering for Main and Mini"
 ```
 
 ---
@@ -718,66 +1087,67 @@ git commit -m "refactor: render holidays from ordered dynamic layers"
 - Create: `src/workspace/state/holidayLibraryStore.test.ts`
 
 **Interfaces:**
-- Produces: `HolidayLibraryRepository.getSnapshot()`, `ensureBuiltins()`, `applyBaseUpdate(update, syncState?)`, `putOverride()`, `clearOverride()`, `deleteCalendar()`.
-- Produces: `useHolidayLibraryStore` with `hydrate`, `refresh`, `snapshot`, `status`, and `error`.
+- Produces: `HolidayLibraryRepository` (`ensureBuiltins`, `getSnapshot`, `applyBaseUpdate`, `putOverride`, `clearOverride`, `deleteCalendar`, `recordSyncFailure`).
+- Produces: `useHolidayLibraryStore` (`snapshot`, `status`, `error`, `hydrate`, `refresh`).
 
-- [ ] **Step 1: Write atomic repository tests**
+- [ ] **Step 1: Write repository tests**
 
-Use this local helper in the repository test:
-
+In `src/persistence/db/holidayLibraryRepository.test.ts`:
 ```ts
-function updateForYear(
-  calendarId: string,
-  year: number,
-  records: readonly HolidayBaseRecord[],
-): HolidayBaseUpdate {
-  const start = { year, month: 1, day: 1 };
-  const end = { year, month: 12, day: 31 };
-  return {
-    calendarId,
-    records,
-    replacementRanges: [{ start, end }],
-    coverage: [{
-      id: `${calendarId}:${year}`,
-      calendarId,
-      start,
-      end,
-      status: "confirmed",
-      source: "sync",
-      updatedAt: "2026-08-28T00:00:00.000Z",
-    }],
-  };
-}
+import { beforeEach, describe, expect, it } from "vitest";
+import "fake-indexeddb/auto";
+import { BUILTIN_CHINA_CALENDAR_ID, BUILTIN_JAPAN_CALENDAR_ID } from "../../domain/holiday/types";
+import { base, overrideUpsert } from "../../domain/holiday/testFixtures";
+import { MonthloomDatabase } from "./monthloomDb";
+import { HolidayLibraryRepository } from "./holidayLibraryRepository";
+
+describe("HolidayLibraryRepository", () => {
+  let db: MonthloomDatabase;
+  let repo: HolidayLibraryRepository;
+
+  beforeEach(async () => {
+    db = new MonthloomDatabase(`test-holiday-db-${Math.random()}`);
+    repo = new HolidayLibraryRepository(db);
+    await repo.ensureBuiltins();
+  });
+
+  it("seeds built-in China and Japan calendars without duplication", async () => {
+    const snapshot = await repo.getSnapshot();
+    expect(snapshot.calendars.map((c) => c.id)).toContain(BUILTIN_CHINA_CALENDAR_ID);
+    expect(snapshot.calendars.map((c) => c.id)).toContain(BUILTIN_JAPAN_CALENDAR_ID);
+
+    await repo.ensureBuiltins();
+    const second = await repo.getSnapshot();
+    expect(second.calendars).toHaveLength(2);
+  });
+
+  it("applies atomic base updates and preserves manual overrides", async () => {
+    await repo.putOverride(overrideUpsert(BUILTIN_CHINA_CALENDAR_ID, "2027-01-01", "holiday", "My New Year"));
+    await repo.applyBaseUpdate({
+      calendarId: BUILTIN_CHINA_CALENDAR_ID,
+      records: [base(BUILTIN_CHINA_CALENDAR_ID, "2027-01-01", "holiday", "元旦")],
+      replacementRanges: [{ start: { year: 2027, month: 1, day: 1 }, end: { year: 2027, month: 12, day: 31 } }],
+      coverage: [{
+        id: `${BUILTIN_CHINA_CALENDAR_ID}:2027`,
+        calendarId: BUILTIN_CHINA_CALENDAR_ID,
+        start: { year: 2027, month: 1, day: 1 },
+        end: { year: 2027, month: 12, day: 31 },
+        status: "confirmed",
+        source: "sync",
+        updatedAt: "2026-08-28T00:00:00.000Z",
+      }],
+    });
+
+    const snapshot = await repo.getSnapshot();
+    expect(snapshot.overrides).toHaveLength(1);
+    expect(snapshot.baseRecords).toHaveLength(1);
+  });
+});
 ```
 
-```ts
-it("replaces only the confirmed update range and preserves manual overrides", async () => {
-  await repo.applyBaseUpdate(updateForYear("cn", 2027, [base("cn", "2027-01-01", "holiday", "元旦")]));
-  await repo.putOverride(overrideUpsert("cn", "2027-01-01", "holiday", "Custom"));
-  await repo.applyBaseUpdate(updateForYear("cn", 2028, [base("cn", "2028-01-01", "holiday", "元旦")]));
+- [ ] **Step 2: Update `MonthloomDatabase` in `src/persistence/db/monthloomDb.ts`**
 
-  const snapshot = await repo.getSnapshot();
-  expect(resolveEffectiveRecords(snapshot, "cn").get("2027-01-01")?.name).toBe("Custom");
-  expect(resolveEffectiveRecords(snapshot, "cn").has("2028-01-01")).toBe(true);
-});
-
-it("rolls back a failed multi-table base update", async () => {
-  const duplicate = base("cn", "2027-01-01", "holiday", "元旦");
-  await expect(repo.applyBaseUpdate(updateForYear("cn", 2027, [duplicate, duplicate]))).rejects.toThrow();
-  expect((await repo.getSnapshot()).baseRecords).toHaveLength(0);
-});
-```
-
-- [ ] **Step 2: Run repository tests and verify failure**
-
-Run: `npm test -- src/persistence/db/holidayLibraryRepository.test.ts`
-
-Expected: FAIL because the repository and tables are missing.
-
-- [ ] **Step 3: Introduce a clean development database schema**
-
-Change the default database name to `MonthloomDB-v2` instead of adding a legacy upgrade. Add tables:
-
+Switch db name to `MonthloomDB-v2` and add table definitions:
 ```ts
 holidayCalendars!: EntityTable<HolidayCalendar, "id">;
 holidayBaseRecords!: EntityTable<HolidayBaseRecord, "id">;
@@ -785,64 +1155,22 @@ holidayOverrides!: EntityTable<HolidayOverride, "id">;
 holidayCoverage!: EntityTable<HolidayCoverage, "id">;
 holidaySyncStates!: EntityTable<HolidaySyncState, "calendarId">;
 ```
+Add to `.stores({...})`.
 
-```ts
-this.version(1).stores({
-  projects: "id, name, targetYear, updatedAt",
-  templates: "id, name, updatedAt",
-  assets: "id, mimeType, createdAt",
-  fontCache: "cacheKey, family, weight, style, format, updatedAt",
-  holidayCalendars: "id, name, builtin, provider, updatedAt",
-  holidayBaseRecords: "id, calendarId, updatedAt",
-  holidayOverrides: "id, calendarId, updatedAt",
-  holidayCoverage: "id, calendarId, updatedAt",
-  holidaySyncStates: "calendarId, status, lastAttemptAt, lastSuccessAt",
-});
-```
+- [ ] **Step 3: Implement `HolidayLibraryRepository` in `src/persistence/db/holidayLibraryRepository.ts`**
 
-Keep `LocalDate` objects as domain values and compare/filter their ISO strings inside the repository. Do not attempt to index a plain `LocalDate` object as an IndexedDB key.
+Implement atomic methods with Dexie transactions:
+- `ensureBuiltins()`
+- `getSnapshot(): Promise<HolidayLibrarySnapshot>`
+- `applyBaseUpdate(update: HolidayBaseUpdate, syncState?: HolidaySyncState): Promise<void>`
+- `putOverride(override: HolidayOverride): Promise<void>`
+- `clearOverride(calendarId: string, date: LocalDate): Promise<void>`
+- `deleteCalendar(calendarId: string): Promise<void>`
+- `recordSyncFailure(calendarId: string, errorMessage: string, attemptedAt: string): Promise<void>`
 
-- [ ] **Step 4: Implement repository transactions and built-ins**
+- [ ] **Step 4: Implement `src/workspace/state/holidayLibraryStore.ts`**
 
-`ensureBuiltins()` must insert the fixed China/Japan metadata only when absent. `applyBaseUpdate()` must validate all records, delete baseline records only inside declared replacement ranges, then put new baseline and coverage rows within one Dexie `rw` transaction.
-
-```ts
-async ensureBuiltins(): Promise<void> {
-  const builtins = [
-    createBuiltinCalendar(BUILTIN_CHINA_CALENDAR_ID, "中国公众假期", "china-timor"),
-    createBuiltinCalendar(BUILTIN_JAPAN_CALENDAR_ID, "日本公众假期", "japan-holidays-jp"),
-  ];
-  const existing = await this.db.holidayCalendars.bulkGet(builtins.map((calendar) => calendar.id));
-  await this.db.holidayCalendars.bulkAdd(
-    builtins.filter((_, index) => existing[index] === undefined),
-  );
-}
-
-async applyBaseUpdate(update: HolidayBaseUpdate, syncState?: HolidaySyncState): Promise<void> {
-  assertValidBaseUpdate(update);
-  await this.db.transaction(
-    "rw",
-    [this.db.holidayBaseRecords, this.db.holidayCoverage, this.db.holidaySyncStates],
-    async () => {
-      const current = await this.db.holidayBaseRecords.where("calendarId").equals(update.calendarId).toArray();
-      const replacedIds = current
-        .filter((record) => update.replacementRanges.some((range) => isDateInRange(record.date, range)))
-        .map((record) => record.id);
-      await this.db.holidayBaseRecords.bulkDelete(replacedIds);
-      await this.db.holidayBaseRecords.bulkPut([...update.records]);
-      await replaceCoverageRows(this.db, update);
-      if (syncState) await this.db.holidaySyncStates.put(syncState);
-    },
-  );
-}
-```
-
-`createBuiltinCalendar` fills `builtin: true`, the supplied provider, and one shared ISO timestamp. `isDateInRange` uses `compareDate`; `replaceCoverageRows` deletes only overlapping coverage rows for the same calendar before putting `update.coverage`. `assertValidBaseUpdate` rejects foreign calendar IDs, duplicate record IDs/dates, invalid dates, and records outside the declared calendar.
-
-Add `recordSyncFailure(calendarId, errorMessage, attemptedAt)`. It updates only `holidaySyncStates`; a failed request must never alter calendars, records, overrides, or coverage. Successful synchronization passes its success state to `applyBaseUpdate` so data and status commit atomically.
-
-- [ ] **Step 5: Implement the hydrated Zustand store**
-
+Create Zustand store:
 ```ts
 export type HolidayLibraryStore = {
   snapshot: HolidayLibrarySnapshot;
@@ -853,24 +1181,21 @@ export type HolidayLibraryStore = {
 };
 ```
 
-Hydration calls `ensureBuiltins()` and then `getSnapshot()`. It must not put holiday data into `workspaceStore`.
+- [ ] **Step 5: Run persistence & store tests**
 
-- [ ] **Step 6: Run repository/store tests**
+Run: `npm test -- src/persistence/db/holidayLibraryRepository.test.ts src/workspace/state/holidayLibraryStore.test.ts`
+Expected: PASS.
 
-Run: `npm test -- src/persistence/db/holidayLibraryRepository.test.ts src/workspace/state/holidayLibraryStore.test.ts src/persistence/db/repositories.test.ts`
-
-Expected: PASS against `fake-indexeddb`.
-
-- [ ] **Step 7: Commit global persistence**
+- [ ] **Step 6: Commit Task 4**
 
 ```bash
-git add src/persistence/db src/persistence/schema/holidayLibrarySchema.ts src/workspace/state/holidayLibraryStore.ts src/workspace/state/holidayLibraryStore.test.ts
-git commit -m "feat: persist the global holiday library"
+git add src/persistence/db src/persistence/schema/holidayLibrarySchema.ts src/workspace/state/holidayLibraryStore.ts
+git commit -m "feat: implement global holiday library persistence and store"
 ```
 
 ---
 
-### Task 5: Synchronization, Monthloom JSON, and manual operations
+### Task 5: Synchronization, Monthloom JSON exchange, and operations
 
 **Files:**
 - Modify: `src/domain/holiday/adapters/chinaTimorHolidayAdapter.ts`
@@ -883,251 +1208,61 @@ git commit -m "feat: persist the global holiday library"
 - Create: `src/workspace/holiday/holidayLibraryOperations.test.ts`
 
 **Interfaces:**
-- Produces: `fetchChinaHolidayYear(year, fetchImpl)`, `fetchJapanHolidayYear(year, fetchImpl)`.
+- Produces: `fetchChinaHolidayYear`, `fetchJapanHolidayYear`, `normalizeChinaTimorHolidayYear`, `normalizeJapanHolidaysJp`.
 - Produces: `parseMonthloomHolidayJson`, `serializeMonthloomHolidayJson`.
-- Produces: prepared-update workflows for sync/import, `summarizeBaseUpdate`, plus calendar CRUD and manual-record operations.
+- Produces: `HolidayLibraryOperations` class for sync, import, manual single date / date range add, edit, delete, restore, and coverage confirmation.
 
-- [ ] **Step 1: Write provider-fetch and manual-priority tests**
+- [ ] **Step 1: Write provider adapters and Monthloom JSON tests**
 
-Define the provider fixture and fetch stub in the test file:
+In `src/domain/holiday/monthloomJson.test.ts`:
+Test strict format validation, duplicate dates rejection, and roundtrip serialization.
 
+In `src/workspace/holiday/holidayLibraryOperations.test.ts`:
+Test `prepareSyncYear`, `applyPreparedUpdate`, `upsertManualDateRange`, `deleteRecord`, `restoreSourceRecord`, and `deleteCalendar` (verifying template reference checks).
+
+- [ ] **Step 2: Implement adapters and direct browser fetch in `chinaTimorHolidayAdapter.ts` & `japanHolidaysJpAdapter.ts`**
+
+Implement `fetchChinaHolidayYear(year, fetchImpl)` and `fetchJapanHolidayYear(year, fetchImpl)` converting response to `HolidayBaseUpdate`.
+
+- [ ] **Step 3: Implement `src/domain/holiday/monthloomJson.ts`**
+
+Strict Zod schema validating format `"monthloom-holidays"`, version `1`, unique dates, and valid ISO strings.
+Export:
 ```ts
-const chinaPayload = {
-  code: 0,
-  holiday: {
-    "01-01": { holiday: true, name: "元旦", date: "2027-01-01" },
-    "02-06": { holiday: false, name: "春节调休", date: "2027-02-06" },
-  },
-};
-
-function fakeFetch(payload: unknown): typeof fetch {
-  return (async () =>
-    new Response(JSON.stringify(payload), {
-      status: 200,
-      headers: { "content-type": "application/json" },
-    })) as typeof fetch;
-}
-
-function effectiveName(snapshot: HolidayLibrarySnapshot, isoDate: string): string | undefined {
-  return resolveEffectiveRecords(snapshot, BUILTIN_CHINA_CALENDAR_ID).get(isoDate)?.name;
-}
+export function parseMonthloomHolidayJson(raw: unknown): MonthloomHolidayExchange;
+export function serializeMonthloomHolidayJson(args: {
+  calendar: HolidayCalendar;
+  records: readonly EffectiveHolidayRecord[];
+  coverage?: readonly HolidayCoverage[];
+}): string;
 ```
 
-```ts
-it("fetches one China year into a confirmed baseline update", async () => {
-  const update = await fetchChinaHolidayYear(2027, fakeFetch(chinaPayload));
-  expect(update.calendarId).toBe(BUILTIN_CHINA_CALENDAR_ID);
-  expect(update.replacementRanges).toEqual([
-    { start: { year: 2027, month: 1, day: 1 }, end: { year: 2027, month: 12, day: 31 } },
-  ]);
-});
+- [ ] **Step 4: Implement `src/workspace/holiday/holidayLibraryOperations.ts`**
 
-it("syncs a new baseline without changing a manual override", async () => {
-  await operations.upsertManualRecord({
-    calendarId: BUILTIN_CHINA_CALENDAR_ID,
-    date: { year: 2027, month: 1, day: 1 },
-    type: "holiday",
-    name: "Custom New Year",
-  });
-  const prepared = await operations.prepareSyncYear(
-    BUILTIN_CHINA_CALENDAR_ID,
-    2027,
-    fakeFetch(chinaPayload),
-  );
-  await operations.applyPreparedUpdate(prepared);
-  expect(effectiveName(await repo.getSnapshot(), "2027-01-01")).toBe("Custom New Year");
-});
-```
+Include:
+- `createCalendar(name: string): Promise<HolidayCalendar>`
+- `renameCalendar(calendarId: string, name: string): Promise<void>` (reject built-ins)
+- `deleteCalendar(calendarId: string): Promise<void>` (check active doc, saved templates in `db.templates`, saved projects in `db.projects`)
+- `prepareSyncYear(calendarId: string, year: number, fetchImpl?: typeof fetch): Promise<PreparedHolidayUpdate>`
+- `prepareMonthloomImport(raw: unknown): Promise<PreparedHolidayUpdate>`
+- `prepareProviderImport(calendarId: string, provider: HolidayProviderId, year: number, raw: unknown): Promise<PreparedHolidayUpdate>`
+- `applyPreparedUpdate(prepared: PreparedHolidayUpdate): Promise<HolidayChangeSummary>`
+- `upsertManualRecord(input: ManualHolidayRecordInput): Promise<void>`
+- `upsertManualDateRange(input: ManualHolidayDateRangeInput): Promise<void>` (iterates `start` to `end` via `addDays`/`compareDate`)
+- `deleteRecord(calendarId: string, date: LocalDate): Promise<void>`
+- `restoreSourceRecord(calendarId: string, date: LocalDate): Promise<void>`
+- `markCoverageConfirmed(calendarId: string, range: DateRange): Promise<void>`
 
-- [ ] **Step 2: Run focused tests and verify failure**
+- [ ] **Step 5: Run tests and verify PASS**
 
 Run: `npm test -- src/domain/holiday/adapters src/domain/holiday/monthloomJson.test.ts src/workspace/holiday/holidayLibraryOperations.test.ts`
-
-Expected: FAIL because fetch workflows and JSON exchange do not exist.
-
-- [ ] **Step 3: Add normalized provider adapters without breaking the still-running legacy screen**
-
-Add normalized functions that return records or throw descriptive validation errors. Keep the current country-shaped parser exports temporarily so the application remains buildable until Task 10 deletes the legacy upload screen; Task 11 removes the obsolete exports.
-
-```ts
-export function normalizeChinaTimorHolidayYear(raw: unknown): readonly NormalizedHolidayRecord[];
-export function normalizeJapanHolidaysJp(raw: unknown): readonly NormalizedHolidayRecord[];
-```
-
-- [ ] **Step 4: Add direct browser synchronization functions**
-
-```ts
-export async function fetchChinaHolidayYear(
-  year: number,
-  fetchImpl: typeof fetch = fetch,
-): Promise<HolidayBaseUpdate> {
-  const response = await fetchImpl(`https://timor.tech/api/holiday/year/${year}/`);
-  if (!response.ok) throw new Error(`China holiday sync failed: HTTP ${response.status}`);
-  return providerRecordsToYearUpdate(BUILTIN_CHINA_CALENDAR_ID, year, normalizeChinaTimorHolidayYear(await response.json()));
-}
-```
-
-Implement the Japan equivalent with `https://holidays-jp.github.io/api/v1/${year}/date.json`.
-
-```ts
-function providerRecordsToYearUpdate(
-  calendarId: string,
-  year: number,
-  records: readonly NormalizedHolidayRecord[],
-): HolidayBaseUpdate {
-  const now = new Date().toISOString();
-  const start = { year, month: 1, day: 1 };
-  const end = { year, month: 12, day: 31 };
-  return {
-    calendarId,
-    records: records.map((record) => ({
-      id: holidayRecordId(calendarId, record.date),
-      calendarId,
-      date: record.date,
-      type: record.type,
-      ...(record.name ? { name: record.name } : {}),
-      source: "sync",
-      updatedAt: now,
-    })),
-    replacementRanges: [{ start, end }],
-    coverage: [{
-      id: `${calendarId}:${year}`,
-      calendarId,
-      start,
-      end,
-      status: "confirmed",
-      source: "sync",
-      updatedAt: now,
-    }],
-  };
-}
-```
-
-- [ ] **Step 5: Implement strict Monthloom JSON exchange**
-
-Use Zod to validate `format`, version `1`, calendar metadata, coverage, and unique records. Confirmed ranges replace baseline only in those ranges; absent confirmed ranges upsert without deletion.
-
-```ts
-const isoLocalDateSchema = z.string().transform((value, ctx) => {
-  const date = parseISODate(value);
-  if (!date) {
-    ctx.addIssue({ code: "custom", message: `Invalid ISO date: ${value}` });
-    return z.NEVER;
-  }
-  return date;
-});
-
-const monthloomHolidayExchangeSchema = z.object({
-  format: z.literal("monthloom-holidays"),
-  version: z.literal(1),
-  calendar: z.object({ id: z.string().min(1), name: z.string().min(1) }),
-  coverage: z.array(z.object({
-    start: isoLocalDateSchema,
-    end: isoLocalDateSchema,
-    status: z.enum(["confirmed", "unconfirmed"]),
-  })),
-  records: z.array(z.object({
-    date: isoLocalDateSchema,
-    type: z.enum(["holiday", "workday"]),
-    name: z.string().min(1).optional(),
-  })),
-}).superRefine((value, ctx) => {
-  const seen = new Set<string>();
-  value.records.forEach((record, index) => {
-    const key = toISODate(record.date);
-    if (seen.has(key)) {
-      ctx.addIssue({ code: "custom", path: ["records", index, "date"], message: `Duplicate date: ${key}` });
-    }
-    seen.add(key);
-  });
-});
-```
-
-- [ ] **Step 6: Implement prepared updates and atomic user operations**
-
-```ts
-export class HolidayLibraryOperations {
-  async createCalendar(name: string): Promise<HolidayCalendar>;
-  async renameCalendar(calendarId: string, name: string): Promise<void>;
-  async deleteCalendar(calendarId: string): Promise<void>;
-  async prepareSyncYear(calendarId: string, year: number, fetchImpl?: typeof fetch): Promise<PreparedHolidayUpdate>;
-  async prepareMonthloomImport(raw: unknown): Promise<PreparedHolidayUpdate>;
-  async prepareProviderImport(calendarId: string, provider: HolidayProviderId, year: number, raw: unknown): Promise<PreparedHolidayUpdate>;
-  async applyPreparedUpdate(prepared: PreparedHolidayUpdate): Promise<HolidayChangeSummary>;
-  async upsertManualRecord(input: ManualHolidayRecordInput): Promise<void>;
-  async upsertManualRecords(inputs: readonly ManualHolidayRecordInput[]): Promise<void>;
-  async deleteRecord(calendarId: string, date: LocalDate): Promise<void>;
-  async restoreSourceRecord(calendarId: string, date: LocalDate): Promise<void>;
-  async markCoverageConfirmed(calendarId: string, range: DateRange): Promise<void>;
-}
-```
-
-Define the operation DTOs in the same module:
-
-```ts
-export type ManualHolidayRecordInput = Readonly<{
-  calendarId: string;
-  date: LocalDate;
-  type: HolidayRecordType;
-  name?: string;
-}>;
-
-export type HolidayChangeSummary = Readonly<{
-  added: number;
-  changed: number;
-  removed: number;
-  skippedManualConflicts: number;
-}>;
-
-export type PreparedHolidayUpdate = Readonly<{
-  update: HolidayBaseUpdate;
-  summary: HolidayChangeSummary;
-}>;
-```
-
-`PreparedHolidayUpdate` contains the validated base update and exact added/changed/removed counts, but does not mutate holiday records. The UI displays that summary and calls `applyPreparedUpdate` only after confirmation. Successful synchronization passes a success `HolidaySyncState` into the same repository transaction as its base update. A failed remote request writes only an error `HolidaySyncState`; calendars, records, overrides, and coverage remain unchanged. Refresh `useHolidayLibraryStore` after either outcome.
-
-```ts
-async prepareSyncYear(calendarId: string, year: number, fetchImpl: typeof fetch = fetch) {
-  try {
-    let update: HolidayBaseUpdate;
-    if (calendarId === BUILTIN_CHINA_CALENDAR_ID) {
-      update = await fetchChinaHolidayYear(year, fetchImpl);
-    } else if (calendarId === BUILTIN_JAPAN_CALENDAR_ID) {
-      update = await fetchJapanHolidayYear(year, fetchImpl);
-    } else {
-      throw new Error(`Calendar does not support synchronization: ${calendarId}`);
-    }
-    return {
-      update,
-      summary: summarizeBaseUpdate(await this.repository.getSnapshot(), update),
-    };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    await this.repository.recordSyncFailure(calendarId, message, new Date().toISOString());
-    await useHolidayLibraryStore.getState().refresh(this.repository);
-    throw error;
-  }
-}
-```
-
-`summarizeBaseUpdate(library, update)` resolves effective records before and after applying the update in memory, then counts added, changed, and removed effective dates; dates protected by manual overrides therefore do not appear as changes.
-
-`deleteCalendar` rejects built-ins and scans the current `useDocumentStore` document plus saved project/template documents for `holidayLayers.calendarId`; referenced custom calendars cannot be deleted.
-
-`renameCalendar` also rejects built-ins so their stable system identity and localized display names cannot drift.
-
-- [ ] **Step 7: Run provider, interchange, and operation tests**
-
-Run: `npm test -- src/domain/holiday/adapters src/domain/holiday/monthloomJson.test.ts src/workspace/holiday/holidayLibraryOperations.test.ts`
-
 Expected: PASS.
 
-- [ ] **Step 8: Commit data acquisition and editing workflows**
+- [ ] **Step 6: Commit Task 5**
 
 ```bash
-git add src/domain/holiday src/workspace/holiday/holidayLibraryOperations.ts src/workspace/holiday/holidayLibraryOperations.test.ts
-git commit -m "feat: sync and edit global holiday calendars"
+git add src/domain/holiday src/workspace/holiday
+git commit -m "feat: implement holiday synchronization, JSON exchange, and operations"
 ```
 
 ---
@@ -1140,93 +1275,47 @@ git commit -m "feat: sync and edit global holiday calendars"
 - Create: `src/workspace/components/HolidayCalendarDetail.tsx`
 - Create: `src/workspace/components/HolidayRecordDialog.tsx`
 - Create: `src/workspace/components/holiday-library.css`
-- Modify: `src/workspace/components/HolidayDiagnostics.tsx`
 - Modify: `src/shared/i18n/types.ts`
 - Modify: `src/shared/i18n/locales/zh.ts`
 - Modify: `src/shared/i18n/locales/en.ts`
 
 **Interfaces:**
-- Consumes: `useHolidayLibraryStore`, `HolidayLibraryOperations`, canonical calendar/record types.
-- Produces: independent global-library workspace panel.
+- Consumes: `useHolidayLibraryStore`, `HolidayLibraryOperations`.
+- Produces: Complete, accessible Holiday Library management card/panel.
 
-- [ ] **Step 1: Add behavior tests only for form validation and action wiring**
+- [ ] **Step 1: Write UI unit tests for modal validation and action dispatch**
 
-Test invalid date/type submission and that manual save calls `upsertManualRecord` with a `LocalDate`. Do not snapshot styling or layout.
+Test `HolidayRecordDialog` validating ISO dates, switching between single date and date range, and submitting `upsertManualRecord` / `upsertManualDateRange`.
 
-```tsx
-fireEvent.change(screen.getByLabelText("日期"), { target: { value: "2027-02-30" } });
-fireEvent.click(screen.getByRole("button", { name: "保存" }));
-expect(screen.getByRole("alert")).toHaveTextContent("日期无效");
-expect(upsertManualRecord).not.toHaveBeenCalled();
-```
+- [ ] **Step 2: Implement `HolidayLibraryPanel.tsx` and child components**
 
-- [ ] **Step 2: Implement the left-list/right-detail management flow**
+- Left list (`HolidayCalendarList`): built-in/custom calendars, record count, current target year coverage badge (`confirmed`/`unconfirmed`/`unknown`), "Add Calendar" button.
+- Right detail (`HolidayCalendarDetail`):
+  - Calendar name header (rename button for custom).
+  - Sync state status (last sync time/status).
+  - Coverage banner with "Mark Confirmed" button.
+  - Action bar: Year selector, Sync year (China/Japan), Import raw JSON (China/Japan), Import Monthloom JSON, Export Monthloom JSON, Add Date, Add Date Range.
+  - Record table: Date, Type badge (`holiday` / `workday`), Name, Provenance badge (`数据源记录`, `人工修改`, `人工新增`), Edit, Delete, and Restore Source buttons.
+  - Summary Confirmation Dialog before applying sync/import.
 
-`HolidayLibraryPanel` lists built-in and custom calendars and supports creating/renaming/deleting custom calendars; `HolidayCalendarDetail` filters records by selected year and displays date, type, name, provenance, and actions.
+- [ ] **Step 3: Implement `HolidayRecordDialog.tsx`**
 
-```tsx
-export const HolidayLibraryPanel: React.FC = () => {
-  const snapshot = useHolidayLibraryStore((state) => state.snapshot);
-  const [selectedId, setSelectedId] = useState(snapshot.calendars[0]?.id ?? null);
-  const selected = snapshot.calendars.find((calendar) => calendar.id === selectedId) ?? null;
-  return (
-    <section className="holiday-library-panel">
-      <HolidayCalendarList calendars={snapshot.calendars} selectedId={selectedId} onSelect={setSelectedId} />
-      {selected && <HolidayCalendarDetail calendar={selected} snapshot={snapshot} />}
-    </section>
-  );
-};
-```
+Tabs/toggle for "Single Date" vs "Date Range":
+- Single Date: Date input, Type radio (`holiday` / `workday`), Name input.
+- Date Range: Start Date input, End Date input, Type radio, Name input.
 
-Show the selected calendar's latest synchronization success or failure from `snapshot.syncStates`; keep this separate from coverage status.
+- [ ] **Step 4: Add complete bilingual localization in `zh.ts` & `en.ts`**
 
-- [ ] **Step 3: Implement sync/import previews and manual edits**
+- [ ] **Step 5: Run tests and verify PASS**
 
-Show the `PreparedHolidayUpdate` change counts before applying sync/import. China/Japan expose year sync and raw provider JSON import; all calendars expose manual add/edit and Monthloom JSON import/export. Keep the selected calendar/year after refresh.
-
-```ts
-const prepared = await operations.prepareSyncYear(calendar.id, selectedYear);
-setPendingUpdate(prepared);
-
-const confirmPendingUpdate = async () => {
-  if (!pendingUpdate) return;
-  const summary = await operations.applyPreparedUpdate(pendingUpdate);
-  setLastSummary(summary);
-  setPendingUpdate(null);
-};
-```
-
-- [ ] **Step 4: Add coverage messaging without blocking export**
-
-Display `confirmed`, `unconfirmed`, and `unknown` distinctly. Missing future data is warning copy, never a disabled editor or export action.
-
-```tsx
-<div role="status" className={`coverage-status coverage-${coverageState}`}>
-  {t.holidayLibrary.coverage[coverageState]}
-</div>
-```
-
-Do not pass coverage state into any `disabled` prop on preview/export controls.
-
-- [ ] **Step 5: Export a mount-ready panel**
-
-Export `<HolidayLibraryPanel />` with its scoped stylesheet and no dependency on project-owned holiday state. Task 10 mounts it as a separate workspace card beside project persistence/export controls when the application switches to the global SSOT.
-
-```ts
-export { HolidayLibraryPanel } from "./HolidayLibraryPanel";
-```
-
-- [ ] **Step 6: Run the focused UI behavior tests and i18n tests**
-
-Run: `npm test -- src/workspace/components src/shared/i18n/i18n.test.ts`
-
+Run: `npm test -- src/workspace/components src/shared/i18n`
 Expected: PASS.
 
-- [ ] **Step 7: Commit the global-library UI**
+- [ ] **Step 6: Commit Task 6**
 
 ```bash
 git add src/workspace/components src/shared/i18n
-git commit -m "feat: add holiday library management UI"
+git commit -m "feat: implement global holiday library management UI"
 ```
 
 ---
@@ -1241,44 +1330,23 @@ git commit -m "feat: add holiday library management UI"
 - Modify: `src/editor/model/templateBindings.test.ts`
 - Modify: `src/editor/interaction/drag.ts`
 - Modify: `src/editor/interaction/drag.test.ts`
-- Modify: `src/editor/model/effectiveDocument.ts`
 - Modify: `src/editor/selection/hitTargets.ts`
 - Modify: `src/editor/selection/hitTargets.test.ts`
-- Modify: `src/editor/selection/selection.ts`
-- Modify: `src/rendering/scene/types.ts`
 
 **Interfaces:**
 - Produces: `HolidaySemanticId`, `buildHolidaySemanticId`, `parseHolidaySemanticId`.
-- Extends: `EditableSemanticId` and `PositionableSemanticId` with dynamic layer IDs.
-- Consumes: immutable holiday-layer helpers from Task 2.
+- Updates `EditableSemanticId` and `PositionableSemanticId` to include dynamic holiday IDs.
+- Updates `getElementPosition`, `setElementPosition`, `getTypography`, `setTypography`, `applyDragCommit`.
 
-- [ ] **Step 1: Write round-trip and binding tests**
+- [ ] **Step 1: Write semantic ID parser and template binding tests**
 
-```ts
-it("round-trips a dynamic Main holiday-name semantic ID", () => {
-  const id = buildHolidaySemanticId("main", "layer-cn", "name");
-  expect(id).toBe("main.holiday.layer-cn.name");
-  expect(parseHolidaySemanticId(id)).toEqual({
-    target: "main",
-    layerId: "layer-cn",
-    element: "name",
-  });
-});
+In `src/editor/model/holidaySemanticId.test.ts`:
+Test `buildHolidaySemanticId` and `parseHolidaySemanticId` roundtrips for `main` and `mini` (rejecting mini name IDs).
 
-it("updates only the selected layer marker position", () => {
-  const next = setElementPosition(document, "main.holiday.layer-cn.holiday-marker", position);
-  expect(findLayer(next, "layer-cn").main.holidayMarker.marker.position).toEqual(position);
-  expect(findLayer(next, "layer-jp")).toBe(findLayer(document, "layer-jp"));
-});
-```
+In `src/editor/model/templateBindings.test.ts`:
+Test getting and setting position, typography, and markers for dynamic layer elements.
 
-- [ ] **Step 2: Run focused editor-model tests and verify failure**
-
-Run: `npm test -- src/editor/model/holidaySemanticId.test.ts src/editor/model/templateBindings.test.ts src/editor/interaction/drag.test.ts src/editor/selection/hitTargets.test.ts`
-
-Expected: FAIL because semantic IDs are still fixed country strings.
-
-- [ ] **Step 3: Define dynamic IDs**
+- [ ] **Step 2: Implement `src/editor/model/holidaySemanticId.ts`**
 
 ```ts
 export type HolidayLayerElement =
@@ -1290,57 +1358,52 @@ export type HolidayLayerElement =
 export type HolidaySemanticId =
   | `main.holiday.${string}.${HolidayLayerElement}`
   | `mini.holiday.${string}.${Exclude<HolidayLayerElement, "name">}`;
-```
 
-The parser must reject Mini name IDs and malformed strings.
+export function buildHolidaySemanticId(
+  target: "main" | "mini",
+  layerId: string,
+  element: HolidayLayerElement,
+): HolidaySemanticId {
+  if (target === "mini" && element === "name") {
+    throw new Error("Mini calendars do not support holiday names.");
+  }
+  return `${target}.holiday.${layerId}.${element}` as HolidaySemanticId;
+}
 
-- [ ] **Step 4: Route bindings through parsed layer IDs**
-
-Update `getElementPosition`, `setElementPosition`, `getTypography`, `setTypography`, and marker getters/setters. Dynamic date-color IDs are editable but not positionable. Preserve the static weekday/date/month/grid branches.
-
-```ts
-const holidayTarget = parseHolidaySemanticId(semanticId);
-if (holidayTarget) {
-  const layer = getHolidayLayer(document.holidayLayers, holidayTarget.layerId);
-  return getHolidayElementPosition(layer, holidayTarget);
+export function parseHolidaySemanticId(id: string): {
+  target: "main" | "mini";
+  layerId: string;
+  element: HolidayLayerElement;
+} | null {
+  const parts = id.split(".");
+  if (parts.length !== 4 || parts[1] !== "holiday") return null;
+  const target = parts[0];
+  const layerId = parts[2];
+  const element = parts[3] as HolidayLayerElement;
+  if (target !== "main" && target !== "mini") return null;
+  if (target === "mini" && element === "name") return null;
+  return { target, layerId, element };
 }
 ```
 
-Setter branches call `updateHolidayLayer` and rebuild only the selected layer/style branch.
+- [ ] **Step 3: Update `templateBindings.ts` for dynamic holiday routing**
 
-- [ ] **Step 5: Update dragging and selection**
+Add branches for `parseHolidaySemanticId(semanticId)` in `getElementPosition`, `setElementPosition`, `getTypography`, `setTypography`.
 
-Dynamic name/marker scene nodes must generate hit targets and use the same anchor-relative drag commits as current static elements. Do not introduce absolute client coordinates.
+- [ ] **Step 4: Update `hitTargets.ts` and `drag.ts`**
 
-```ts
-export type DragSession = Readonly<{
-  semanticId: PositionableSemanticId;
-  instanceKey: string;
-  deltaX: number;
-  deltaY: number;
-}>;
+Verify dynamic nodes generate hit targets and calculate anchor-relative drag deltas cleanly.
 
-export function applyDragCommit(document: EditorDocument, drag: DragSession): EditorDocument {
-  const current = getElementPosition(document, drag.semanticId);
-  return setElementPosition(document, drag.semanticId, {
-    ...current,
-    offsetX: Math.round((current.offsetX + drag.deltaX) * 100) / 100,
-    offsetY: Math.round((current.offsetY + drag.deltaY) * 100) / 100,
-  });
-}
-```
-
-- [ ] **Step 6: Run editor-model tests**
+- [ ] **Step 5: Run tests and verify PASS**
 
 Run: `npm test -- src/editor/model src/editor/interaction src/editor/selection`
-
 Expected: PASS.
 
-- [ ] **Step 7: Commit dynamic editor semantics**
+- [ ] **Step 6: Commit Task 7**
 
 ```bash
-git add src/editor/model src/editor/interaction src/editor/selection src/rendering/scene/types.ts
-git commit -m "refactor: support dynamic holiday layer selections"
+git add src/editor/model src/editor/interaction src/editor/selection
+git commit -m "feat: support dynamic holiday semantic IDs and template bindings"
 ```
 
 ---
@@ -1355,98 +1418,44 @@ git commit -m "refactor: support dynamic holiday layer selections"
 - Modify: `src/editor/components/Inspector.tsx`
 - Modify: `src/editor/components/MarkerInspector.tsx`
 - Modify: `src/editor/components/editor.css`
-- Modify: `src/editor/state/uiStore.ts`
-- Modify: `src/editor/state/documentStore.test.ts`
 - Modify: `src/shared/i18n/types.ts`
 - Modify: `src/shared/i18n/locales/zh.ts`
 - Modify: `src/shared/i18n/locales/en.ts`
 
 **Interfaces:**
-- Consumes: dynamic semantic IDs, global calendar metadata, document holiday-layer helpers.
-- Produces: ordered expandable layer tree and Main/Mini-specific inspector.
+- Produces: `HolidayLayerTree` with reorder handles, enable/disable toggle, remove, missing calendar indicator, and rebind select.
+- Produces: `HolidayLayerInspector` for Name, Holiday Marker, Workday Marker, Date Colors.
 
-- [ ] **Step 1: Add model-level tests for add, toggle, move, remove, and rebind**
+- [ ] **Step 1: Implement `HolidayLayerTree.tsx`**
 
-```ts
-it("rebinds a missing layer only to a calendar unused by this template", () => {
-  expect(() => rebindHolidayLayer(layers, "missing-layer", "already-used-calendar")).toThrow();
-  expect(rebindHolidayLayer(layers, "missing-layer", "custom-calendar")[0].calendarId)
-    .toBe("custom-calendar");
-});
-```
+- Collapsible "Holiday Layers" group in the left editor sidebar.
+- "Add Layer" (+) button with dropdown filtering out calendars already in the template.
+- Layer rows displaying calendar name, missing calendar warning badge if not found in library, "Rebind" select, toggle visibility, drag handle, up/down buttons, and delete layer button.
+- Expandable child items:
+  - Main: Name (with text icon), Holiday Marker (休 icon), Workday Marker (班 icon), Date Colors (palette icon).
+  - Mini: Holiday Marker, Workday Marker, Date Colors.
+- Clicking canvas element selects corresponding layer child item.
 
-Keep reordering behavior testable outside React; do not add visual snapshot tests.
+- [ ] **Step 2: Implement `HolidayLayerInspector.tsx` and `HolidayDateColorInspector.tsx`**
 
-- [ ] **Step 2: Extract and implement `HolidayLayerTree`**
+- When `name` selected: `showName` checkbox, `PositionInspector`, `TypographyInspector`.
+- When `holiday-marker` or `workday-marker` selected: `enabled` toggle, `MarkerInspector` (text/image, size, position, typography/asset).
+- When `date-colors` selected: `HolidayDateColorInspector` (`enabled` toggle, holiday color picker, workday color picker).
 
-Render calendar name, enabled state, expand/collapse, missing-data state, drag handle, keyboard up/down actions, remove, and add-from-library. Filter the add picker so one calendar cannot appear twice in a template.
+- [ ] **Step 3: Integrate into `TemplateEditor.tsx` and `Inspector.tsx`**
 
-```tsx
-const availableCalendars = calendars.filter(
-  (calendar) => !layers.some((layer) => layer.calendarId === calendar.id),
-);
+Replace static holiday items in `TemplateEditor` layers list with `HolidayLayerTree`. Route dynamic selections in `Inspector` to `HolidayLayerInspector`.
 
-return layers.map((layer) => (
-  <HolidayLayerRow
-    key={layer.id}
-    layer={layer}
-    calendar={calendarById.get(layer.calendarId) ?? null}
-    onMove={(direction) => onChange(moveHolidayLayer(layers, layer.id, direction))}
-    onToggle={() => onChange(updateHolidayLayer(layers, layer.id, (current) => ({ ...current, enabled: !current.enabled })))}
-  />
-));
-```
+- [ ] **Step 4: Run editor and i18n tests**
 
-- [ ] **Step 3: Render Main/Mini child entries**
+Run: `npm test -- src/editor src/shared/i18n`
+Expected: PASS.
 
-Main children: name, holiday marker, workday marker, date colors. Mini children: holiday marker, workday marker, date colors. Never render a Mini name entry.
-
-```ts
-const elements: readonly HolidayLayerElement[] = activeTemplate === "main"
-  ? ["name", "holiday-marker", "workday-marker", "date-colors"]
-  : ["holiday-marker", "workday-marker", "date-colors"];
-```
-
-- [ ] **Step 4: Implement the dynamic inspector**
-
-Route dynamic IDs to `HolidayLayerInspector`. Reuse `PositionInspector`, `TypographyInspector`, and `MarkerInspector`; add `HolidayDateColorInspector` with:
-
-```ts
-type HolidayDateColorInspectorProps = {
-  value: HolidayDateColors;
-  onChange: (next: HolidayDateColors) => void;
-};
-```
-
-The Main name branch includes a `showName` toggle. Both targets include separate enabled toggles for holiday/workday markers. Only show fields applicable to the active marker type. Updating image assets continues to use the persistent asset store.
-
-- [ ] **Step 5: Preserve canvas selection and missing-data editing**
-
-Rendered dynamic nodes select their layer child. A layer with no current-year instances remains selectable from the tree and editable in the inspector.
-
-```tsx
-<button
-  type="button"
-  onClick={() => setSelection({
-    semanticId: buildHolidaySemanticId(activeTemplate, layer.id, element),
-    instanceKey: `${layer.id}:${element}:default`,
-  })}
->
-  {label}
-</button>
-```
-
-- [ ] **Step 6: Run editor behavior and i18n tests**
-
-Run: `npm test -- src/editor src/shared/i18n/i18n.test.ts`
-
-Expected: PASS; no tests assert overlap warnings because none exist.
-
-- [ ] **Step 7: Commit the dynamic editor UI**
+- [ ] **Step 5: Commit Task 8**
 
 ```bash
 git add src/editor src/shared/i18n
-git commit -m "feat: edit ordered holiday layers in templates"
+git commit -m "feat: implement holiday layer tree and inspector in editor"
 ```
 
 ---
@@ -1459,149 +1468,56 @@ git commit -m "feat: edit ordered holiday layers in templates"
 - Modify: `src/persistence/schema/validation.ts`
 - Modify: `src/persistence/schema/snapshot.test.ts`
 - Modify: `src/persistence/operations/projectOperations.ts`
-- Modify: `src/persistence/operations/operations.test.ts`
 - Modify: `src/persistence/bundle/manifest.ts`
 - Modify: `src/persistence/bundle/exportBundle.ts`
 - Modify: `src/persistence/bundle/importBundle.ts`
 - Modify: `src/persistence/bundle/bundle.test.ts`
 - Modify: `src/persistence/assets/referencedAssets.ts`
 - Modify: `src/persistence/assets/remapAssets.ts`
-- Modify: `src/persistence/assets/assets.test.ts`
 - Modify: `src/persistence/components/PersistenceControls.tsx`
 
 **Interfaces:**
-- Project snapshot no longer contains holiday datasets.
-- Project bundle contains `holiday-library.json`; template bundle does not.
-- Bundle import returns conflict summary counts.
+- Clean project snapshot without `chinaHolidayDataset` or `japanHolidayDataset`.
+- Bundle manifest v2: project bundle contains `holiday-library.json`; template bundle does not.
+- Non-destructive library merge on project import with conflict summary reporting.
 
-- [ ] **Step 1: Rewrite snapshot tests for the clean schema**
+- [ ] **Step 1: Write snapshot and bundle roundtrip tests**
 
-```ts
-const project: ProjectSnapshotV1 = {
-  version: 1,
-  type: "project",
-  id: "project-1",
-  name: "2027 Calendar",
-  createdAt: now,
-  updatedAt: now,
-  targetYear: 2027,
-  document: createDefaultEditorDocument(),
-};
+In `src/persistence/schema/snapshot.test.ts`:
+Verify `ProjectSnapshotV1` contains `document.holidayLayers` and no fixed holiday dataset fields.
 
-expect("chinaHolidayDataset" in project).toBe(false);
-expect("japanHolidayDataset" in project).toBe(false);
-```
+In `src/persistence/bundle/bundle.test.ts`:
+Verify project bundle contains `holiday-library.json`, imports non-destructively, keeps local overrides on conflict, and reports `skippedManualConflicts`. Verify template bundle contains no `holiday-library.json`.
 
-- [ ] **Step 2: Rewrite bundle tests before implementation**
+- [ ] **Step 2: Update snapshot schemas**
 
-Project roundtrip must assert that all calendars—including one unused by the project—and their coverage/sync states arrive in the target DB. Template roundtrip must assert that `holiday-library.json` is absent. Add a conflict fixture where target manual data wins and the result reports one skipped conflict.
+Remove `chinaHolidayDataset` and `japanHolidayDataset` from `ProjectSnapshotV1` and its Zod schema.
 
-```ts
-expect((await targetHolidayRepo.getSnapshot()).calendars.map((calendar) => calendar.id))
-  .toContain("unused-custom-calendar");
-expect(projectZip.file("holiday-library.json")).not.toBeNull();
-expect(templateZip.file("holiday-library.json")).toBeNull();
-expect(importResult.holidayMerge?.skippedManualConflicts).toBe(1);
-```
+- [ ] **Step 3: Update `collectReferencedAssetIds` and `remapDocumentAssetIds`**
 
-- [ ] **Step 3: Run snapshot/bundle tests and verify failure**
+Iterate `document.holidayLayers` and extract/remap image asset IDs from Main and Mini markers.
 
-Run: `npm test -- src/persistence/schema/snapshot.test.ts src/persistence/bundle/bundle.test.ts`
+- [ ] **Step 4: Update bundle manifest, export, and import**
 
-Expected: FAIL because snapshots still embed fixed datasets and bundles omit the global library.
+In `exportBundle.ts`:
+For project bundles, load snapshot from `HolidayLibraryRepository` and write `holiday-library.json`.
 
-- [ ] **Step 4: Remove project-owned holiday data**
+In `importBundle.ts`:
+For project bundles, validate `holiday-library.json`, load local library snapshot, execute `mergeHolidayLibraries(local, incoming)`, and save assets, project, and merged holiday tables inside a single Dexie `rw` transaction.
 
-Delete `chinaHolidayDataset` and `japanHolidayDataset` from the project schema and `ProjectOperations`. Project load updates only project identity, target year, and document.
+In `PersistenceControls.tsx`:
+Display the spec notice: "项目包将包含 Monthloom 中的完整节假日资料库，以便在其他设备上继续使用。"
 
-```ts
-export type ProjectSnapshotV1 = Readonly<{
-  version: 1;
-  type: "project";
-  id: string;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-  targetYear: number;
-  document: EditorDocument;
-}>;
-```
-
-- [ ] **Step 5: Make asset traversal dynamic**
-
-`collectReferencedAssetIds` and `remapDocumentAssetIds` must iterate every Main/Mini holiday-layer marker and process image assets. Delete fixed `chinaMarkers` branches.
-
-```ts
-for (const layer of document.holidayLayers) {
-  for (const configured of [
-    layer.main.holidayMarker,
-    layer.main.workdayMarker,
-    layer.mini.holidayMarker,
-    layer.mini.workdayMarker,
-  ]) {
-    if (configured.marker.type === "image") assetIds.add(configured.marker.assetId);
-  }
-}
-```
-
-- [ ] **Step 6: Version the bundle manifest and embed the full library for projects**
-
-Use a discriminated manifest version `2`. Project bundles write validated `holiday-library.json`; template bundles do not. Display the fixed export notice from the spec in `PersistenceControls`.
-
-```ts
-const bundleManifestSchema = z.discriminatedUnion("type", [
-  z.object({
-    format: z.literal("monthloom-bundle"),
-    version: z.literal(2),
-    type: z.literal("project"),
-    holidayLibraryFilename: z.literal("holiday-library.json"),
-    exportedAt: z.string(),
-    generator: z.string(),
-    assets: z.array(bundleAssetEntrySchema),
-  }),
-  z.object({
-    format: z.literal("monthloom-bundle"),
-    version: z.literal(2),
-    type: z.literal("template"),
-    exportedAt: z.string(),
-    generator: z.string(),
-    assets: z.array(bundleAssetEntrySchema),
-  }),
-]);
-```
-
-- [ ] **Step 7: Implement non-destructive library merge**
-
-Create and test a pure merge function:
-
-```ts
-export function mergeHolidayLibraries(
-  local: HolidayLibrarySnapshot,
-  incoming: HolidayLibrarySnapshot,
-): { snapshot: HolidayLibrarySnapshot; summary: HolidayLibraryMergeSummary };
-```
-
-```ts
-export type HolidayLibraryMergeSummary = Readonly<{
-  addedCalendars: number;
-  addedRecords: number;
-  skippedManualConflicts: number;
-}>;
-```
-
-New IDs/records are added; local metadata, local sync state, and local manual overrides win for matching calendar IDs. Conflicting incoming manual edits are skipped and counted. Save assets, project, and merged holiday tables in one `rw` transaction.
-
-- [ ] **Step 8: Run persistence tests**
+- [ ] **Step 5: Run persistence tests**
 
 Run: `npm test -- src/persistence`
+Expected: PASS.
 
-Expected: PASS, including atomic rollback and dynamic marker asset remapping.
-
-- [ ] **Step 9: Commit schemas and bundles**
+- [ ] **Step 6: Commit Task 9**
 
 ```bash
 git add src/persistence
-git commit -m "feat: bundle the global holiday library with projects"
+git commit -m "feat: bundle full holiday library with projects and merge on import"
 ```
 
 ---
@@ -1620,79 +1536,19 @@ git commit -m "feat: bundle the global holiday library with projects"
 - Modify: `src/app/App.tsx`
 - Modify: `src/preview/fullYear/FullYearPreview.tsx`
 - Modify: `src/preview/fullYear/FullYearPreview.test.tsx`
-- Modify: `src/preview/fullYear/calendarSet.ts`
 - Modify: `src/export/components/BatchExportPanel.tsx`
-- Modify: `src/export/formal/monthSet.ts`
 - Modify: `src/shared/i18n/types.ts`
 - Modify: `src/shared/i18n/locales/zh.ts`
 - Modify: `src/shared/i18n/locales/en.ts`
 
 **Interfaces:**
-- Workspace store retains project identity/name and target year only.
-- App derives `holidayIndex` and coverage diagnostics from global snapshot plus `document.holidayLayers`.
-- Editor, gallery, and export share that resolved index.
+- Workspace store holds project meta and target year only.
+- `App.tsx` hydrates `holidayLibraryStore`, derives single `holidayIndex` and coverage diagnostics, and mounts `HolidayLibraryPanel`.
+- Editor, preview, and export consume identical `holidayIndex` and `document.holidayLayers`.
 
-- [ ] **Step 1: Rewrite workspace tests for the final ownership model**
+- [ ] **Step 1: Clean up `workspaceStore.ts`**
 
-```ts
-it("keeps holiday records out of project workspace state", () => {
-  const state = useWorkspaceStore.getState();
-  expect("chinaHolidayDataset" in state).toBe(false);
-  expect("japanHolidayDataset" in state).toBe(false);
-});
-```
-
-Add a test that target-year changes recompute required coverage without mutating the library.
-
-- [ ] **Step 2: Hydrate the global library once in `App`**
-
-Call `useHolidayLibraryStore.getState().hydrate()` from an app-level effect. Derive:
-
-```ts
-const holidayIndex = useMemo(
-  () => resolveHolidayIndex({ library: holidayLibrary, layers: document.holidayLayers }),
-  [holidayLibrary, document.holidayLayers],
-);
-```
-
-- [ ] **Step 3: Replace fixed workspace diagnostics**
-
-`getWorkspaceHolidayDiagnostics` now receives target year, library, and enabled layers. It calculates the required `Y-1 Dec` through `Y+1 Feb` range and returns diagnostics per referenced calendar.
-
-```ts
-export function getWorkspaceHolidayDiagnostics(args: {
-  targetYear: number;
-  library: HolidayLibrarySnapshot;
-  layers: readonly HolidayLayer[];
-}): readonly HolidayDiagnostic[] {
-  const requiredRange = calculateRequiredHolidayRange(args.targetYear);
-  return args.layers
-    .filter((layer) => layer.enabled)
-    .flatMap((layer) => diagnosticsForReferencedCalendar(args.library, layer.calendarId, requiredRange));
-}
-```
-
-- [ ] **Step 4: Pass one resolved index through editor, preview, and export**
-
-Editor month generation, `FullYearPreview`, and `BatchExportPanel` must consume the same `holidayIndex`. Pass `document.holidayLayers` into all render/font requirement functions.
-
-```tsx
-<TemplateEditor calendar={editorCalendar} assetResolver={persistentAssetStore} />
-<FullYearPreview
-  targetYear={targetYear}
-  holidayIndex={holidayIndex}
-  coverageDiagnostics={diagnostics}
-  assetResolver={persistentAssetStore}
-/>
-<BatchExportPanel holidayIndex={holidayIndex} coverageDiagnostics={diagnostics} />
-```
-
-Change `BatchExportPanelProps` accordingly instead of reading holiday data from `workspaceStore`.
-
-- [ ] **Step 5: Remove legacy upload controls and fixed workspace fields**
-
-Delete the two fixed file inputs and all China/Japan workspace setters. The global `HolidayLibraryPanel` is the only data-management UI.
-
+Remove `chinaHolidayDataset` and `japanHolidayDataset`. Workspace state holds:
 ```ts
 export type WorkspaceState = {
   currentProjectId: string | null;
@@ -1705,23 +1561,44 @@ export type WorkspaceState = {
 };
 ```
 
-- [ ] **Step 6: Run integration tests**
+- [ ] **Step 2: Update `holidayWorkspace.ts`**
+
+Export:
+```ts
+export function getWorkspaceHolidayDiagnostics(args: {
+  targetYear: number;
+  library: HolidayLibrarySnapshot;
+  layers: readonly HolidayLayer[];
+}): readonly HolidayDiagnostic[];
+```
+
+- [ ] **Step 3: Integrate in `App.tsx`**
+
+- Call `useHolidayLibraryStore.getState().hydrate()` in an initial effect.
+- Derive `holidayIndex`:
+  ```ts
+  const holidayLibrary = useHolidayLibraryStore((s) => s.snapshot);
+  const holidayIndex = useMemo(
+    () => resolveHolidayIndex({ library: holidayLibrary, layers: document.holidayLayers }),
+    [holidayLibrary, document.holidayLayers],
+  );
+  ```
+- Derive diagnostics from targetYear, holidayLibrary, and document.holidayLayers.
+- Mount `<HolidayLibraryPanel />` in the workspace view.
+
+- [ ] **Step 4: Pass `holidayIndex` and `document.holidayLayers` to `FullYearPreview` and `BatchExportPanel`**
+
+- [ ] **Step 5: Run integration tests and full build**
 
 Run: `npm test -- src/app src/workspace src/preview src/export`
-
-Expected: PASS with target-year switching, non-blocking coverage warnings, and exactly 28 formal outputs.
-
-- [ ] **Step 7: Run the first full integration build**
-
 Run: `npm run build`
+Expected: PASS.
 
-Expected: PASS. Resolve every temporary compile break caused by switching the domain/render interfaces; do not add legacy adapters to make the build pass.
-
-- [ ] **Step 8: Commit application integration**
+- [ ] **Step 6: Commit Task 10**
 
 ```bash
 git add src/app src/workspace src/preview src/export src/shared/i18n
-git commit -m "refactor: consume the global holiday SSOT everywhere"
+git commit -m "feat: wire global holiday library into app, preview, and batch export"
 ```
 
 ---
@@ -1738,126 +1615,59 @@ git commit -m "refactor: consume the global holiday SSOT everywhere"
 - Modify: `docs/user/holiday-json.md`
 - Modify: `docs/user/backup-and-recovery.md`
 - Modify: `docs/user/getting-started.md`
-- Modify: relevant `src/verification/**` fixtures or remove obsolete fixed-country verification views
+- Modify: relevant `src/verification/**` fixtures
 
 **Interfaces:**
-- Final source contains no business-significant fixed China/Japan template, workspace, renderer, or snapshot slots.
-- Provider names remain only in built-in calendar metadata, sync adapters, and provider-specific tests.
+- Clean repository with zero legacy China/Japan template slots or workspace fields.
+- Updated user documentation.
 
-- [ ] **Step 1: Scan for every legacy fixed-field reference**
+- [ ] **Step 1: Scan for legacy fields**
 
 Run:
-
 ```bash
 rg -n "chinaHoliday|japanHoliday|chinaMarkers|holidayDot|workdayDot|chinaHolidayDataset|japanHolidayDataset" src
 ```
 
-Expected before cleanup: remaining references in old types/tests/fixtures. Classify each result as provider-adapter metadata or a legacy business slot; only provider-adapter references may remain.
+- [ ] **Step 2: Clean up legacy template fields**
 
-- [ ] **Step 2: Remove legacy template fields and colors**
+In `mainTemplate.ts`: remove `chinaHolidayName`, `japanHolidayName`, `chinaMarkers`, and `japanHoliday` color.
+In `miniTemplate.ts`: remove `markers`, and `japanHoliday` color.
+`CalendarBaseColors` is `{ default: string; sunday: string; saturday: string }`.
 
-Delete `chinaHolidayName`, `japanHolidayName`, `chinaMarkers`, Mini fixed dots, and `japanHoliday` base colors. Delete fixed font IDs and inspector labels that no longer have semantic meaning.
+- [ ] **Step 3: Update verification fixtures and user documentation**
 
-```ts
-export type CalendarBaseColors = Readonly<{
-  default: string;
-  sunday: string;
-  saturday: string;
-}>;
-```
+Update `holiday-json.md`, `backup-and-recovery.md`, `getting-started.md`.
 
-Keep each template's existing canvas, weekday, date, and grid fields unchanged; replace its `colors` field with `CalendarBaseColors` and remove every fixed holiday field listed above.
-
-- [ ] **Step 3: Update all fixtures and verification views**
-
-Build fixtures with `HolidayLibrarySnapshot + HolidayLayer[] + resolveHolidayIndex`. Keep verification cases for adjacent-month opacity, two calendars on one date, workdays, dynamic markers, and 28-file export.
-
-```ts
-const holidayIndex = resolveHolidayIndex({
-  library: PHASE_FIXTURE_HOLIDAY_LIBRARY,
-  layers: PHASE_FIXTURE_HOLIDAY_LAYERS,
-});
-const calendar = generateCalendarMonth(2027, 5, holidayIndex);
-```
-
-- [ ] **Step 4: Rewrite user documentation**
-
-`holiday-json.md` documents Monthloom JSON, built-in provider sync/import, manual editing, coverage, and manual priority. `backup-and-recovery.md` states that project bundles contain the entire holiday library while templates contain only layer design.
-
-```markdown
-# Managing Holiday Calendars
-
-## Built-in China and Japan synchronization
-## Manual records and overrides
-## Monthloom holiday JSON
-## Confirmed, unconfirmed, and unknown coverage
-## Why manual changes survive synchronization
-```
-
-- [ ] **Step 5: Run the fixed-field scan again**
-
-Run:
-
-```bash
-rg -n "chinaHoliday|japanHoliday|chinaMarkers|holidayDot|workdayDot|chinaHolidayDataset|japanHolidayDataset" src
-```
-
-Expected: no results except provider-specific adapter/test names whose source identity is intentionally China or Japan.
-
-- [ ] **Step 6: Run formatting-free repository verification**
+- [ ] **Step 4: Run complete verification**
 
 Run: `npm test`
-
-Expected: all Vitest files pass.
+Expected: All tests pass.
 
 Run: `npm run build`
+Expected: TypeScript and Vite production bundle pass.
 
-Expected: TypeScript and Vite production build pass.
-
-- [ ] **Step 7: Verify the working-tree diff contains no compatibility layer**
+- [ ] **Step 5: Verify no compatibility or legacy residue remains**
 
 Run:
-
 ```bash
 rg -n "legacy|migrate|migration|version === 0|chinaHolidayDataset|japanHolidayDataset" src
 git diff --check
 ```
+Expected: No matches in application logic; clean git diff.
 
-Expected: no holiday compatibility code, and `git diff --check` produces no output.
-
-- [ ] **Step 8: Commit final cleanup and docs**
+- [ ] **Step 6: Commit Task 11**
 
 ```bash
 git add src docs/user
-git commit -m "docs: finalize dynamic holiday library workflow"
+git commit -m "chore: clean up fixed holiday legacy fields and update documentation"
 ```
 
 ---
 
-## Final Verification
+## Final Verification Checklist
 
-- [ ] Run: `npm test`
-
-Expected: all tests pass.
-
-- [ ] Run: `npm run build`
-
-Expected: production build succeeds.
-
-- [ ] Run the formal-scope focused tests:
-
-```bash
-npm test -- src/domain/calendar/monthSequence.test.ts src/export/formal src/preview/fullYear/calendarSet.test.ts
-```
-
-Expected: 13 Main, 15 Mini, and 28 total SVG documents remain invariant.
-
-- [ ] Run the final architecture scans:
-
-```bash
-rg -n "chinaHolidayDataset|japanHolidayDataset|main\.chinaHoliday|main\.japanHoliday|mini\.holidayDot|mini\.workdayDot" src
-rg -n "new Date\([^)]*,[^)]*,[^)]*\)" src/domain src/workspace src/rendering
-git status --short
-```
-
-Expected: no fixed-country business slots, no browser-local calendar arithmetic, and only intentional implementation changes in the working tree.
+1. [ ] **Test Suite**: Run `npm test` — all test files pass.
+2. [ ] **Typecheck & Production Build**: Run `npm run build` — `tsc -b` and Vite bundle succeed.
+3. [ ] **Formal Output Invariant**: Run `npm test -- src/domain/calendar/monthSequence.test.ts src/export/formal src/preview/fullYear/calendarSet.test.ts` — exactly 13 Main + 15 Mini = 28 SVGs.
+4. [ ] **Timezone Invariant**: Run `rg -n "new Date\([^)]*,[^)]*,[^)]*\)" src/domain src/workspace src/rendering` — no browser-local date arithmetic.
+5. [ ] **Architecture Boundary**: Run `rg -n "chinaHolidayDataset|japanHolidayDataset|main\.chinaHoliday|main\.japanHoliday|mini\.holidayDot|mini\.workdayDot" src` — no legacy slots exist.
