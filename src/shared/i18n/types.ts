@@ -103,6 +103,7 @@ export interface TranslationDictionary {
   };
   weekday: {
     sectionTitle: string;
+    heightLabel: string;
     startOfWeekHeading: string;
     startOfWeekSunday: string;
     startOfWeekMonday: string;

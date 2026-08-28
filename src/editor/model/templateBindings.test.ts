@@ -157,11 +157,13 @@ describe("templateBindings", () => {
     const doc = createDefaultEditorDocument();
 
     const initialSettings = getWeekdayRowSettings(doc, "main");
+    expect(initialSettings.height).toBe(50);
     expect(initialSettings.startOfWeek).toBe(0);
     expect(initialSettings.showBorder).toBe(false);
     expect(initialSettings.colors.sunday).toBe("#DC2626");
 
     const updated = setWeekdayRowSettings(doc, "main", {
+      height: 65,
       startOfWeek: 1,
       showBorder: true,
       borderWidth: 2,
@@ -174,6 +176,7 @@ describe("templateBindings", () => {
     });
 
     const updatedSettings = getWeekdayRowSettings(updated, "main");
+    expect(updatedSettings.height).toBe(65);
     expect(updatedSettings.startOfWeek).toBe(1);
     expect(updatedSettings.showBorder).toBe(true);
     expect(updatedSettings.borderWidth).toBe(2);

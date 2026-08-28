@@ -472,6 +472,7 @@ export function updateFontDescriptor(
 }
 
 export type WeekdayRowSettings = Readonly<{
+  height: number;
   labels: readonly string[];
   startOfWeek: 0 | 1;
   showBorder: boolean;
@@ -493,6 +494,7 @@ export function getWeekdayRowSettings(
   const defaultLabels = templateType === "main" ? DEFAULT_MAIN_WEEKDAYS : DEFAULT_MINI_WEEKDAYS;
 
   return {
+    height: row.height,
     labels: row.labels ?? defaultLabels,
     startOfWeek: row.startOfWeek ?? 0,
     showBorder: row.showBorder ?? false,
@@ -522,6 +524,7 @@ export function setWeekdayRowSettings(
         ...document.mainTemplate,
         weekdayRow: {
           ...current,
+          height: settings.height !== undefined ? settings.height : current.height,
           labels: settings.labels !== undefined ? settings.labels : current.labels,
           startOfWeek: settings.startOfWeek !== undefined ? settings.startOfWeek : current.startOfWeek,
           showBorder: settings.showBorder !== undefined ? settings.showBorder : current.showBorder,
@@ -546,6 +549,7 @@ export function setWeekdayRowSettings(
         ...document.miniTemplate,
         weekdayRow: {
           ...current,
+          height: settings.height !== undefined ? settings.height : current.height,
           labels: settings.labels !== undefined ? settings.labels : current.labels,
           startOfWeek: settings.startOfWeek !== undefined ? settings.startOfWeek : current.startOfWeek,
           showBorder: settings.showBorder !== undefined ? settings.showBorder : current.showBorder,

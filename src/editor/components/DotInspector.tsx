@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import type { DotTemplate } from "../../domain/template/primitives";
 import { useI18n } from "../../shared/i18n/i18nStore";
+import { NumberInput } from "./NumberInput";
 
 export interface DotInspectorProps {
   dot: DotTemplate;
@@ -9,13 +10,6 @@ export interface DotInspectorProps {
 
 export const DotInspector: React.FC<DotInspectorProps> = ({ dot, onChangeDot }) => {
   const { t } = useI18n();
-  const [draftSize, setDraftSize] = useState(String(dot.size));
-  const [draftOpacity, setDraftOpacity] = useState(String(dot.opacity));
-
-  useEffect(() => {
-    setDraftSize(String(dot.size));
-    setDraftOpacity(String(dot.opacity));
-  }, [dot.size, dot.opacity]);
 
   return (
     <div className="inspector-section">
@@ -24,18 +18,11 @@ export const DotInspector: React.FC<DotInspectorProps> = ({ dot, onChangeDot }) 
       <div className="field-group">
         <div className="field-row">
           <span className="field-label">{t.inspector.dotSizeLabel}</span>
-          <input
-            type="number"
-            min="1"
-            className="field-input field-input-number"
-            value={draftSize}
-            onChange={(e) => setDraftSize(e.target.value)}
-            onBlur={() => {
-              const val = parseFloat(draftSize);
-              if (!isNaN(val) && val > 0 && val !== dot.size) {
-                onChangeDot({ ...dot, size: val });
-              }
-            }}
+          <NumberInput
+            min={0.5}
+            step={0.5}
+            value={dot.size}
+            onChange={(size) => onChangeDot({ ...dot, size })}
           />
         </div>
 
@@ -54,20 +41,12 @@ export const DotInspector: React.FC<DotInspectorProps> = ({ dot, onChangeDot }) 
 
         <div className="field-row">
           <span className="field-label">{t.inspector.opacityLabel}</span>
-          <input
-            type="number"
-            step="0.05"
-            min="0"
-            max="1"
-            className="field-input field-input-number"
-            value={draftOpacity}
-            onChange={(e) => setDraftOpacity(e.target.value)}
-            onBlur={() => {
-              const val = parseFloat(draftOpacity);
-              if (!isNaN(val) && val >= 0 && val <= 1 && val !== dot.opacity) {
-                onChangeDot({ ...dot, opacity: val });
-              }
-            }}
+          <NumberInput
+            min={0}
+            max={1}
+            step={0.05}
+            value={dot.opacity}
+            onChange={(opacity) => onChangeDot({ ...dot, opacity })}
           />
         </div>
       </div>

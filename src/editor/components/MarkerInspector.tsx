@@ -3,6 +3,7 @@ import type { MarkerTemplate } from "../../domain/template/primitives";
 import type { FontDescriptor } from "../../domain/template/font";
 import { TypographyInspector } from "./TypographyInspector";
 import { ColorInspector } from "./ColorInspector";
+import { NumberInput } from "./NumberInput";
 import { memoryAssetStore } from "../assets/memoryAssetStore";
 import { useI18n } from "../../shared/i18n/i18nStore";
 
@@ -21,23 +22,10 @@ export const MarkerInspector: React.FC<MarkerInspectorProps> = ({
 }) => {
   const { t } = useI18n();
   const [draftValue, setDraftValue] = useState(marker.type === "text" ? marker.value : "");
-  const [draftWidth, setDraftWidth] = useState(
-    marker.type === "image" ? String(marker.width) : "16",
-  );
-  const [draftHeight, setDraftHeight] = useState(
-    marker.type === "image" ? String(marker.height) : "16",
-  );
-  const [draftOpacity, setDraftOpacity] = useState(
-    marker.type === "image" ? String(marker.opacity) : "1",
-  );
 
   useEffect(() => {
     if (marker.type === "text") {
       setDraftValue(marker.value);
-    } else {
-      setDraftWidth(String(marker.width));
-      setDraftHeight(String(marker.height));
-      setDraftOpacity(String(marker.opacity));
     }
   }, [marker]);
 
@@ -163,52 +151,32 @@ export const MarkerInspector: React.FC<MarkerInspectorProps> = ({
 
           <div className="field-row">
             <span className="field-label">{t.inspector.markerWidthLabel}</span>
-            <input
-              type="number"
-              className="field-input field-input-number"
-              value={draftWidth}
-              onChange={(e) => setDraftWidth(e.target.value)}
-              onBlur={() => {
-                const w = parseFloat(draftWidth);
-                if (!isNaN(w) && w > 0 && w !== marker.width) {
-                  onChangeMarker({ ...marker, width: w });
-                }
-              }}
+            <NumberInput
+              min={1}
+              step={1}
+              value={marker.width}
+              onChange={(width) => onChangeMarker({ ...marker, width })}
             />
           </div>
 
           <div className="field-row">
             <span className="field-label">{t.inspector.markerHeightLabel}</span>
-            <input
-              type="number"
-              className="field-input field-input-number"
-              value={draftHeight}
-              onChange={(e) => setDraftHeight(e.target.value)}
-              onBlur={() => {
-                const h = parseFloat(draftHeight);
-                if (!isNaN(h) && h > 0 && h !== marker.height) {
-                  onChangeMarker({ ...marker, height: h });
-                }
-              }}
+            <NumberInput
+              min={1}
+              step={1}
+              value={marker.height}
+              onChange={(height) => onChangeMarker({ ...marker, height })}
             />
           </div>
 
           <div className="field-row">
             <span className="field-label">{t.inspector.opacityLabel}</span>
-            <input
-              type="number"
-              step="0.05"
-              min="0"
-              max="1"
-              className="field-input field-input-number"
-              value={draftOpacity}
-              onChange={(e) => setDraftOpacity(e.target.value)}
-              onBlur={() => {
-                const op = parseFloat(draftOpacity);
-                if (!isNaN(op) && op >= 0 && op <= 1 && op !== marker.opacity) {
-                  onChangeMarker({ ...marker, opacity: op });
-                }
-              }}
+            <NumberInput
+              min={0}
+              max={1}
+              step={0.05}
+              value={marker.opacity}
+              onChange={(opacity) => onChangeMarker({ ...marker, opacity })}
             />
           </div>
         </div>

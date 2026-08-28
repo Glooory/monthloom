@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useRef } from "react";
 import type { PageLayout, PagePreviewConfig } from "../../domain/pagePreview/types";
 import { useI18n } from "../../shared/i18n/i18nStore";
+import { NumberInput } from "./NumberInput";
 
 export interface AssetStoreLike {
   addImage(file: File | Blob): Promise<string>;
@@ -12,63 +13,25 @@ export interface PagePreviewSettingsProps {
   assetStore?: AssetStoreLike;
 }
 
-interface NumberFieldProps {
+const NumberField: React.FC<{
   label: string;
   value: number;
   step?: number;
   min?: number;
   max?: number;
   onChange: (val: number) => void;
-}
-
-const NumberField: React.FC<NumberFieldProps> = ({
-  label,
-  value,
-  step = 1,
-  min,
-  max,
-  onChange,
-}) => {
-  const [draft, setDraft] = useState(String(value));
-
-  useEffect(() => {
-    setDraft(String(value));
-  }, [value]);
-
-  const commit = () => {
-    const parsed = parseFloat(draft);
-    if (!isNaN(parsed) && parsed !== value) {
-      onChange(parsed);
-    } else {
-      setDraft(String(value));
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      commit();
-    } else if (e.key === "Escape") {
-      setDraft(String(value));
-    }
-  };
-
-  return (
-    <div className="field-row" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-      <span className="field-label" style={{ fontSize: "12px", color: "var(--text-secondary)" }}>{label}</span>
-      <input
-        type="number"
-        step={step}
-        min={min}
-        max={max}
-        className="field-input field-input-number"
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={commit}
-        onKeyDown={handleKeyDown}
-      />
-    </div>
-  );
-};
+}> = ({ label, value, step, min, max, onChange }) => (
+  <div className="field-row" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+    <span className="field-label" style={{ fontSize: "12px", color: "var(--text-secondary)" }}>{label}</span>
+    <NumberInput
+      value={value}
+      step={step}
+      min={min}
+      max={max}
+      onChange={onChange}
+    />
+  </div>
+);
 
 export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
   config,

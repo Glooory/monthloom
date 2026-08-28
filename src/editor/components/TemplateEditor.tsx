@@ -15,7 +15,6 @@ import { layoutMini } from "../../rendering/layout/miniLayout";
 import { materializeSvg } from "../../rendering/svg/materialize";
 import { clientDeltaToSceneDelta } from "../interaction/pointerDelta";
 import { applyDragCommit } from "../interaction/drag";
-import { applyWeekdayResizeCommit } from "../interaction/weekdayResize";
 import { calculatePositionForAnchorChange } from "../interaction/anchorChange";
 import { matchUndoRedoShortcut, shouldIgnoreKeyboardShortcut } from "../interaction/keyboardShortcuts";
 import { setElementPosition } from "../model/templateBindings";
@@ -61,12 +60,10 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     activeTemplate,
     selection,
     drag,
-    weekdayResize,
     setActiveTemplate,
     setSelection,
     clearSelection,
     setDrag,
-    setWeekdayResize,
   } = useUiStore();
 
   const [svgDocument, setSvgDocument] = useState<SvgDocument | null>(null);
@@ -76,9 +73,9 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     return createEffectiveDocument({
       document,
       drag,
-      weekdayResize,
+      weekdayResize: null,
     });
-  }, [document, drag, weekdayResize]);
+  }, [document, drag]);
 
   // Load font engine with requirement stability
   const { fontEngine, error: fontError } = useEditorFontEngine({
@@ -193,43 +190,6 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     setDrag(null);
   };
 
-  // Weekday Row Resize interaction tracking
-  const resizeStartRef = useRef<{ clientY: number } | null>(null);
-
-  const handleStartWeekdayResize = (clientY: number) => {
-    resizeStartRef.current = { clientY };
-    setWeekdayResize({ deltaY: 0 });
-  };
-
-  const handleMoveWeekdayResize = (clientY: number, renderedBounds: DOMRect) => {
-    if (!resizeStartRef.current || !scene) return;
-
-    const clientDeltaY = clientY - resizeStartRef.current.clientY;
-    const sceneDelta = clientDeltaToSceneDelta({
-      clientDeltaX: 0,
-      clientDeltaY,
-      renderedWidth: renderedBounds.width,
-      renderedHeight: renderedBounds.height,
-      sceneWidth: scene.width,
-      sceneHeight: scene.height,
-    });
-
-    setWeekdayResize({ deltaY: Math.round(sceneDelta.y) });
-  };
-
-  const handleEndWeekdayResize = () => {
-    if (weekdayResize && weekdayResize.deltaY !== 0) {
-      const nextDoc = applyWeekdayResizeCommit(document, weekdayResize);
-      commitDocument(nextDoc);
-    }
-    resizeStartRef.current = null;
-    setWeekdayResize(null);
-  };
-
-  const handleCancelWeekdayResize = () => {
-    resizeStartRef.current = null;
-    setWeekdayResize(null);
-  };
 
   // Anchor selection handler
   const handleSelectAnchor = (nextAnchor: Anchor) => {
@@ -250,13 +210,11 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   // Undo / Redo handlers
   const handleUndo = () => {
     setDrag(null);
-    setWeekdayResize(null);
     temporal.getState().undo();
   };
 
   const handleRedo = () => {
     setDrag(null);
-    setWeekdayResize(null);
     temporal.getState().redo();
   };
 
@@ -273,8 +231,6 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
       } else if (e.key === "Escape") {
         if (dragStartRef.current || drag) {
           handleCancelDrag();
-        } else if (resizeStartRef.current || weekdayResize) {
-          handleCancelWeekdayResize();
         } else if (!shouldIgnoreKeyboardShortcut(e.target)) {
           clearSelection();
         }
@@ -285,7 +241,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [canUndo, canRedo, drag, weekdayResize, clearSelection]);
+  }, [canUndo, canRedo, drag, clearSelection]);
 
   const [zoom, setZoom] = useState(1);
 
@@ -376,11 +332,6 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
           scene={scene}
           selection={selection}
           activeTemplate={activeTemplate}
-          mainWeekdayHeight={
-            activeTemplate === "main"
-              ? effectiveDocument.mainTemplate.weekdayRow.height
-              : undefined
-          }
           zoom={zoom}
           onSelect={setSelection}
           onSelectAnchor={handleSelectAnchor}
@@ -388,9 +339,6 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
           onMoveDrag={handleMoveDrag}
           onEndDrag={handleEndDrag}
           onCancelDrag={handleCancelDrag}
-          onStartWeekdayResize={handleStartWeekdayResize}
-          onMoveWeekdayResize={handleMoveWeekdayResize}
-          onEndWeekdayResize={handleEndWeekdayResize}
         />
 
         {/* Right Inspector */}

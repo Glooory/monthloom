@@ -126,6 +126,7 @@ export const en: TranslationDictionary = {
   },
   weekday: {
     sectionTitle: "Weekday Row Settings",
+    heightLabel: "Row Height (px)",
     startOfWeekHeading: "First Day of Week",
     startOfWeekSunday: "Sunday Start",
     startOfWeekMonday: "Monday Start",

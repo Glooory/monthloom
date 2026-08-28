@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import type { Typography } from "../../domain/template/primitives";
 import type { FontDescriptor } from "../../domain/template/font";
 import { useI18n } from "../../shared/i18n/i18nStore";
+import { NumberInput } from "./NumberInput";
 
 export interface TypographyInspectorProps {
   typography: Typography;
@@ -19,19 +20,10 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
   const { t } = useI18n();
   const currentFamily = fontDescriptor?.family ?? "Noto Sans";
   const [draftFamily, setDraftFamily] = useState(currentFamily);
-  const [draftSize, setDraftSize] = useState(String(typography.fontSize));
-  const [draftLetterSpacing, setDraftLetterSpacing] = useState(String(typography.letterSpacing));
-  const [draftOpacity, setDraftOpacity] = useState(String(typography.opacity));
 
   useEffect(() => {
     setDraftFamily(currentFamily);
   }, [currentFamily]);
-
-  useEffect(() => {
-    setDraftSize(String(typography.fontSize));
-    setDraftLetterSpacing(String(typography.letterSpacing));
-    setDraftOpacity(String(typography.opacity));
-  }, [typography.fontSize, typography.letterSpacing, typography.opacity]);
 
   const commitFamily = () => {
     const trimmed = draftFamily.trim();
@@ -43,33 +35,6 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
       });
     } else {
       setDraftFamily(currentFamily);
-    }
-  };
-
-  const commitSize = () => {
-    const val = parseFloat(draftSize);
-    if (!isNaN(val) && val > 0 && val !== typography.fontSize) {
-      onChangeTypography({ ...typography, fontSize: val });
-    } else {
-      setDraftSize(String(typography.fontSize));
-    }
-  };
-
-  const commitLetterSpacing = () => {
-    const val = parseFloat(draftLetterSpacing);
-    if (!isNaN(val) && val !== typography.letterSpacing) {
-      onChangeTypography({ ...typography, letterSpacing: val });
-    } else {
-      setDraftLetterSpacing(String(typography.letterSpacing));
-    }
-  };
-
-  const commitOpacity = () => {
-    const val = parseFloat(draftOpacity);
-    if (!isNaN(val) && val >= 0 && val <= 1 && val !== typography.opacity) {
-      onChangeTypography({ ...typography, opacity: val });
-    } else {
-      setDraftOpacity(String(typography.opacity));
     }
   };
 
@@ -135,49 +100,31 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
 
         <div className="field-row">
           <span className="field-label">{t.inspector.fontSizeLabel}</span>
-          <input
-            type="number"
-            className="field-input field-input-number"
-            value={draftSize}
-            onChange={(e) => setDraftSize(e.target.value)}
-            onBlur={commitSize}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") commitSize();
-              if (e.key === "Escape") setDraftSize(String(typography.fontSize));
-            }}
+          <NumberInput
+            min={1}
+            step={1}
+            value={typography.fontSize}
+            onChange={(fontSize) => onChangeTypography({ ...typography, fontSize })}
           />
         </div>
 
         <div className="field-row">
           <span className="field-label">{t.inspector.letterSpacingLabel}</span>
-          <input
-            type="number"
-            className="field-input field-input-number"
-            value={draftLetterSpacing}
-            onChange={(e) => setDraftLetterSpacing(e.target.value)}
-            onBlur={commitLetterSpacing}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") commitLetterSpacing();
-              if (e.key === "Escape") setDraftLetterSpacing(String(typography.letterSpacing));
-            }}
+          <NumberInput
+            step={0.5}
+            value={typography.letterSpacing}
+            onChange={(letterSpacing) => onChangeTypography({ ...typography, letterSpacing })}
           />
         </div>
 
         <div className="field-row">
           <span className="field-label">{t.inspector.opacityLabel}</span>
-          <input
-            type="number"
-            step="0.05"
-            min="0"
-            max="1"
-            className="field-input field-input-number"
-            value={draftOpacity}
-            onChange={(e) => setDraftOpacity(e.target.value)}
-            onBlur={commitOpacity}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") commitOpacity();
-              if (e.key === "Escape") setDraftOpacity(String(typography.opacity));
-            }}
+          <NumberInput
+            min={0}
+            max={1}
+            step={0.05}
+            value={typography.opacity}
+            onChange={(opacity) => onChangeTypography({ ...typography, opacity })}
           />
         </div>
       </div>

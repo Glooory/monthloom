@@ -305,26 +305,7 @@
   filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.9));
 }
 
-.weekday-resize-handle {
-  cursor: row-resize;
-  stroke: transparent;
-  stroke-width: 12;
-}
 
-.weekday-resize-line {
-  stroke: var(--accent-cyan);
-  stroke-width: 2;
-  stroke-dasharray: 4 2;
-  pointer-events: none;
-}
-
-.weekday-resize-pill {
-  fill: var(--accent-primary);
-  stroke: #ffffff;
-  stroke-width: 1.5;
-  cursor: row-resize;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
-}
 
 /* Right Inspector Sidebar */
 .editor-inspector {

@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useI18n } from "../../shared/i18n/i18nStore";
+import { NumberInput } from "./NumberInput";
 
 export interface BorderInspectorProps {
   borderWidth: number;
@@ -13,20 +14,6 @@ export const BorderInspector: React.FC<BorderInspectorProps> = ({
   onChangeBorder,
 }) => {
   const { t } = useI18n();
-  const [draftWidth, setDraftWidth] = useState(String(borderWidth));
-
-  useEffect(() => {
-    setDraftWidth(String(borderWidth));
-  }, [borderWidth]);
-
-  const commitWidth = () => {
-    const val = parseFloat(draftWidth);
-    if (!isNaN(val) && val >= 0 && val !== borderWidth) {
-      onChangeBorder({ borderWidth: val, borderColor });
-    } else {
-      setDraftWidth(String(borderWidth));
-    }
-  };
 
   return (
     <div className="inspector-section">
@@ -34,17 +21,11 @@ export const BorderInspector: React.FC<BorderInspectorProps> = ({
       <div className="field-group">
         <div className="field-row">
           <span className="field-label">{t.inspector.borderWidthLabel}</span>
-          <input
-            type="number"
-            min="0"
-            className="field-input field-input-number"
-            value={draftWidth}
-            onChange={(e) => setDraftWidth(e.target.value)}
-            onBlur={commitWidth}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") commitWidth();
-              if (e.key === "Escape") setDraftWidth(String(borderWidth));
-            }}
+          <NumberInput
+            min={0}
+            step={0.5}
+            value={borderWidth}
+            onChange={(nextWidth) => onChangeBorder({ borderWidth: nextWidth, borderColor })}
           />
         </div>
 

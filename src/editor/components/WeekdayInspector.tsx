@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useI18n } from "../../shared/i18n/i18nStore";
 import type { WeekdayRowSettings } from "../model/templateBindings";
+import { NumberInput } from "./NumberInput";
 
 export interface WeekdayInspectorProps {
   settings: WeekdayRowSettings;
@@ -63,7 +64,20 @@ export const WeekdayInspector: React.FC<WeekdayInspectorProps> = ({
     <div className="inspector-section weekday-inspector">
       <div className="section-heading">{t.weekday.sectionTitle}</div>
 
-      {/* 1. Start of Week (Sunday vs Monday) */}
+      {/* 1. Row Height */}
+      <div className="field-row">
+        <label className="field-label">{t.weekday.heightLabel}</label>
+        <NumberInput
+          min={10}
+          max={300}
+          step={1}
+          isInteger
+          value={settings.height}
+          onChange={(height) => onChangeSettings({ height })}
+        />
+      </div>
+
+      {/* 2. Start of Week (Sunday vs Monday) */}
       <div className="field-group">
         <label className="field-label">{t.weekday.startOfWeekHeading}</label>
         <div className="weekday-segmented-control">
@@ -84,7 +98,7 @@ export const WeekdayInspector: React.FC<WeekdayInspectorProps> = ({
         </div>
       </div>
 
-      {/* 2. Border settings */}
+      {/* 3. Border settings */}
       <div className="field-group" style={{ marginTop: "8px" }}>
         <div className="field-row">
           <label className="field-label">{t.weekday.showBorderLabel}</label>
@@ -100,19 +114,12 @@ export const WeekdayInspector: React.FC<WeekdayInspectorProps> = ({
           <div className="weekday-border-options">
             <div className="field-row">
               <label className="field-label">{t.weekday.borderWidthLabel}</label>
-              <input
-                type="number"
-                min="0.5"
-                max="10"
-                step="0.5"
-                className="field-input field-input-number"
+              <NumberInput
+                min={0.5}
+                max={10}
+                step={0.5}
                 value={settings.borderWidth}
-                onChange={(e) => {
-                  const val = parseFloat(e.target.value);
-                  if (!Number.isNaN(val) && val > 0) {
-                    onChangeSettings({ borderWidth: val });
-                  }
-                }}
+                onChange={(borderWidth) => onChangeSettings({ borderWidth })}
               />
             </div>
             <div className="field-row">

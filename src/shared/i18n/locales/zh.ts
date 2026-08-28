@@ -126,6 +126,7 @@ export const zh: TranslationDictionary = {
   },
   weekday: {
     sectionTitle: "星期标题设置",
+    heightLabel: "星期行高 (px)",
     startOfWeekHeading: "星期起始列",
     startOfWeekSunday: "周日开始 (Sunday)",
     startOfWeekMonday: "周一开始 (Monday)",

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import type { Position, Anchor } from "../../domain/template/primitives";
 import { useI18n } from "../../shared/i18n/i18nStore";
+import { NumberInput } from "./NumberInput";
 
 const ANCHOR_GRID: readonly Anchor[][] = [
   ["top-left", "top-center", "top-right"],
@@ -20,47 +21,6 @@ export const PositionInspector: React.FC<PositionInspectorProps> = ({
   onAnchorChange,
 }) => {
   const { t } = useI18n();
-  const [draftX, setDraftX] = useState(String(position.offsetX));
-  const [draftY, setDraftY] = useState(String(position.offsetY));
-
-  useEffect(() => {
-    setDraftX(String(position.offsetX));
-    setDraftY(String(position.offsetY));
-  }, [position.offsetX, position.offsetY]);
-
-  const commitX = () => {
-    const val = parseFloat(draftX);
-    if (!isNaN(val) && val !== position.offsetX) {
-      onChange({ ...position, offsetX: val });
-    } else {
-      setDraftX(String(position.offsetX));
-    }
-  };
-
-  const commitY = () => {
-    const val = parseFloat(draftY);
-    if (!isNaN(val) && val !== position.offsetY) {
-      onChange({ ...position, offsetY: val });
-    } else {
-      setDraftY(String(position.offsetY));
-    }
-  };
-
-  const handleKeyDownX = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      commitX();
-    } else if (e.key === "Escape") {
-      setDraftX(String(position.offsetX));
-    }
-  };
-
-  const handleKeyDownY = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      commitY();
-    } else if (e.key === "Escape") {
-      setDraftY(String(position.offsetY));
-    }
-  };
 
   return (
     <div className="inspector-section">
@@ -90,25 +50,17 @@ export const PositionInspector: React.FC<PositionInspectorProps> = ({
 
       <div className="field-row">
         <span className="field-label">{t.inspector.offsetXLabel}</span>
-        <input
-          type="number"
-          className="field-input field-input-number"
-          value={draftX}
-          onChange={(e) => setDraftX(e.target.value)}
-          onBlur={commitX}
-          onKeyDown={handleKeyDownX}
+        <NumberInput
+          value={position.offsetX}
+          onChange={(offsetX) => onChange({ ...position, offsetX })}
         />
       </div>
 
       <div className="field-row" style={{ marginTop: 8 }}>
         <span className="field-label">{t.inspector.offsetYLabel}</span>
-        <input
-          type="number"
-          className="field-input field-input-number"
-          value={draftY}
-          onChange={(e) => setDraftY(e.target.value)}
-          onBlur={commitY}
-          onKeyDown={handleKeyDownY}
+        <NumberInput
+          value={position.offsetY}
+          onChange={(offsetY) => onChange({ ...position, offsetY })}
         />
       </div>
     </div>

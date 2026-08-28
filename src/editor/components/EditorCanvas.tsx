@@ -12,7 +12,6 @@ export interface EditorCanvasProps {
   scene: RenderScene | null;
   selection: EditorSelection | null;
   activeTemplate: "main" | "mini";
-  mainWeekdayHeight?: number;
   zoom?: number;
   onSelect: (selection: EditorSelection | null) => void;
   onSelectAnchor: (nextAnchor: Anchor) => void;
@@ -25,9 +24,6 @@ export interface EditorCanvasProps {
   onMoveDrag: (clientX: number, clientY: number, renderedBounds: DOMRect) => void;
   onEndDrag: () => void;
   onCancelDrag: () => void;
-  onStartWeekdayResize: (clientY: number) => void;
-  onMoveWeekdayResize: (clientY: number, renderedBounds: DOMRect) => void;
-  onEndWeekdayResize: () => void;
 }
 
 export const EditorCanvas: React.FC<EditorCanvasProps> = ({
@@ -35,7 +31,6 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   scene,
   selection,
   activeTemplate,
-  mainWeekdayHeight,
   zoom = 1,
   onSelect,
   onSelectAnchor,
@@ -43,9 +38,6 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   onMoveDrag,
   onEndDrag,
   onCancelDrag,
-  onStartWeekdayResize,
-  onMoveWeekdayResize,
-  onEndWeekdayResize,
 }) => {
   const targets = useMemo(() => {
     if (!scene) return [];
@@ -90,16 +82,12 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
               targets={targets}
               selection={selection}
               activeTemplate={activeTemplate}
-              mainWeekdayHeight={mainWeekdayHeight}
               onSelect={onSelect}
               onSelectAnchor={(_, nextAnchor) => onSelectAnchor(nextAnchor)}
               onStartDrag={onStartDrag}
               onMoveDrag={onMoveDrag}
               onEndDrag={onEndDrag}
               onCancelDrag={onCancelDrag}
-              onStartWeekdayResize={onStartWeekdayResize}
-              onMoveWeekdayResize={onMoveWeekdayResize}
-              onEndWeekdayResize={onEndWeekdayResize}
             />
           </div>
         </div>
@@ -107,4 +95,3 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
     </div>
   );
 };
-
