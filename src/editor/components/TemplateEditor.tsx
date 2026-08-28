@@ -238,6 +238,17 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         } else if (!shouldIgnoreKeyboardShortcut(e.target)) {
           clearSelection();
         }
+      } else if ((e.metaKey || e.ctrlKey) && !shouldIgnoreKeyboardShortcut(e.target)) {
+        if (e.key === "=" || e.key === "+") {
+          e.preventDefault();
+          setZoom((z) => Math.min(4.0, Math.round((z + 0.25) * 100) / 100));
+        } else if (e.key === "-" || e.key === "_") {
+          e.preventDefault();
+          setZoom((z) => Math.max(0.25, Math.round((z - 0.25) * 100) / 100));
+        } else if (e.key === "0") {
+          e.preventDefault();
+          setZoom(1);
+        }
       }
     };
 
@@ -370,6 +381,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
           selection={selection}
           activeTemplate={activeTemplate}
           zoom={zoom}
+          onZoomChange={setZoom}
           onSelect={setSelection}
           onSelectAnchor={handleSelectAnchor}
           onStartDrag={handleStartDrag}
