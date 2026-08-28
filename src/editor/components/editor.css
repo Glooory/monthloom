@@ -171,7 +171,7 @@
   background: radial-gradient(circle at center, #0e1526 0%, #060911 100%);
   position: relative;
   overflow: auto;
-  padding: 32px;
+  padding: 48px;
 }
 
 .canvas-viewport-wrapper {
@@ -179,20 +179,31 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 24px;
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.canvas-viewport {
+.canvas-artboard {
   position: relative;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08);
   background-color: #ffffff;
-  border-radius: 0;
+  padding: 32px;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 25px 50px -12px rgba(0, 0, 0, 0.85);
   display: inline-block;
   line-height: 0;
 }
 
+.canvas-viewport {
+  position: relative;
+  background-color: transparent;
+  display: inline-block;
+  line-height: 0;
+  overflow: visible;
+}
+
 .canvas-viewport svg {
   display: block;
+  overflow: visible;
 }
 
 /* Canvas Floating Controls (Zoom, Month Badge) */
@@ -247,6 +258,7 @@
   width: 100%;
   height: 100%;
   pointer-events: all;
+  overflow: visible;
 }
 
 .hit-target {
@@ -270,25 +282,27 @@
 
 .anchor-point {
   cursor: pointer;
-  transition: transform 0.15s ease;
 }
 
-.anchor-point:hover {
-  transform: scale(1.35);
-}
-
-.anchor-point circle {
+.anchor-point circle.anchor-visual {
   fill: #ffffff;
   stroke: var(--accent-primary);
   stroke-width: 1.5;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.6));
+  transition: r 0.15s ease, stroke-width 0.15s ease;
 }
 
-.anchor-point.active circle {
+.anchor-point:hover circle.anchor-visual {
+  r: 5.5;
+  stroke-width: 2;
+  stroke: var(--accent-cyan);
+}
+
+.anchor-point.active circle.anchor-visual {
   fill: var(--accent-primary);
   stroke: #ffffff;
   stroke-width: 2;
-  filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.8));
+  filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.9));
 }
 
 .weekday-resize-handle {

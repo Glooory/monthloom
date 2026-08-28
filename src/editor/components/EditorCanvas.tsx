@@ -70,29 +70,38 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
         }}
       >
         <div
-          className="canvas-viewport"
-          style={{
-            width: scene.width,
-            height: scene.height,
+          className="canvas-artboard"
+          onPointerDown={(e) => {
+            if (e.target === e.currentTarget) {
+              onSelect(null);
+            }
           }}
         >
-          <SvgPreview document={svgDocument} />
-          <EditorOverlay
-            scene={scene}
-            targets={targets}
-            selection={selection}
-            activeTemplate={activeTemplate}
-            mainWeekdayHeight={mainWeekdayHeight}
-            onSelect={onSelect}
-            onSelectAnchor={(_, nextAnchor) => onSelectAnchor(nextAnchor)}
-            onStartDrag={onStartDrag}
-            onMoveDrag={onMoveDrag}
-            onEndDrag={onEndDrag}
-            onCancelDrag={onCancelDrag}
-            onStartWeekdayResize={onStartWeekdayResize}
-            onMoveWeekdayResize={onMoveWeekdayResize}
-            onEndWeekdayResize={onEndWeekdayResize}
-          />
+          <div
+            className="canvas-viewport"
+            style={{
+              width: scene.width,
+              height: scene.height,
+            }}
+          >
+            <SvgPreview document={svgDocument} />
+            <EditorOverlay
+              scene={scene}
+              targets={targets}
+              selection={selection}
+              activeTemplate={activeTemplate}
+              mainWeekdayHeight={mainWeekdayHeight}
+              onSelect={onSelect}
+              onSelectAnchor={(_, nextAnchor) => onSelectAnchor(nextAnchor)}
+              onStartDrag={onStartDrag}
+              onMoveDrag={onMoveDrag}
+              onEndDrag={onEndDrag}
+              onCancelDrag={onCancelDrag}
+              onStartWeekdayResize={onStartWeekdayResize}
+              onMoveWeekdayResize={onMoveWeekdayResize}
+              onEndWeekdayResize={onEndWeekdayResize}
+            />
+          </div>
         </div>
       </div>
     </div>

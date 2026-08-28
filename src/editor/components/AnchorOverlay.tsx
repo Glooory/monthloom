@@ -59,7 +59,7 @@ export const AnchorOverlay: React.FC<AnchorOverlayProps> = ({
             {/* Expanded hit area */}
             <circle cx={pt.x} cy={pt.y} r={8} fill="transparent" />
             {/* Visual anchor point */}
-            <circle cx={pt.x} cy={pt.y} r={isActive ? 4 : 3} />
+            <circle className="anchor-visual" cx={pt.x} cy={pt.y} r={isActive ? 4 : 3} />
           </g>
         );
       })}
