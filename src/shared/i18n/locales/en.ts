@@ -37,8 +37,8 @@ export const en: TranslationDictionary = {
     title: "Layers",
     mainBadge: "Main",
     miniBadge: "Mini",
-    mainDate: "Date Numbers",
     mainWeekday: "Weekday Header",
+    mainDate: "Date Numbers",
     mainChinaHolidayName: "China Holidays",
     mainJapanHolidayName: "Japan Holidays",
     mainChinaHolidayMarker: "Holiday Badge (休)",
@@ -53,8 +53,8 @@ export const en: TranslationDictionary = {
   },
   inspector: {
     titles: {
-      "main.date": "Main Calendar Date",
       "main.weekday": "Main Weekday Header",
+      "main.date": "Main Calendar Date",
       "main.chinaHolidayName": "China Holiday Name",
       "main.japanHolidayName": "Japan Holiday Name",
       "main.chinaHolidayMarker": "China Holiday Badge",

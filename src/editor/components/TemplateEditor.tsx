@@ -246,8 +246,8 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const [zoom, setZoom] = useState(1);
 
   const mainLayers: Array<{ id: PositionableSemanticId; label: string; key: string }> = [
-    { id: "main.date", label: t.layers.mainDate, key: "main.date:default" },
     { id: "main.weekday", label: t.layers.mainWeekday, key: "main.weekday:default" },
+    { id: "main.date", label: t.layers.mainDate, key: "main.date:default" },
     { id: "main.chinaHolidayName", label: t.layers.mainChinaHolidayName, key: "main.chinaHolidayName:default" },
     { id: "main.japanHolidayName", label: t.layers.mainJapanHolidayName, key: "main.japanHolidayName:default" },
     { id: "main.chinaHolidayMarker", label: t.layers.mainChinaHolidayMarker, key: "main.chinaHolidayMarker:default" },

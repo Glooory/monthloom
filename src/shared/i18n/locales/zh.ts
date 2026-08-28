@@ -37,8 +37,8 @@ export const zh: TranslationDictionary = {
     title: "图层元素",
     mainBadge: "主模板",
     miniBadge: "附模板",
-    mainDate: "日期数字",
     mainWeekday: "星期行",
+    mainDate: "日期数字",
     mainChinaHolidayName: "中国节假日",
     mainJapanHolidayName: "日本节假日",
     mainChinaHolidayMarker: "休假角标 (休)",
@@ -53,8 +53,8 @@ export const zh: TranslationDictionary = {
   },
   inspector: {
     titles: {
-      "main.date": "主日历日期",
       "main.weekday": "星期标题行",
+      "main.date": "主日历日期",
       "main.chinaHolidayName": "中国节假日名称",
       "main.japanHolidayName": "日本节假日名称",
       "main.chinaHolidayMarker": "休假角标",

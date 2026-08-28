@@ -37,8 +37,8 @@ export interface TranslationDictionary {
     title: string;
     mainBadge: string;
     miniBadge: string;
-    mainDate: string;
     mainWeekday: string;
+    mainDate: string;
     mainChinaHolidayName: string;
     mainJapanHolidayName: string;
     mainChinaHolidayMarker: string;
