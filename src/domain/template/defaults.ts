@@ -47,6 +47,7 @@ export const DEFAULT_MAIN_TEMPLATE: MainTemplate = {
   },
 
   dateGrid: {
+    showBorder: true,
     borderWidth: 1,
     borderColor: "#E5E7EB",
   },

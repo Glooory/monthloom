@@ -98,51 +98,6 @@ export const WeekdayInspector: React.FC<WeekdayInspectorProps> = ({
         </div>
       </div>
 
-      {/* 3. Border settings */}
-      <div className="field-group" style={{ marginTop: "8px" }}>
-        <div className="field-row">
-          <label className="field-label">{t.weekday.showBorderLabel}</label>
-          <input
-            type="checkbox"
-            checked={settings.showBorder}
-            onChange={(e) => onChangeSettings({ showBorder: e.target.checked })}
-            style={{ width: "16px", height: "16px", cursor: "pointer" }}
-          />
-        </div>
-
-        {settings.showBorder && (
-          <div className="weekday-border-options">
-            <div className="field-row">
-              <label className="field-label">{t.weekday.borderWidthLabel}</label>
-              <NumberInput
-                min={0.5}
-                max={10}
-                step={0.5}
-                value={settings.borderWidth}
-                onChange={(borderWidth) => onChangeSettings({ borderWidth })}
-              />
-            </div>
-            <div className="field-row">
-              <label className="field-label">{t.weekday.borderColorLabel}</label>
-              <div className="color-input-container">
-                <input
-                  type="color"
-                  className="color-picker-input"
-                  value={settings.borderColor}
-                  onChange={(e) => onChangeSettings({ borderColor: e.target.value })}
-                />
-                <input
-                  type="text"
-                  className="field-input"
-                  value={settings.borderColor}
-                  onChange={(e) => onChangeSettings({ borderColor: e.target.value })}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
       {/* 3. Text Colors (Default, Sunday, Saturday) */}
       <div className="field-group" style={{ marginTop: "8px" }}>
         <label className="field-label" style={{ fontWeight: 600 }}>{t.weekday.colorsHeading}</label>

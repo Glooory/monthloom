@@ -19,11 +19,18 @@ describe("CanvasInspector", () => {
     const inputs = screen.getAllByRole("spinbutton") as HTMLInputElement[];
     expect(inputs[0].value).toBe("700");
     expect(inputs[1].value).toBe("500");
+    expect(inputs[2].value).toBe("1"); // grid border width
 
     fireEvent.change(inputs[0], { target: { value: "850" } });
     expect(handleCommit).toHaveBeenCalledTimes(1);
     const updatedDoc = handleCommit.mock.calls[0][0];
     expect(updatedDoc.mainTemplate.width).toBe(850);
+
+    // Test border change
+    fireEvent.change(inputs[2], { target: { value: "2" } });
+    expect(handleCommit).toHaveBeenCalledTimes(2);
+    const borderUpdatedDoc = handleCommit.mock.calls[1][0];
+    expect(borderUpdatedDoc.mainTemplate.dateGrid.borderWidth).toBe(2);
   });
 
   it("applies preset when clicked", () => {
@@ -47,7 +54,38 @@ describe("CanvasInspector", () => {
     expect(updatedDoc.mainTemplate.height).toBe(600);
   });
 
-  it("renders dimensions for mini template", () => {
+  it("handles weekday row border toggle and edit in main template", () => {
+    const doc = createDefaultEditorDocument();
+    const handleCommit = vi.fn();
+
+    render(
+      <CanvasInspector
+        document={doc}
+        activeTemplate="main"
+        onCommitDocument={handleCommit}
+      />
+    );
+
+    const checkboxes = screen.getAllByRole("checkbox") as HTMLInputElement[];
+    // Date Grid border checkbox is checked by default
+    expect(checkboxes[0].checked).toBe(true);
+    // Weekday row border checkbox is unchecked by default
+    expect(checkboxes[1].checked).toBe(false);
+
+    // Toggle weekday border ON
+    fireEvent.click(checkboxes[1]);
+    expect(handleCommit).toHaveBeenCalledTimes(1);
+    const updatedDoc = handleCommit.mock.calls[0][0];
+    expect(updatedDoc.mainTemplate.weekdayRow.showBorder).toBe(true);
+
+    // Toggle dateGrid border OFF
+    fireEvent.click(checkboxes[0]);
+    expect(handleCommit).toHaveBeenCalledTimes(2);
+    const dateGridOffDoc = handleCommit.mock.calls[1][0];
+    expect(dateGridOffDoc.mainTemplate.dateGrid.showBorder).toBe(false);
+  });
+
+  it("renders dimensions and weekday border for mini template", () => {
     const doc = createDefaultEditorDocument();
     const handleCommit = vi.fn();
 
@@ -60,7 +98,18 @@ describe("CanvasInspector", () => {
     );
 
     const inputs = screen.getAllByRole("spinbutton") as HTMLInputElement[];
+    expect(inputs.length).toBe(2);
     expect(inputs[0].value).toBe("280");
     expect(inputs[1].value).toBe("210");
+
+    const checkbox = screen.getByRole("checkbox") as HTMLInputElement;
+    expect(checkbox.checked).toBe(false);
+
+    fireEvent.click(checkbox);
+    expect(handleCommit).toHaveBeenCalledTimes(1);
+    const updatedDoc = handleCommit.mock.calls[0][0];
+    expect(updatedDoc.miniTemplate.weekdayRow.showBorder).toBe(true);
   });
 });
+
+

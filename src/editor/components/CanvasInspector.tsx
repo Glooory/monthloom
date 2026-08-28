@@ -3,6 +3,10 @@ import type { EditorDocument } from "../model/types";
 import {
   getTemplateDimensions,
   setTemplateDimensions,
+  getGridBorder,
+  setGridBorder,
+  getWeekdayRowSettings,
+  setWeekdayRowSettings,
 } from "../model/templateBindings";
 import { DEFAULT_MAIN_TEMPLATE, DEFAULT_MINI_TEMPLATE } from "../../domain/template/defaults";
 import { useI18n } from "../../shared/i18n/i18nStore";
@@ -43,6 +47,8 @@ export const CanvasInspector: React.FC<CanvasInspectorProps> = ({
 }) => {
   const { t } = useI18n();
   const dimensions = getTemplateDimensions(document, activeTemplate);
+  const weekdaySettings = getWeekdayRowSettings(document, activeTemplate);
+  const gridBorder = activeTemplate === "main" ? getGridBorder(document) : null;
 
   const presets = activeTemplate === "main" ? MAIN_PRESETS : MINI_PRESETS;
   const defaultSize =
@@ -79,6 +85,24 @@ export const CanvasInspector: React.FC<CanvasInspectorProps> = ({
     onCommitDocument(next);
   };
 
+  const handleGridBorderChange = (updates: {
+    showBorder?: boolean;
+    borderWidth?: number;
+    borderColor?: string;
+  }) => {
+    const next = setGridBorder(document, updates);
+    onCommitDocument(next);
+  };
+
+  const handleWeekdayBorderChange = (updates: {
+    showBorder?: boolean;
+    borderWidth?: number;
+    borderColor?: string;
+  }) => {
+    const next = setWeekdayRowSettings(document, activeTemplate, updates);
+    onCommitDocument(next);
+  };
+
   const ratio = (dimensions.width / dimensions.height).toFixed(2);
 
   return (
@@ -106,7 +130,7 @@ export const CanvasInspector: React.FC<CanvasInspectorProps> = ({
         </div>
       </div>
 
-      {/* Dimensions Inputs Section */}
+      {/* 1. Canvas Sizing & Presets Section */}
       <div className="inspector-section">
         <div className="section-heading">{t.inspector.canvasHeading}</div>
         <div className="field-group">
@@ -150,44 +174,145 @@ export const CanvasInspector: React.FC<CanvasInspectorProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Presets Grid */}
+        <div style={{ marginTop: "14px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+            <span className="field-label" style={{ fontWeight: 600 }}>{t.inspector.presetsLabel}</span>
+            {!isDefault && (
+              <button
+                type="button"
+                className="studio-btn studio-btn-secondary"
+                style={{ fontSize: "11px", padding: "2px 8px", height: "auto" }}
+                onClick={handleResetDefault}
+              >
+                {t.inspector.resetDefaultSize}
+              </button>
+            )}
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "6px" }}>
+            {presets.map((preset) => {
+              const isSelected =
+                dimensions.width === preset.width && dimensions.height === preset.height;
+              return (
+                <button
+                  key={preset.label}
+                  type="button"
+                  className={`canvas-preset-btn ${isSelected ? "active" : ""}`}
+                  onClick={() => handleApplyPreset(preset)}
+                >
+                  <span>{preset.label}</span>
+                  {isSelected && (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
-      {/* Presets Section */}
+      {/* 2. Grid & Border System Section */}
       <div className="inspector-section">
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
-          <div className="section-heading" style={{ margin: 0 }}>{t.inspector.presetsLabel}</div>
-          {!isDefault && (
-            <button
-              type="button"
-              className="studio-btn studio-btn-secondary"
-              style={{ fontSize: "11px", padding: "2px 8px", height: "auto" }}
-              onClick={handleResetDefault}
-            >
-              {t.inspector.resetDefaultSize}
-            </button>
-          )}
-        </div>
+        <div className="section-heading">{t.inspector.gridSystemHeading}</div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "6px" }}>
-          {presets.map((preset) => {
-            const isSelected =
-              dimensions.width === preset.width && dimensions.height === preset.height;
-            return (
-              <button
-                key={preset.label}
-                type="button"
-                className={`canvas-preset-btn ${isSelected ? "active" : ""}`}
-                onClick={() => handleApplyPreset(preset)}
-              >
-                <span>{preset.label}</span>
-                {isSelected && (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                )}
-              </button>
-            );
-          })}
+        {/* Date Grid Lines (Main only) */}
+        {activeTemplate === "main" && gridBorder && (
+          <div className="field-group" style={{ marginBottom: "14px" }}>
+            <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "6px" }}>
+              {t.inspector.dateGridLinesLabel}
+            </div>
+            <div className="field-row">
+              <span className="field-label">{t.inspector.showDateGridBorderLabel}</span>
+              <input
+                type="checkbox"
+                checked={gridBorder.showBorder ?? true}
+                onChange={(e) => handleGridBorderChange({ showBorder: e.target.checked })}
+                style={{ width: "16px", height: "16px", cursor: "pointer", accentColor: "var(--accent-primary)" }}
+              />
+            </div>
+
+            {(gridBorder.showBorder ?? true) && (
+              <div className="weekday-border-options" style={{ marginTop: "6px" }}>
+                <div className="field-row">
+                  <span className="field-label">{t.inspector.borderWidthLabel}</span>
+                  <NumberInput
+                    min={0.5}
+                    max={10}
+                    step={0.5}
+                    value={gridBorder.borderWidth}
+                    onChange={(borderWidth) =>
+                      handleGridBorderChange({ borderWidth })
+                    }
+                  />
+                </div>
+                <div className="field-row">
+                  <span className="field-label">{t.inspector.borderColorLabel}</span>
+                  <div className="color-input-container">
+                    <input
+                      type="color"
+                      className="color-picker-input"
+                      value={gridBorder.borderColor}
+                      onChange={(e) =>
+                        handleGridBorderChange({ borderColor: e.target.value })
+                      }
+                    />
+                    <span style={{ fontSize: 11, color: "var(--text-secondary)", fontFamily: "monospace" }}>
+                      {gridBorder.borderColor}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Weekday Row Border (Main & Mini) */}
+        <div className="field-group">
+          <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "6px" }}>
+            {t.inspector.weekdayBorderLabel}
+          </div>
+          <div className="field-row">
+            <span className="field-label">{t.weekday.showBorderLabel}</span>
+            <input
+              type="checkbox"
+              checked={weekdaySettings.showBorder ?? false}
+              onChange={(e) => handleWeekdayBorderChange({ showBorder: e.target.checked })}
+              style={{ width: "16px", height: "16px", cursor: "pointer", accentColor: "var(--accent-primary)" }}
+            />
+          </div>
+
+          {weekdaySettings.showBorder && (
+            <div className="weekday-border-options" style={{ marginTop: "6px" }}>
+              <div className="field-row">
+                <span className="field-label">{t.weekday.borderWidthLabel}</span>
+                <NumberInput
+                  min={0.5}
+                  max={10}
+                  step={0.5}
+                  value={weekdaySettings.borderWidth ?? 1}
+                  onChange={(borderWidth) => handleWeekdayBorderChange({ borderWidth })}
+                />
+              </div>
+              <div className="field-row">
+                <span className="field-label">{t.weekday.borderColorLabel}</span>
+                <div className="color-input-container">
+                  <input
+                    type="color"
+                    className="color-picker-input"
+                    value={weekdaySettings.borderColor ?? "#E5E7EB"}
+                    onChange={(e) => handleWeekdayBorderChange({ borderColor: e.target.value })}
+                  />
+                  <span style={{ fontSize: 11, color: "var(--text-secondary)", fontFamily: "monospace" }}>
+                    {weekdaySettings.borderColor ?? "#E5E7EB"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -209,3 +334,4 @@ export const CanvasInspector: React.FC<CanvasInspectorProps> = ({
     </div>
   );
 };
+

@@ -245,14 +245,13 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
   const [zoom, setZoom] = useState(1);
 
-  const mainLayers: Array<{ id: PositionableSemanticId | "main.grid"; label: string; key: string }> = [
+  const mainLayers: Array<{ id: PositionableSemanticId; label: string; key: string }> = [
     { id: "main.date", label: t.layers.mainDate, key: "main.date:default" },
     { id: "main.weekday", label: t.layers.mainWeekday, key: "main.weekday:default" },
     { id: "main.chinaHolidayName", label: t.layers.mainChinaHolidayName, key: "main.chinaHolidayName:default" },
     { id: "main.japanHolidayName", label: t.layers.mainJapanHolidayName, key: "main.japanHolidayName:default" },
     { id: "main.chinaHolidayMarker", label: t.layers.mainChinaHolidayMarker, key: "main.chinaHolidayMarker:default" },
     { id: "main.chinaWorkdayMarker", label: t.layers.mainChinaWorkdayMarker, key: "main.chinaWorkdayMarker:default" },
-    { id: "main.grid", label: t.layers.mainGrid, key: "main.grid:default" },
   ];
 
   const miniLayers: Array<{ id: PositionableSemanticId; label: string; key: string }> = [
@@ -280,7 +279,6 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         onSelectTemplate={setActiveTemplate}
         onUndo={handleUndo}
         onRedo={handleRedo}
-        onSelectGrid={() => setSelection({ semanticId: "main.grid", instanceKey: "main.grid:default" })}
         zoom={zoom}
         onZoomChange={setZoom}
       />

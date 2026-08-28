@@ -136,4 +136,57 @@ describe("Grid Geometry", () => {
 
     expect(borderNodes).toEqual([]);
   });
+
+  it("omits bottom border line when omitBottomBorder is true", () => {
+    const borderNodes = buildGridBorderNodes({
+      bounds: { x: 0, y: 0, width: 700, height: 50 },
+      columns: 7,
+      rows: 1,
+      strokeWidth: 1,
+      strokeColor: "#E5E7EB",
+      semanticId: "main.grid",
+      omitBottomBorder: true,
+    });
+
+    // 3 outer lines (top, left, right) + 6 vertical internal lines = 9 line nodes (0 rect nodes)
+    expect(borderNodes).toHaveLength(9);
+    expect(borderNodes.every((n) => n.kind === "line")).toBe(true);
+
+    // Top line
+    expect(borderNodes[0]).toEqual({
+      kind: "line",
+      semanticId: "main.grid",
+      x1: 0,
+      y1: 0.5,
+      x2: 700,
+      y2: 0.5,
+      stroke: "#E5E7EB",
+      strokeWidth: 1,
+    });
+
+    // Left line
+    expect(borderNodes[1]).toEqual({
+      kind: "line",
+      semanticId: "main.grid",
+      x1: 0.5,
+      y1: 0,
+      x2: 0.5,
+      y2: 50,
+      stroke: "#E5E7EB",
+      strokeWidth: 1,
+    });
+
+    // Right line
+    expect(borderNodes[2]).toEqual({
+      kind: "line",
+      semanticId: "main.grid",
+      x1: 699.5,
+      y1: 0,
+      x2: 699.5,
+      y2: 50,
+      stroke: "#E5E7EB",
+      strokeWidth: 1,
+    });
+  });
 });
+

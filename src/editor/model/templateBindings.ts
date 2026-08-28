@@ -378,8 +378,9 @@ export function setCalendarColors(
 
 export function getGridBorder(
   document: EditorDocument,
-): { borderWidth: number; borderColor: string } {
+): { showBorder?: boolean; borderWidth: number; borderColor: string } {
   return {
+    showBorder: document.mainTemplate.dateGrid.showBorder ?? true,
     borderWidth: document.mainTemplate.dateGrid.borderWidth,
     borderColor: document.mainTemplate.dateGrid.borderColor,
   };
@@ -387,7 +388,7 @@ export function getGridBorder(
 
 export function setGridBorder(
   document: EditorDocument,
-  border: { borderWidth: number; borderColor: string },
+  border: { showBorder?: boolean; borderWidth?: number; borderColor?: string },
 ): EditorDocument {
   return {
     ...document,
@@ -395,7 +396,18 @@ export function setGridBorder(
       ...document.mainTemplate,
       dateGrid: {
         ...document.mainTemplate.dateGrid,
-        ...border,
+        showBorder:
+          border.showBorder !== undefined
+            ? border.showBorder
+            : (document.mainTemplate.dateGrid.showBorder ?? true),
+        borderWidth:
+          border.borderWidth !== undefined
+            ? border.borderWidth
+            : document.mainTemplate.dateGrid.borderWidth,
+        borderColor:
+          border.borderColor !== undefined
+            ? border.borderColor
+            : document.mainTemplate.dateGrid.borderColor,
       },
     },
   };

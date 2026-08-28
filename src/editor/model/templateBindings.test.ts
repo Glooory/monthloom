@@ -93,9 +93,10 @@ describe("templateBindings", () => {
 
     const border = getGridBorder(doc);
     expect(border.borderWidth).toBe(1);
+    expect(border.showBorder).toBe(true);
 
-    const updated = setGridBorder(doc, { borderWidth: 3, borderColor: "#000000" });
-    expect(getGridBorder(updated)).toEqual({ borderWidth: 3, borderColor: "#000000" });
+    const updated = setGridBorder(doc, { borderWidth: 3, borderColor: "#000000", showBorder: false });
+    expect(getGridBorder(updated)).toEqual({ borderWidth: 3, borderColor: "#000000", showBorder: false });
   });
 
   it("handles marker get, set, and type toggle", () => {

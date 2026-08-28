@@ -54,6 +54,8 @@ export function layoutMain(args: {
   const nodes: RenderNode[] = [];
 
   // 1. Weekday row
+  const hasDateGridBorder =
+    (template.dateGrid.showBorder ?? true) && template.dateGrid.borderWidth > 0;
   if (template.weekdayRow.showBorder && (template.weekdayRow.borderWidth ?? 1) > 0) {
     const weekdayBorderNodes = buildGridBorderNodes({
       bounds: { x: 0, y: 0, width, height: weekdayRowHeight },
@@ -62,6 +64,7 @@ export function layoutMain(args: {
       strokeWidth: template.weekdayRow.borderWidth ?? 1,
       strokeColor: template.weekdayRow.borderColor ?? "#E5E7EB",
       semanticId: "main.grid",
+      omitBottomBorder: hasDateGridBorder,
     });
     nodes.push(...weekdayBorderNodes);
   }
@@ -124,15 +127,17 @@ export function layoutMain(args: {
     rows: calendar.weekCount,
   });
 
-  const borderNodes = buildGridBorderNodes({
-    bounds: dateGridBounds,
-    columns: 7,
-    rows: calendar.weekCount,
-    strokeWidth: template.dateGrid.borderWidth,
-    strokeColor: template.dateGrid.borderColor,
-    semanticId: "main.grid",
-  });
-  nodes.push(...borderNodes);
+  if ((template.dateGrid.showBorder ?? true) && template.dateGrid.borderWidth > 0) {
+    const borderNodes = buildGridBorderNodes({
+      bounds: dateGridBounds,
+      columns: 7,
+      rows: calendar.weekCount,
+      strokeWidth: template.dateGrid.borderWidth,
+      strokeColor: template.dateGrid.borderColor,
+      semanticId: "main.grid",
+    });
+    nodes.push(...borderNodes);
+  }
 
   // 3. Date Cells
   let cellIndex = 0;

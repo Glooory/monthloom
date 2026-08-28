@@ -63,6 +63,10 @@ export interface TranslationDictionary {
     resetDefaultSize: string;
     presetsLabel: string;
     canvasHelpHint: string;
+    gridSystemHeading: string;
+    dateGridLinesLabel: string;
+    showDateGridBorderLabel: string;
+    weekdayBorderLabel: string;
     currentSelection: string;
     positionHeading: string;
     anchorLabel: string;

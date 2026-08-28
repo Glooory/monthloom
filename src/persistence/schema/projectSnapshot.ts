@@ -126,6 +126,7 @@ const mainTemplateSchema = z.object({
     }),
   }),
   dateGrid: z.object({
+    showBorder: z.boolean().optional(),
     borderWidth: z.number(),
     borderColor: z.string(),
   }),

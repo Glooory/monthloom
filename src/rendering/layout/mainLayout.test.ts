@@ -387,8 +387,12 @@ describe("Main Layout", () => {
     const borderNodes = scene.nodes.filter(
       (n) => n.semanticId === "main.grid" && (n.kind === "rect" || n.kind === "line"),
     );
-    // 11 date grid borders + 7 weekday row borders = 18 border nodes
-    expect(borderNodes.length).toBeGreaterThan(11);
+    // 12 date grid borders (1 rect + 6 vertical + 5 horizontal lines for 6-week month) + 9 weekday row borders (3 outer lines + 6 vertical lines) = 21 border nodes
+    expect(borderNodes.length).toBe(21);
+
+    // Weekday row does not create an outer rect that would draw a redundant bottom edge at y=50
+    const rectNodes = borderNodes.filter((n) => n.kind === "rect");
+    expect(rectNodes).toHaveLength(1); // Only the date grid outer rect
   });
 });
 

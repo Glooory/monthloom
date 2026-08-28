@@ -50,8 +50,17 @@ export function buildGridBorderNodes(args: {
   strokeWidth: number;
   strokeColor: string;
   semanticId: "main.grid";
+  omitBottomBorder?: boolean;
 }): readonly RenderNode[] {
-  const { bounds, columns, rows, strokeWidth, strokeColor, semanticId } = args;
+  const {
+    bounds,
+    columns,
+    rows,
+    strokeWidth,
+    strokeColor,
+    semanticId,
+    omitBottomBorder = false,
+  } = args;
   if (strokeWidth <= 0) {
     return [];
   }
@@ -59,18 +68,54 @@ export function buildGridBorderNodes(args: {
   const nodes: RenderNode[] = [];
   const halfStroke = strokeWidth / 2;
 
-  // 1. Inset outer rect
-  nodes.push({
-    kind: "rect",
-    semanticId,
-    x: bounds.x + halfStroke,
-    y: bounds.y + halfStroke,
-    width: bounds.width - strokeWidth,
-    height: bounds.height - strokeWidth,
-    stroke: strokeColor,
-    strokeWidth,
-    fill: "none",
-  });
+  // 1. Outer boundary (closed rect if not omitting bottom border, or 3 separate lines)
+  if (!omitBottomBorder) {
+    nodes.push({
+      kind: "rect",
+      semanticId,
+      x: bounds.x + halfStroke,
+      y: bounds.y + halfStroke,
+      width: bounds.width - strokeWidth,
+      height: bounds.height - strokeWidth,
+      stroke: strokeColor,
+      strokeWidth,
+      fill: "none",
+    });
+  } else {
+    // Top border line
+    nodes.push({
+      kind: "line",
+      semanticId,
+      x1: bounds.x,
+      y1: bounds.y + halfStroke,
+      x2: bounds.x + bounds.width,
+      y2: bounds.y + halfStroke,
+      stroke: strokeColor,
+      strokeWidth,
+    });
+    // Left border line
+    nodes.push({
+      kind: "line",
+      semanticId,
+      x1: bounds.x + halfStroke,
+      y1: bounds.y,
+      x2: bounds.x + halfStroke,
+      y2: bounds.y + bounds.height,
+      stroke: strokeColor,
+      strokeWidth,
+    });
+    // Right border line
+    nodes.push({
+      kind: "line",
+      semanticId,
+      x1: bounds.x + bounds.width - halfStroke,
+      y1: bounds.y,
+      x2: bounds.x + bounds.width - halfStroke,
+      y2: bounds.y + bounds.height,
+      stroke: strokeColor,
+      strokeWidth,
+    });
+  }
 
   const cellWidth = bounds.width / columns;
   const cellHeight = bounds.height / rows;
