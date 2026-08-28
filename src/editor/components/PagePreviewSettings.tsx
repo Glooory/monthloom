@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import type { PageLayout, PagePreviewConfig } from "../../domain/pagePreview/types";
+
 export interface AssetStoreLike {
   addImage(file: File | Blob): Promise<string>;
 }
@@ -51,23 +52,14 @@ const NumberField: React.FC<NumberFieldProps> = ({
   };
 
   return (
-    <div className="field-row" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-      <span className="field-label" style={{ fontSize: "12px", color: "#94a3b8" }}>{label}</span>
+    <div className="field-row" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <span className="field-label" style={{ fontSize: "12px", color: "var(--text-secondary)" }}>{label}</span>
       <input
         type="number"
         step={step}
         min={min}
         max={max}
         className="field-input field-input-number"
-        style={{
-          width: "90px",
-          padding: "4px 8px",
-          background: "#1e293b",
-          border: "1px solid #334155",
-          borderRadius: "4px",
-          color: "#f8fafc",
-          fontSize: "12px",
-        }}
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commit}
@@ -119,12 +111,63 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
   };
 
   return (
-    <div className="page-preview-settings" style={{ padding: "12px 16px", background: "#0f172a", borderTop: "1px solid #1e293b", color: "#f8fafc" }}>
-      <div style={{ fontWeight: 600, fontSize: "13px", marginBottom: 12, color: "#38bdf8" }}>
-        页面版面与背景设置
+    <div
+      className="page-preview-settings"
+      style={{
+        padding: "16px 20px",
+        background: "var(--bg-surface)",
+        borderBottom: "1px solid var(--border-subtle)",
+        color: "var(--text-primary)",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+        <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--accent-cyan)", display: "flex", alignItems: "center", gap: "8px" }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <line x1="3" y1="9" x2="21" y2="9" />
+            <line x1="9" y1="21" x2="9" y2="9" />
+          </svg>
+          页面版面与背景设置
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={handleUploadBackground}
+          />
+          <button
+            type="button"
+            className="studio-btn studio-btn-secondary"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            {config.backgroundAssetId ? "替换背景图" : "上传背景图"}
+          </button>
+          {config.backgroundAssetId && (
+            <button
+              type="button"
+              className="studio-btn"
+              style={{
+                background: "rgba(244, 63, 94, 0.15)",
+                color: "var(--accent-rose)",
+                borderColor: "rgba(244, 63, 94, 0.3)",
+              }}
+              onClick={handleClearBackground}
+            >
+              清除背景图
+            </button>
+          )}
+        </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))", gap: "10px 20px" }}>
         <NumberField
           label="页面宽度"
           value={layout.width}
@@ -177,49 +220,7 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
           onChange={(miniGap) => updateLayout({ miniGap })}
         />
       </div>
-
-      <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 12 }}>
-        <span style={{ fontSize: "12px", color: "#94a3b8" }}>背景底图：</span>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          style={{ display: "none" }}
-          onChange={handleUploadBackground}
-        />
-        <button
-          type="button"
-          style={{
-            padding: "4px 10px",
-            background: "#1e293b",
-            border: "1px solid #334155",
-            borderRadius: "4px",
-            color: "#f1f5f9",
-            fontSize: "12px",
-            cursor: "pointer",
-          }}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          {config.backgroundAssetId ? "替换背景图" : "上传背景图"}
-        </button>
-        {config.backgroundAssetId && (
-          <button
-            type="button"
-            style={{
-              padding: "4px 10px",
-              background: "#450a0a",
-              border: "1px solid #7f1d1d",
-              borderRadius: "4px",
-              color: "#fca5a5",
-              fontSize: "12px",
-              cursor: "pointer",
-            }}
-            onClick={handleClearBackground}
-          >
-            清除背景图
-          </button>
-        )}
-      </div>
     </div>
   );
 };
+

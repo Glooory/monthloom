@@ -148,19 +148,24 @@ export const PersistenceControls: React.FC = () => {
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: "12px",
-        padding: "16px",
-        backgroundColor: "#FFFFFF",
-        border: "1px solid #E5E7EB",
-        borderRadius: "8px",
+        gap: "14px",
+        padding: "18px",
+        backgroundColor: "var(--bg-surface)",
+        border: "1px solid var(--border-subtle)",
+        borderRadius: "var(--radius-lg)",
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontWeight: 600, fontSize: "14px", color: "#1F2937" }}>
+        <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "6px" }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+            <polyline points="17 21 17 13 7 13 7 21" />
+            <polyline points="7 3 7 8 15 8" />
+          </svg>
           项目与模板
         </div>
         {statusMessage && (
-          <div style={{ fontSize: "12px", color: "#059669", fontWeight: 500 }}>
+          <div style={{ fontSize: "12px", color: "var(--accent-emerald)", fontWeight: 500 }}>
             {statusMessage}
           </div>
         )}
@@ -171,16 +176,7 @@ export const PersistenceControls: React.FC = () => {
         <button
           type="button"
           onClick={handleSaveProject}
-          style={{
-            padding: "6px 12px",
-            fontSize: "13px",
-            fontWeight: 500,
-            background: "#2563EB",
-            color: "#FFFFFF",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
+          className="studio-btn studio-btn-primary"
         >
           保存项目
         </button>
@@ -191,14 +187,7 @@ export const PersistenceControls: React.FC = () => {
             reloadLists();
             setShowProjectsModal(true);
           }}
-          style={{
-            padding: "6px 12px",
-            fontSize: "13px",
-            background: "#F3F4F6",
-            border: "1px solid #D1D5DB",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
+          className="studio-btn studio-btn-secondary"
         >
           打开项目 ({projectList.length})
         </button>
@@ -209,14 +198,7 @@ export const PersistenceControls: React.FC = () => {
             reloadLists();
             setShowTemplatesModal(true);
           }}
-          style={{
-            padding: "6px 12px",
-            fontSize: "13px",
-            background: "#F3F4F6",
-            border: "1px solid #D1D5DB",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
+          className="studio-btn studio-btn-secondary"
         >
           模板库 ({templateList.length})
         </button>
@@ -224,14 +206,7 @@ export const PersistenceControls: React.FC = () => {
         <button
           type="button"
           onClick={handleExportProjectBundle}
-          style={{
-            padding: "6px 12px",
-            fontSize: "13px",
-            background: "#F3F4F6",
-            border: "1px solid #D1D5DB",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
+          className="studio-btn studio-btn-secondary"
         >
           导出项目包 (.monthloom)
         </button>
@@ -246,14 +221,7 @@ export const PersistenceControls: React.FC = () => {
         <button
           type="button"
           onClick={() => bundleInputRef.current?.click()}
-          style={{
-            padding: "6px 12px",
-            fontSize: "13px",
-            background: "#F3F4F6",
-            border: "1px solid #D1D5DB",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
+          className="studio-btn studio-btn-secondary"
         >
           导入项目包 (.monthloom)
         </button>
@@ -266,25 +234,13 @@ export const PersistenceControls: React.FC = () => {
           placeholder="新模板名称..."
           value={templateNameInput}
           onChange={(e) => setTemplateNameInput(e.target.value)}
-          style={{
-            padding: "4px 8px",
-            fontSize: "12px",
-            border: "1px solid #D1D5DB",
-            borderRadius: "4px",
-            flex: 1,
-          }}
+          className="field-input"
+          style={{ flex: 1 }}
         />
         <button
           type="button"
           onClick={handleSaveTemplate}
-          style={{
-            padding: "4px 10px",
-            fontSize: "12px",
-            background: "#F3F4F6",
-            border: "1px solid #D1D5DB",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
+          className="studio-btn studio-btn-secondary"
         >
           存为模板
         </button>
@@ -293,100 +249,84 @@ export const PersistenceControls: React.FC = () => {
       {/* Projects Modal */}
       {showProjectsModal && (
         <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.4)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 1000,
-          }}
+          className="monthloom-modal-backdrop"
           onClick={() => setShowProjectsModal(false)}
         >
           <div
-            style={{
-              backgroundColor: "#FFFFFF",
-              borderRadius: "8px",
-              padding: "20px",
-              width: "420px",
-              maxHeight: "80vh",
-              overflowY: "auto",
-              boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
-            }}
+            className="monthloom-modal"
+            style={{ maxWidth: "480px" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "16px" }}>
-              <div style={{ fontWeight: 600, fontSize: "16px" }}>已保存的项目</div>
+            <div className="monthloom-modal-header">
+              <div className="monthloom-modal-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                </svg>
+                已保存的项目
+              </div>
               <button
                 type="button"
+                className="monthloom-modal-close"
                 onClick={() => setShowProjectsModal(false)}
-                style={{ border: "none", background: "transparent", cursor: "pointer", fontSize: "16px" }}
               >
                 ✕
               </button>
             </div>
-            {projectList.length === 0 ? (
-              <div style={{ color: "#6B7280", fontSize: "13px" }}>暂无已保存的项目。</div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {projectList.map((p) => (
-                  <div
-                    key={p.id}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "8px 12px",
-                      border: "1px solid #E5E7EB",
-                      borderRadius: "6px",
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontWeight: 500, fontSize: "14px" }}>{p.name}</div>
-                      <div style={{ fontSize: "12px", color: "#6B7280" }}>
-                        年份：{p.targetYear} • {new Date(p.updatedAt).toLocaleDateString()}
+            <div className="monthloom-modal-body">
+              {projectList.length === 0 ? (
+                <div style={{ color: "var(--text-muted)", fontSize: "13px", textAlign: "center", padding: "20px" }}>
+                  暂无已保存的项目。
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {projectList.map((p) => (
+                    <div
+                      key={p.id}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "10px 14px",
+                        background: "var(--bg-surface-raised)",
+                        border: "1px solid var(--border-medium)",
+                        borderRadius: "var(--radius-md)",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-primary)" }}>{p.name}</div>
+                        <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>
+                          年份：{p.targetYear} • {new Date(p.updatedAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        <button
+                          type="button"
+                          onClick={() => handleLoadProject(p.id)}
+                          className="studio-btn studio-btn-primary"
+                          style={{ padding: "4px 10px", fontSize: "12px" }}
+                        >
+                          加载
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteProject(p.id)}
+                          className="studio-btn"
+                          style={{
+                            padding: "4px 8px",
+                            fontSize: "12px",
+                            color: "var(--accent-rose)",
+                            background: "transparent",
+                            borderColor: "rgba(244, 63, 94, 0.3)",
+                          }}
+                        >
+                          删除
+                        </button>
                       </div>
                     </div>
-                    <div style={{ display: "flex", gap: "6px" }}>
-                      <button
-                        type="button"
-                        onClick={() => handleLoadProject(p.id)}
-                        style={{
-                          padding: "4px 8px",
-                          fontSize: "12px",
-                          background: "#2563EB",
-                          color: "#FFF",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        加载
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteProject(p.id)}
-                        style={{
-                          padding: "4px 8px",
-                          fontSize: "12px",
-                          color: "#DC2626",
-                          background: "transparent",
-                          border: "1px solid #FCA5A5",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        删除
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -394,100 +334,86 @@ export const PersistenceControls: React.FC = () => {
       {/* Templates Modal */}
       {showTemplatesModal && (
         <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.4)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 1000,
-          }}
+          className="monthloom-modal-backdrop"
           onClick={() => setShowTemplatesModal(false)}
         >
           <div
-            style={{
-              backgroundColor: "#FFFFFF",
-              borderRadius: "8px",
-              padding: "20px",
-              width: "420px",
-              maxHeight: "80vh",
-              overflowY: "auto",
-              boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
-            }}
+            className="monthloom-modal"
+            style={{ maxWidth: "480px" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "16px" }}>
-              <div style={{ fontWeight: 600, fontSize: "16px" }}>模板库</div>
+            <div className="monthloom-modal-header">
+              <div className="monthloom-modal-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <line x1="3" y1="9" x2="21" y2="9" />
+                  <line x1="9" y1="21" x2="9" y2="9" />
+                </svg>
+                模板库
+              </div>
               <button
                 type="button"
+                className="monthloom-modal-close"
                 onClick={() => setShowTemplatesModal(false)}
-                style={{ border: "none", background: "transparent", cursor: "pointer", fontSize: "16px" }}
               >
                 ✕
               </button>
             </div>
-            {templateList.length === 0 ? (
-              <div style={{ color: "#6B7280", fontSize: "13px" }}>暂无已保存的模板。</div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {templateList.map((t) => (
-                  <div
-                    key={t.id}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "8px 12px",
-                      border: "1px solid #E5E7EB",
-                      borderRadius: "6px",
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontWeight: 500, fontSize: "14px" }}>{t.name}</div>
-                      <div style={{ fontSize: "12px", color: "#6B7280" }}>
-                        保存于：{new Date(t.updatedAt).toLocaleDateString()}
+            <div className="monthloom-modal-body">
+              {templateList.length === 0 ? (
+                <div style={{ color: "var(--text-muted)", fontSize: "13px", textAlign: "center", padding: "20px" }}>
+                  暂无已保存的模板。
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {templateList.map((t) => (
+                    <div
+                      key={t.id}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "10px 14px",
+                        background: "var(--bg-surface-raised)",
+                        border: "1px solid var(--border-medium)",
+                        borderRadius: "var(--radius-md)",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-primary)" }}>{t.name}</div>
+                        <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>
+                          保存于：{new Date(t.updatedAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        <button
+                          type="button"
+                          onClick={() => handleApplyTemplate(t.id)}
+                          className="studio-btn studio-btn-accent"
+                          style={{ padding: "4px 10px", fontSize: "12px" }}
+                        >
+                          应用
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteTemplate(t.id)}
+                          className="studio-btn"
+                          style={{
+                            padding: "4px 8px",
+                            fontSize: "12px",
+                            color: "var(--accent-rose)",
+                            background: "transparent",
+                            borderColor: "rgba(244, 63, 94, 0.3)",
+                          }}
+                        >
+                          删除
+                        </button>
                       </div>
                     </div>
-                    <div style={{ display: "flex", gap: "6px" }}>
-                      <button
-                        type="button"
-                        onClick={() => handleApplyTemplate(t.id)}
-                        style={{
-                          padding: "4px 8px",
-                          fontSize: "12px",
-                          background: "#059669",
-                          color: "#FFF",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        应用
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteTemplate(t.id)}
-                        style={{
-                          padding: "4px 8px",
-                          fontSize: "12px",
-                          color: "#DC2626",
-                          background: "transparent",
-                          border: "1px solid #FCA5A5",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        删除
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

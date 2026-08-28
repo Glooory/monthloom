@@ -49,11 +49,11 @@ export const HolidayImportControls: React.FC<HolidayImportControlsProps> = ({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-      <div style={{ fontWeight: 600, fontSize: "13px", color: "#374151" }}>
+      <div style={{ fontWeight: 600, fontSize: "13px", color: "var(--text-primary)" }}>
         节假日数据
       </div>
 
-      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
         <input
           ref={chinaInputRef}
           type="file"
@@ -65,14 +65,8 @@ export const HolidayImportControls: React.FC<HolidayImportControlsProps> = ({
         <button
           type="button"
           onClick={() => chinaInputRef.current?.click()}
-          style={{
-            padding: "4px 8px",
-            fontSize: "12px",
-            background: "#F3F4F6",
-            border: "1px solid #D1D5DB",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
+          className="studio-btn studio-btn-secondary"
+          style={{ fontSize: "12px", padding: "5px 10px" }}
         >
           {chinaDataset ? "替换中国节假日 (JSON)" : "导入中国节假日 (JSON)"}
         </button>
@@ -80,13 +74,13 @@ export const HolidayImportControls: React.FC<HolidayImportControlsProps> = ({
           <button
             type="button"
             onClick={() => onImportChina(null)}
+            className="studio-btn"
             style={{
-              padding: "4px 6px",
+              padding: "4px 8px",
               fontSize: "11px",
-              color: "#DC2626",
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
+              color: "var(--accent-rose)",
+              background: "rgba(244, 63, 94, 0.1)",
+              borderColor: "rgba(244, 63, 94, 0.25)",
             }}
           >
             清除 ({chinaDataset.entries.length} 天)
@@ -94,7 +88,7 @@ export const HolidayImportControls: React.FC<HolidayImportControlsProps> = ({
         )}
       </div>
 
-      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
         <input
           ref={japanInputRef}
           type="file"
@@ -106,14 +100,8 @@ export const HolidayImportControls: React.FC<HolidayImportControlsProps> = ({
         <button
           type="button"
           onClick={() => japanInputRef.current?.click()}
-          style={{
-            padding: "4px 8px",
-            fontSize: "12px",
-            background: "#F3F4F6",
-            border: "1px solid #D1D5DB",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
+          className="studio-btn studio-btn-secondary"
+          style={{ fontSize: "12px", padding: "5px 10px" }}
         >
           {japanDataset ? "替换日本节假日 (JSON)" : "导入日本节假日 (JSON)"}
         </button>
@@ -121,13 +109,13 @@ export const HolidayImportControls: React.FC<HolidayImportControlsProps> = ({
           <button
             type="button"
             onClick={() => onImportJapan(null)}
+            className="studio-btn"
             style={{
-              padding: "4px 6px",
+              padding: "4px 8px",
               fontSize: "11px",
-              color: "#DC2626",
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
+              color: "var(--accent-rose)",
+              background: "rgba(244, 63, 94, 0.1)",
+              borderColor: "rgba(244, 63, 94, 0.25)",
             }}
           >
             清除 ({japanDataset.entries.length} 天)
@@ -137,3 +125,4 @@ export const HolidayImportControls: React.FC<HolidayImportControlsProps> = ({
     </div>
   );
 };
+

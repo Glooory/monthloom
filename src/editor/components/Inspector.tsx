@@ -55,7 +55,15 @@ export const Inspector: React.FC<InspectorProps> = ({
     return (
       <div className="editor-inspector">
         <div className="inspector-empty">
-          点击日历中的任意元素即可查看并编辑模板属性。
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ opacity: 0.4 }}>
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 16v-4" />
+            <path d="M12 8h.01" />
+          </svg>
+          <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: "14px" }}>未选中任何元素</div>
+          <div style={{ lineHeight: 1.5, maxWidth: "220px" }}>
+            点击左侧图层列表或直接点击日历画布中的文字、角标进行编辑。
+          </div>
         </div>
       </div>
     );

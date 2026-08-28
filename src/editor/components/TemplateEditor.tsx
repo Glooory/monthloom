@@ -273,6 +273,28 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     };
   }, [canUndo, canRedo]);
 
+  const [zoom, setZoom] = useState(1);
+
+  const mainLayers: Array<{ id: PositionableSemanticId | "main.grid"; label: string; key: string }> = [
+    { id: "main.date", label: "主日期文本", key: "main.date:default" },
+    { id: "main.weekday", label: "星期表头", key: "main.weekday:default" },
+    { id: "main.chinaHolidayName", label: "中国节假日名", key: "main.chinaHolidayName:default" },
+    { id: "main.japanHolidayName", label: "日本节假日名", key: "main.japanHolidayName:default" },
+    { id: "main.chinaHolidayMarker", label: "休假角标 (休)", key: "main.chinaHolidayMarker:default" },
+    { id: "main.chinaWorkdayMarker", label: "班期角标 (班)", key: "main.chinaWorkdayMarker:default" },
+    { id: "main.grid", label: "网格边框", key: "main.grid:default" },
+  ];
+
+  const miniLayers: Array<{ id: PositionableSemanticId; label: string; key: string }> = [
+    { id: "mini.monthLabel", label: "月份标题", key: "mini.monthLabel:default" },
+    { id: "mini.weekday", label: "星期表头", key: "mini.weekday:default" },
+    { id: "mini.date", label: "附日历日期", key: "mini.date:default" },
+    { id: "mini.holidayDot", label: "休假圆点", key: "mini.holidayDot:default" },
+    { id: "mini.workdayDot", label: "班期圆点", key: "mini.workdayDot:default" },
+  ];
+
+  const currentLayers = activeTemplate === "main" ? mainLayers : miniLayers;
+
   return (
     <div className="monthloom-editor">
       {fontError && (
@@ -289,9 +311,52 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         onUndo={handleUndo}
         onRedo={handleRedo}
         onSelectGrid={() => setSelection({ semanticId: "main.grid", instanceKey: "main.grid:default" })}
+        zoom={zoom}
+        onZoomChange={setZoom}
       />
 
       <div className="editor-body">
+        {/* Left Layers / Elements Sidebar */}
+        <div className="editor-layers-sidebar">
+          <div className="layers-header">
+            <span>图层元素</span>
+            <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>
+              {activeTemplate === "main" ? "主模板" : "附模板"}
+            </span>
+          </div>
+          <div className="layers-list">
+            {currentLayers.map((layer) => {
+              const isSelected = selection?.semanticId === layer.id;
+              return (
+                <button
+                  key={layer.id}
+                  type="button"
+                  className={`layer-item ${isSelected ? "active" : ""}`}
+                  onClick={() => setSelection({ semanticId: layer.id, instanceKey: layer.key })}
+                >
+                  <svg
+                    className="layer-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    {layer.id.includes("date") && <path d="M4 7V4h16v3M9 20h6M12 4v16" />}
+                    {layer.id.includes("weekday") && <path d="M3 6h18M3 12h18M3 18h18" />}
+                    {layer.id.includes("Holiday") && <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />}
+                    {layer.id.includes("Marker") && <rect x="3" y="3" width="18" height="18" rx="2" />}
+                    {layer.id.includes("Dot") && <circle cx="12" cy="12" r="7" />}
+                    {layer.id.includes("grid") && <rect x="3" y="3" width="18" height="18" rx="2" strokeDasharray="3 3" />}
+                    {layer.id.includes("monthLabel") && <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />}
+                  </svg>
+                  <span>{layer.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Center Canvas */}
         <EditorCanvas
           svgDocument={svgDocument}
           scene={scene}
@@ -302,6 +367,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
               ? effectiveDocument.mainTemplate.weekdayRow.height
               : undefined
           }
+          zoom={zoom}
           onSelect={setSelection}
           onSelectAnchor={handleSelectAnchor}
           onStartDrag={handleStartDrag}
@@ -313,6 +379,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
           onEndWeekdayResize={handleEndWeekdayResize}
         />
 
+        {/* Right Inspector */}
         <Inspector
           document={document}
           selection={selection}

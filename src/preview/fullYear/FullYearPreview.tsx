@@ -175,10 +175,13 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
     document.miniTemplate.height,
   ]);
 
+  const [viewMode, setViewMode] = useState<"grid" | "focus" | "flow">("grid");
+  const [focusPageIndex, setFocusPageIndex] = useState(0);
+
   if (error) {
     return (
-      <div className="full-year-preview-container">
-        <div style={{ color: "#ef4444", padding: 16 }}>
+      <div className="full-year-preview-container full-year-preview-studio">
+        <div style={{ color: "var(--accent-rose)", padding: 24, textAlign: "center" }}>
           全年预览渲染失败：{error.message}
         </div>
       </div>
@@ -186,55 +189,230 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
   }
 
   return (
-    <div className="full-year-preview-container">
-      {/* Warning Banners */}
-      {(geometry.warnings.length > 0 || coverageDiagnostics.length > 0) && (
-        <div className="full-year-page-wrapper">
-          <div className="page-preview-warning-banner">
-            {geometry.warnings.map((w, idx) => (
-              <div key={`geom-${idx}`}>
-                <strong>[{w.code}]</strong> {w.message}
-              </div>
-            ))}
-            {coverageDiagnostics.map((d, idx) => (
-              <div key={`cov-${idx}`}>
-                <strong>[{d.code}]</strong> {d.message}
-              </div>
-            ))}
-          </div>
+    <div className="full-year-preview-container full-year-preview-studio">
+      {/* Top View Mode Control Bar */}
+      <div className="gallery-control-bar">
+        <div className="gallery-mode-switch">
+          <button
+            type="button"
+            className={`gallery-tab-btn ${viewMode === "grid" ? "active" : ""}`}
+            onClick={() => setViewMode("grid")}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+            </svg>
+            画廊网格 (13页)
+          </button>
+          <button
+            type="button"
+            className={`gallery-tab-btn ${viewMode === "focus" ? "active" : ""}`}
+            onClick={() => setViewMode("focus")}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="4" y="2" width="16" height="20" rx="2" />
+              <line x1="8" y1="6" x2="16" y2="6" />
+            </svg>
+            单页专注
+          </button>
+          <button
+            type="button"
+            className={`gallery-tab-btn ${viewMode === "flow" ? "active" : ""}`}
+            onClick={() => setViewMode("flow")}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="12" y1="2" x2="12" y2="22" />
+              <polyline points="19 15 12 22 5 15" />
+            </svg>
+            竖版长卷流
+          </button>
         </div>
-      )}
 
-      {loading && !documents && (
-        <div style={{ color: "#94a3b8", padding: 32 }}>正在渲染 13 页日历...</div>
-      )}
+        <div className="gallery-actions">
+          <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+            年份：<strong>{targetYear}</strong>（13页竖版全集）
+          </span>
+        </div>
+      </div>
 
-      {documents &&
-        calendarSet.pages.map((pageDef) => {
-          const mainKey = `${pageDef.mainMonth.year}-${pageDef.mainMonth.month}` as const;
-          const prevKey = `${pageDef.previousMiniMonth.year}-${pageDef.previousMiniMonth.month}` as const;
-          const nextKey = `${pageDef.nextMiniMonth.year}-${pageDef.nextMiniMonth.month}` as const;
+      <div className="gallery-viewport">
+        {/* Warning Banners */}
+        {(geometry.warnings.length > 0 || coverageDiagnostics.length > 0) && (
+          <div style={{ maxWidth: "1200px", margin: "0 auto 20px auto" }}>
+            <div className="page-preview-warning-banner">
+              {geometry.warnings.map((w, idx) => (
+                <div key={`geom-${idx}`}>
+                  <strong>[{w.code}]</strong> {w.message}
+                </div>
+              ))}
+              {coverageDiagnostics.map((d, idx) => (
+                <div key={`cov-${idx}`}>
+                  <strong>[{d.code}]</strong> {d.message}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-          const mainDoc = documents.main.get(mainKey);
-          const prevDoc = documents.mini.get(prevKey);
-          const nextDoc = documents.mini.get(nextKey);
+        {loading && !documents && (
+          <div className="loading-state-container">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: "spin 1s linear infinite" }}>
+              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+            </svg>
+            <div>正在矢量化渲染 13 页挂历与 15 个附日历...</div>
+          </div>
+        )}
 
-          if (!mainDoc || !prevDoc || !nextDoc) {
-            return null;
-          }
+        {/* 1. Grid Gallery View */}
+        {documents && viewMode === "grid" && (
+          <div className="gallery-grid">
+            {calendarSet.pages.map((pageDef, idx) => {
+              const mainKey = `${pageDef.mainMonth.year}-${pageDef.mainMonth.month}` as const;
+              const prevKey = `${pageDef.previousMiniMonth.year}-${pageDef.previousMiniMonth.month}` as const;
+              const nextKey = `${pageDef.nextMiniMonth.year}-${pageDef.nextMiniMonth.month}` as const;
 
-          return (
-            <PagePreview
-              key={pageDef.label}
-              definition={pageDef}
-              geometry={geometry}
-              mainDocument={mainDoc}
-              previousMiniDocument={prevDoc}
-              nextMiniDocument={nextDoc}
-              backgroundDataUri={backgroundDataUri}
-            />
-          );
-        })}
+              const mainDoc = documents.main.get(mainKey);
+              const prevDoc = documents.mini.get(prevKey);
+              const nextDoc = documents.mini.get(nextKey);
+
+              if (!mainDoc || !prevDoc || !nextDoc) return null;
+
+              return (
+                <div
+                  key={pageDef.label}
+                  className="gallery-card"
+                  onClick={() => {
+                    setFocusPageIndex(idx);
+                    setViewMode("focus");
+                  }}
+                >
+                  <div className="gallery-card-header">
+                    <span className="gallery-card-title">
+                      第 {idx + 1} 页 • {pageDef.label}
+                    </span>
+                    <span className="gallery-card-badge">点击专注检查</span>
+                  </div>
+                  <PagePreview
+                    definition={pageDef}
+                    geometry={geometry}
+                    mainDocument={mainDoc}
+                    previousMiniDocument={prevDoc}
+                    nextMiniDocument={nextDoc}
+                    backgroundDataUri={backgroundDataUri}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* 2. Single Page Focus View */}
+        {documents && viewMode === "focus" && (
+          <div className="gallery-focus-container">
+            {(() => {
+              const pageDef = calendarSet.pages[focusPageIndex] ?? calendarSet.pages[0];
+              const mainKey = `${pageDef.mainMonth.year}-${pageDef.mainMonth.month}` as const;
+              const prevKey = `${pageDef.previousMiniMonth.year}-${pageDef.previousMiniMonth.month}` as const;
+              const nextKey = `${pageDef.nextMiniMonth.year}-${pageDef.nextMiniMonth.month}` as const;
+
+              const mainDoc = documents.main.get(mainKey);
+              const prevDoc = documents.mini.get(prevKey);
+              const nextDoc = documents.mini.get(nextKey);
+
+              if (!mainDoc || !prevDoc || !nextDoc) return null;
+
+              return (
+                <>
+                  <div className="focus-nav-bar">
+                    <button
+                      type="button"
+                      className="studio-btn studio-btn-secondary"
+                      disabled={focusPageIndex === 0}
+                      onClick={() => setFocusPageIndex((p) => Math.max(0, p - 1))}
+                    >
+                      ← 上一页
+                    </button>
+
+                    <div className="focus-nav-title">
+                      <span>第 {focusPageIndex + 1} / 13 页</span>
+                      <span style={{ color: "var(--accent-cyan)", fontSize: "16px" }}>{pageDef.label}</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="studio-btn studio-btn-secondary"
+                      disabled={focusPageIndex === calendarSet.pages.length - 1}
+                      onClick={() => setFocusPageIndex((p) => Math.min(calendarSet.pages.length - 1, p + 1))}
+                    >
+                      下一页 →
+                    </button>
+                  </div>
+
+                  <div style={{ width: "100%", maxWidth: "800px" }}>
+                    <PagePreview
+                      definition={pageDef}
+                      geometry={geometry}
+                      mainDocument={mainDoc}
+                      previousMiniDocument={prevDoc}
+                      nextMiniDocument={nextDoc}
+                      backgroundDataUri={backgroundDataUri}
+                    />
+                  </div>
+
+                  {/* Bottom Filmstrip */}
+                  <div className="focus-filmstrip">
+                    {calendarSet.pages.map((p, i) => (
+                      <button
+                        key={p.label}
+                        type="button"
+                        className={`filmstrip-item ${i === focusPageIndex ? "active" : ""}`}
+                        onClick={() => setFocusPageIndex(i)}
+                      >
+                        {i + 1}月 ({p.label})
+                      </button>
+                    ))}
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* 3. Vertical Wall Flow View */}
+        {documents && viewMode === "flow" && (
+          <div className="full-year-flow-container">
+            {calendarSet.pages.map((pageDef) => {
+              const mainKey = `${pageDef.mainMonth.year}-${pageDef.mainMonth.month}` as const;
+              const prevKey = `${pageDef.previousMiniMonth.year}-${pageDef.previousMiniMonth.month}` as const;
+              const nextKey = `${pageDef.nextMiniMonth.year}-${pageDef.nextMiniMonth.month}` as const;
+
+              const mainDoc = documents.main.get(mainKey);
+              const prevDoc = documents.mini.get(prevKey);
+              const nextDoc = documents.mini.get(nextKey);
+
+              if (!mainDoc || !prevDoc || !nextDoc) return null;
+
+              return (
+                <div key={pageDef.label} className="full-year-page-wrapper">
+                  <div className="full-year-page-label">
+                    <span>{pageDef.label}</span>
+                  </div>
+                  <PagePreview
+                    definition={pageDef}
+                    geometry={geometry}
+                    mainDocument={mainDoc}
+                    previousMiniDocument={prevDoc}
+                    nextMiniDocument={nextDoc}
+                    backgroundDataUri={backgroundDataUri}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

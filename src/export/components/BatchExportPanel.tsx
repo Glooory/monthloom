@@ -76,68 +76,133 @@ export const BatchExportPanel: React.FC = () => {
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: "12px",
-        padding: "16px",
-        backgroundColor: "#FFFFFF",
-        border: "1px solid #E5E7EB",
-        borderRadius: "8px",
+        gap: "14px",
+        padding: "18px",
+        backgroundColor: "var(--bg-surface)",
+        border: "1px solid var(--border-subtle)",
+        borderRadius: "var(--radius-lg)",
       }}
     >
-      <div style={{ fontWeight: 600, fontSize: "14px", color: "#1F2937" }}>
+      <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "6px" }}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
         正式批量导出 SVG
       </div>
 
-      <div style={{ display: "flex", gap: "16px", fontSize: "13px", color: "#374151" }}>
-        <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+        <label
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: "10px",
+            padding: "10px 12px",
+            background: exportMode === "outlined" ? "var(--accent-primary-light)" : "var(--bg-surface-raised)",
+            border: `1px solid ${exportMode === "outlined" ? "rgba(99, 102, 241, 0.4)" : "var(--border-subtle)"}`,
+            borderRadius: "var(--radius-md)",
+            cursor: "pointer",
+            fontSize: "12px",
+            color: "var(--text-primary)",
+            transition: "all 0.15s ease",
+          }}
+        >
           <input
             type="radio"
             name="exportMode"
             value="outlined"
             checked={exportMode === "outlined"}
             onChange={() => setExportMode("outlined")}
+            style={{ marginTop: "2px" }}
           />
-          转曲轮廓（矢量路径，独立无外部字体依赖）
+          <div>
+            <div style={{ fontWeight: 600 }}>转曲轮廓</div>
+            <div style={{ color: "var(--text-muted)", fontSize: "11px", marginTop: "2px" }}>
+              矢量路径，独立无外部字体依赖（推荐印刷）
+            </div>
+          </div>
         </label>
-        <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
+
+        <label
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: "10px",
+            padding: "10px 12px",
+            background: exportMode === "editable" ? "var(--accent-primary-light)" : "var(--bg-surface-raised)",
+            border: `1px solid ${exportMode === "editable" ? "rgba(99, 102, 241, 0.4)" : "var(--border-subtle)"}`,
+            borderRadius: "var(--radius-md)",
+            cursor: "pointer",
+            fontSize: "12px",
+            color: "var(--text-primary)",
+            transition: "all 0.15s ease",
+          }}
+        >
           <input
             type="radio"
             name="exportMode"
             value="editable"
             checked={exportMode === "editable"}
             onChange={() => setExportMode("editable")}
+            style={{ marginTop: "2px" }}
           />
-          可编辑文本（保留 &lt;text&gt; 元素）
+          <div>
+            <div style={{ fontWeight: 600 }}>可编辑文本</div>
+            <div style={{ color: "var(--text-muted)", fontSize: "11px", marginTop: "2px" }}>
+              保留 &lt;text&gt; 元素，方便二次排版
+            </div>
+          </div>
         </label>
       </div>
 
       {errorMsg && (
-        <div style={{ fontSize: "12px", color: "#DC2626", backgroundColor: "#FEE2E2", padding: "6px 10px", borderRadius: "4px" }}>
+        <div
+          style={{
+            fontSize: "12px",
+            color: "var(--accent-rose)",
+            backgroundColor: "rgba(244, 63, 94, 0.1)",
+            border: "1px solid rgba(244, 63, 94, 0.25)",
+            padding: "8px 12px",
+            borderRadius: "var(--radius-sm)",
+          }}
+        >
           导出失败：{errorMsg}
         </div>
       )}
 
-      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", marginTop: "4px" }}>
         <button
           type="button"
           onClick={handleExport}
           disabled={isExporting}
-          style={{
-            padding: "8px 16px",
-            fontSize: "14px",
-            fontWeight: 600,
-            background: isExporting ? "#93C5FD" : "#2563EB",
-            color: "#FFFFFF",
-            border: "none",
-            borderRadius: "6px",
-            cursor: isExporting ? "not-allowed" : "pointer",
-          }}
+          className="studio-btn studio-btn-primary"
+          style={{ padding: "8px 18px", fontSize: "13px", fontWeight: 600 }}
         >
-          {isExporting ? "正在导出..." : "批量导出 28 张 SVG"}
+          {isExporting ? (
+            <>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: "spin 1s linear infinite" }}>
+                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+              </svg>
+              正在打包导出...
+            </>
+          ) : (
+            <>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="8 17 12 21 16 17" />
+                <line x1="12" y1="12" x2="12" y2="21" />
+                <path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29" />
+              </svg>
+              批量导出 28 张 SVG
+            </>
+          )}
         </button>
-        <span style={{ fontSize: "12px", color: "#6B7280" }}>
+
+        <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
           目标年份：{targetYear}（13 个主日历 + 15 个附日历）
         </span>
       </div>
     </div>
   );
 };
+

@@ -13,6 +13,7 @@ export interface EditorCanvasProps {
   selection: EditorSelection | null;
   activeTemplate: "main" | "mini";
   mainWeekdayHeight?: number;
+  zoom?: number;
   onSelect: (selection: EditorSelection | null) => void;
   onSelectAnchor: (nextAnchor: Anchor) => void;
   onStartDrag: (
@@ -35,6 +36,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   selection,
   activeTemplate,
   mainWeekdayHeight,
+  zoom = 1,
   onSelect,
   onSelectAnchor,
   onStartDrag,
@@ -53,7 +55,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   if (!svgDocument || !scene) {
     return (
       <div className="editor-canvas-container">
-        <div style={{ color: "#94a3b8" }}>正在渲染预览...</div>
+        <div style={{ color: "var(--text-muted)", fontSize: "13px" }}>正在渲染预览...</div>
       </div>
     );
   }
@@ -61,32 +63,39 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   return (
     <div className="editor-canvas-container">
       <div
-        className="canvas-viewport"
+        className="canvas-viewport-wrapper"
         style={{
-          width: scene.width,
-          height: scene.height,
-          maxWidth: "100%",
-          maxHeight: "100%",
+          transform: `scale(${zoom})`,
+          transformOrigin: "center center",
         }}
       >
-        <SvgPreview document={svgDocument} />
-        <EditorOverlay
-          scene={scene}
-          targets={targets}
-          selection={selection}
-          activeTemplate={activeTemplate}
-          mainWeekdayHeight={mainWeekdayHeight}
-          onSelect={onSelect}
-          onSelectAnchor={(_, nextAnchor) => onSelectAnchor(nextAnchor)}
-          onStartDrag={onStartDrag}
-          onMoveDrag={onMoveDrag}
-          onEndDrag={onEndDrag}
-          onCancelDrag={onCancelDrag}
-          onStartWeekdayResize={onStartWeekdayResize}
-          onMoveWeekdayResize={onMoveWeekdayResize}
-          onEndWeekdayResize={onEndWeekdayResize}
-        />
+        <div
+          className="canvas-viewport"
+          style={{
+            width: scene.width,
+            height: scene.height,
+          }}
+        >
+          <SvgPreview document={svgDocument} />
+          <EditorOverlay
+            scene={scene}
+            targets={targets}
+            selection={selection}
+            activeTemplate={activeTemplate}
+            mainWeekdayHeight={mainWeekdayHeight}
+            onSelect={onSelect}
+            onSelectAnchor={(_, nextAnchor) => onSelectAnchor(nextAnchor)}
+            onStartDrag={onStartDrag}
+            onMoveDrag={onMoveDrag}
+            onEndDrag={onEndDrag}
+            onCancelDrag={onCancelDrag}
+            onStartWeekdayResize={onStartWeekdayResize}
+            onMoveWeekdayResize={onMoveWeekdayResize}
+            onEndWeekdayResize={onEndWeekdayResize}
+          />
+        </div>
       </div>
     </div>
   );
 };
+

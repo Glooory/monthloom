@@ -28,11 +28,11 @@ export const WorkspaceControls: React.FC = () => {
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: "12px",
-        padding: "16px",
-        backgroundColor: "#FFFFFF",
-        border: "1px solid #E5E7EB",
-        borderRadius: "8px",
+        gap: "14px",
+        padding: "18px",
+        backgroundColor: "var(--bg-surface)",
+        border: "1px solid var(--border-subtle)",
+        borderRadius: "var(--radius-lg)",
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -40,19 +40,17 @@ export const WorkspaceControls: React.FC = () => {
           type="text"
           value={projectName}
           onChange={(e) => setProjectInfo(currentProjectId, e.target.value)}
+          className="field-input"
           style={{
-            fontSize: "16px",
+            fontSize: "15px",
             fontWeight: 600,
-            border: "1px solid #D1D5DB",
-            borderRadius: "4px",
-            padding: "4px 8px",
             width: "220px",
           }}
           aria-label="项目名称"
         />
 
-        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <label htmlFor="target-year-input" style={{ fontSize: "12px", color: "#4B5563" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <label htmlFor="target-year-input" style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
             目标年份：
           </label>
           <input
@@ -60,13 +58,9 @@ export const WorkspaceControls: React.FC = () => {
             type="number"
             value={targetYear}
             onChange={(e) => setTargetYear(Number(e.target.value) || 2027)}
-            style={{
-              width: "70px",
-              padding: "4px 6px",
-              fontSize: "13px",
-              border: "1px solid #D1D5DB",
-              borderRadius: "4px",
-            }}
+            className="field-input field-input-number"
+            style={{ width: "76px", textAlign: "center" }}
+            aria-label="目标年份"
           />
         </div>
       </div>
@@ -82,3 +76,4 @@ export const WorkspaceControls: React.FC = () => {
     </div>
   );
 };
+
