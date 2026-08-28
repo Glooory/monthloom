@@ -10,10 +10,6 @@ import {
   setCalendarColors,
   getGridBorder,
   setGridBorder,
-  getMarkerDetails,
-  setMarkerDetails,
-  getDotDetails,
-  setDotDetails,
   updateFontDescriptor,
   getWeekdayRowSettings,
   setWeekdayRowSettings,
@@ -22,10 +18,10 @@ import { PositionInspector } from "./PositionInspector";
 import { TypographyInspector } from "./TypographyInspector";
 import { ColorInspector } from "./ColorInspector";
 import { BorderInspector } from "./BorderInspector";
-import { MarkerInspector } from "./MarkerInspector";
-import { DotInspector } from "./DotInspector";
 import { WeekdayInspector } from "./WeekdayInspector";
 import { CanvasInspector } from "./CanvasInspector";
+import { HolidayLayerInspector } from "./HolidayLayerInspector";
+import { parseHolidaySemanticId } from "../model/holidaySemanticId";
 import { useI18n } from "../../shared/i18n/i18nStore";
 
 export interface InspectorProps {
@@ -58,7 +54,49 @@ export const Inspector: React.FC<InspectorProps> = ({
   }
 
   const { semanticId, instanceKey } = selection;
-  const title = t.inspector.titles[semanticId] ?? semanticId;
+  const parsedHoliday = parseHolidaySemanticId(semanticId);
+  if (parsedHoliday && document.holidayLayers) {
+    const layer = document.holidayLayers.find(
+      (l) => l.id === parsedHoliday.layerId,
+    );
+    if (layer) {
+      const elementTitle =
+        parsedHoliday.element === "name"
+          ? t.holidayLayersUI.elements.name
+          : parsedHoliday.element === "holidayMarker"
+            ? (parsedHoliday.target === "main"
+                ? t.holidayLayersUI.elements.holidayMarkerMain
+                : t.holidayLayersUI.elements.holidayMarkerMini)
+            : parsedHoliday.element === "workdayMarker"
+              ? (parsedHoliday.target === "main"
+                  ? t.holidayLayersUI.elements.workdayMarkerMain
+                  : t.holidayLayersUI.elements.workdayMarkerMini)
+              : t.holidayLayersUI.elements.dateColors;
+
+      return (
+        <div className="editor-inspector">
+          <div className="inspector-header">
+            <h3 className="inspector-title">{elementTitle}</h3>
+            <p className="inspector-subtitle">
+              {t.inspector.currentSelection}
+              {instanceKey}
+            </p>
+          </div>
+
+          <HolidayLayerInspector
+            document={document}
+            layer={layer}
+            element={parsedHoliday.element}
+            target={parsedHoliday.target}
+            onCommitDocument={onCommitDocument}
+            onAnchorChange={onAnchorChange}
+          />
+        </div>
+      );
+    }
+  }
+
+  const title = (t.inspector.titles as Record<string, string>)[semanticId] ?? semanticId;
 
   const isPositionable = semanticId !== "main.grid";
   const position = isPositionable
@@ -74,18 +112,6 @@ export const Inspector: React.FC<InspectorProps> = ({
   const calendarColors = isDate
     ? getCalendarColors(document, semanticId.startsWith("main") ? "main" : "mini")
     : undefined;
-
-  const isMarker =
-    semanticId === "main.chinaHolidayMarker" || semanticId === "main.chinaWorkdayMarker";
-  const marker = isMarker ? getMarkerDetails(document, semanticId) : null;
-  const markerFontDescriptor =
-    marker && marker.type === "text"
-      ? document.fontCatalog[marker.typography.fontId]
-      : undefined;
-
-  const isDot =
-    semanticId === "mini.holidayDot" || semanticId === "mini.workdayDot";
-  const dot = isDot ? getDotDetails(document, semanticId) : null;
 
   const isWeekday = semanticId === "main.weekday" || semanticId === "mini.weekday";
   const weekdayType = semanticId.startsWith("main") ? "main" : "mini";
@@ -170,51 +196,7 @@ export const Inspector: React.FC<InspectorProps> = ({
         />
       )}
 
-      {/* 4. Marker */}
-      {marker && (
-        <MarkerInspector
-          marker={marker}
-          fontDescriptor={markerFontDescriptor}
-          onChangeMarker={(nextMarker) =>
-            onCommitDocument(
-              setMarkerDetails(
-                document,
-                semanticId as "main.chinaHolidayMarker" | "main.chinaWorkdayMarker",
-                nextMarker,
-              ),
-            )
-          }
-          onChangeFontDescriptor={(nextDesc) => {
-            if (marker.type === "text") {
-              onCommitDocument(
-                updateFontDescriptor(
-                  document,
-                  marker.typography.fontId,
-                  () => nextDesc,
-                ),
-              );
-            }
-          }}
-        />
-      )}
-
-      {/* 5. Dot */}
-      {dot && (
-        <DotInspector
-          dot={dot}
-          onChangeDot={(nextDot) =>
-            onCommitDocument(
-              setDotDetails(
-                document,
-                semanticId as "mini.holidayDot" | "mini.workdayDot",
-                nextDot,
-              ),
-            )
-          }
-        />
-      )}
-
-      {/* 6. Grid Border */}
+      {/* 4. Grid Border */}
       {gridBorder && (
         <BorderInspector
           borderWidth={gridBorder.borderWidth}

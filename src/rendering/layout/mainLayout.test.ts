@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { generateCalendarMonth } from "../../domain/calendar/generateCalendarMonth";
-import type { TextMarkerTemplate } from "../../domain/template/primitives";
+import {
+  createDefaultHolidayLayers,
+  type HolidayLayer,
+} from "../../domain/template/holidayLayer";
 import { DEFAULT_MAIN_TEMPLATE } from "../../domain/template/defaults";
 import type { MainTemplate } from "../../domain/template/mainTemplate";
 import { layoutMain } from "./mainLayout";
@@ -56,7 +59,8 @@ describe("Main Layout", () => {
       expect(typeof firstDateNode.originX).toBe("number");
       expect(typeof firstDateNode.baselineY).toBe("number");
       expect(firstDateNode.metrics).toEqual({
-        width: firstDateNode.text.length * (firstDateNode.typography.fontSize * 0.6),
+        width:
+          firstDateNode.text.length * (firstDateNode.typography.fontSize * 0.6),
         ascent: firstDateNode.typography.fontSize * 0.8,
         descent: -firstDateNode.typography.fontSize * 0.2,
       });
@@ -64,14 +68,65 @@ describe("Main Layout", () => {
   });
 
   it("applies adjacent-month opacity to dates and holiday elements but not to grid or weekdays", () => {
+    const layers = createDefaultHolidayLayers();
+    const cnLayer = layers[0];
+    const jpLayer = layers[1];
+
     const calendar = generateCalendarMonth(
       2027,
       5,
       new Map([
-        ["2027-04-30", { china: { type: "workday" } }], // adjacent previous month
-        ["2027-05-01", { china: { type: "holiday", name: "劳动节" } }], // current month
-        ["2027-05-03", { japan: { name: "憲法記念日" } }], // current month
-        ["2027-06-01", { japan: { name: "テスト祝日" } }], // adjacent next month
+        [
+          "2027-04-30",
+          {
+            occurrences: [
+              {
+                layerId: cnLayer.id,
+                calendarId: cnLayer.calendarId,
+                type: "workday",
+              },
+            ],
+          },
+        ],
+        [
+          "2027-05-01",
+          {
+            occurrences: [
+              {
+                layerId: cnLayer.id,
+                calendarId: cnLayer.calendarId,
+                type: "holiday",
+                name: "劳动节",
+              },
+            ],
+          },
+        ],
+        [
+          "2027-05-03",
+          {
+            occurrences: [
+              {
+                layerId: jpLayer.id,
+                calendarId: jpLayer.calendarId,
+                type: "holiday",
+                name: "憲法記念日",
+              },
+            ],
+          },
+        ],
+        [
+          "2027-06-01",
+          {
+            occurrences: [
+              {
+                layerId: jpLayer.id,
+                calendarId: jpLayer.calendarId,
+                type: "holiday",
+                name: "テスト祝日",
+              },
+            ],
+          },
+        ],
       ]),
     );
 
@@ -83,6 +138,7 @@ describe("Main Layout", () => {
     const scene = layoutMain({
       calendar,
       template,
+      holidayLayers: layers,
       textMeasurer: fakeMeasurer,
     });
 
@@ -96,114 +152,127 @@ describe("Main Layout", () => {
 
     // Check adjacent date node opacity
     const prevMonthDateNode = scene.nodes.find(
-      (n) => n.semanticId === "main.date" && n.kind === "text" && n.text === "25",
+      (n) =>
+        n.semanticId === "main.date" && n.kind === "text" && n.text === "25",
     );
     expect(prevMonthDateNode).toBeDefined();
     if (prevMonthDateNode && prevMonthDateNode.kind === "text") {
-      expect(prevMonthDateNode.opacity).toBe(template.date.typography.opacity * 0.5);
+      expect(prevMonthDateNode.opacity).toBe(
+        template.date.typography.opacity * 0.5,
+      );
     }
 
     // Check current month date node opacity
     const currentMonthDateNode = scene.nodes.find(
-      (n) => n.semanticId === "main.date" && n.kind === "text" && n.text === "15",
+      (n) =>
+        n.semanticId === "main.date" && n.kind === "text" && n.text === "15",
     );
     expect(currentMonthDateNode).toBeDefined();
     if (currentMonthDateNode && currentMonthDateNode.kind === "text") {
-      expect(currentMonthDateNode.opacity).toBe(template.date.typography.opacity * 1.0);
+      expect(currentMonthDateNode.opacity).toBe(
+        template.date.typography.opacity * 1.0,
+      );
     }
 
     // Check adjacent Japan holiday name opacity
     const adjacentJapanHoliday = scene.nodes.find(
-      (n) => n.semanticId === "main.japanHolidayName" && n.kind === "text" && n.text === "テスト祝日",
+      (n) =>
+        n.semanticId === `main.holiday.${jpLayer.id}.name` &&
+        n.kind === "text" &&
+        n.text === "テスト祝日",
     );
     expect(adjacentJapanHoliday).toBeDefined();
     if (adjacentJapanHoliday && adjacentJapanHoliday.kind === "text") {
-      expect(adjacentJapanHoliday.opacity).toBe(template.japanHolidayName.typography.opacity * 0.5);
+      expect(adjacentJapanHoliday.opacity).toBe(
+        jpLayer.main.name.typography.opacity * 0.5,
+      );
     }
 
     // Check current Japan holiday name opacity
     const currentJapanHoliday = scene.nodes.find(
-      (n) => n.semanticId === "main.japanHolidayName" && n.kind === "text" && n.text === "憲法記念日",
+      (n) =>
+        n.semanticId === `main.holiday.${jpLayer.id}.name` &&
+        n.kind === "text" &&
+        n.text === "憲法記念日",
     );
     expect(currentJapanHoliday).toBeDefined();
     if (currentJapanHoliday && currentJapanHoliday.kind === "text") {
-      expect(currentJapanHoliday.opacity).toBe(template.japanHolidayName.typography.opacity * 1.0);
+      expect(currentJapanHoliday.opacity).toBe(
+        jpLayer.main.name.typography.opacity * 1.0,
+      );
     }
   });
 
   it("renders China holiday marker, workday marker, and China holiday name with custom values", () => {
-    const calendar = generateCalendarMonth(
-      2027,
-      5,
-      new Map([
-        ["2027-05-01", { china: { type: "holiday", name: "劳动节" } }],
-        ["2027-05-08", { china: { type: "workday" } }],
-      ]),
-    );
-
-    const defaultHolidayMarker = DEFAULT_MAIN_TEMPLATE.chinaMarkers.holiday as TextMarkerTemplate;
-    const defaultWorkdayMarker = DEFAULT_MAIN_TEMPLATE.chinaMarkers.workday as TextMarkerTemplate;
-
-    const customTemplate: MainTemplate = {
-      ...DEFAULT_MAIN_TEMPLATE,
-      chinaMarkers: {
-        holiday: {
-          type: "text",
-          value: "休假",
-          position: { anchor: "top-right", offsetX: -5, offsetY: 5 },
-          typography: { ...defaultHolidayMarker.typography },
+    const [defaultCnLayer] = createDefaultHolidayLayers();
+    const cnLayer: HolidayLayer = {
+      ...defaultCnLayer,
+      main: {
+        ...defaultCnLayer.main,
+        holidayMarker: {
+          enabled: true,
+          marker: {
+            type: "text",
+            value: "休假",
+            position: { anchor: "top-right", offsetX: -4, offsetY: 4 },
+            typography: {
+              fontId: "font-zh",
+              fontSize: 10,
+              fontWeight: 400,
+              fontStyle: "normal",
+              letterSpacing: 0,
+              color: "#DC2626",
+              opacity: 1,
+            },
+          },
         },
-        workday: {
-          type: "text",
-          value: "补班",
-          position: { anchor: "top-right", offsetX: -5, offsetY: 5 },
-          typography: { ...defaultWorkdayMarker.typography },
+        workdayMarker: {
+          enabled: true,
+          marker: {
+            type: "text",
+            value: "补班",
+            position: { anchor: "top-right", offsetX: -4, offsetY: 4 },
+            typography: {
+              fontId: "font-zh",
+              fontSize: 10,
+              fontWeight: 400,
+              fontStyle: "normal",
+              letterSpacing: 0,
+              color: "#4B5563",
+              opacity: 1,
+            },
+          },
         },
       },
     };
 
-
-    const scene = layoutMain({
-      calendar,
-      template: customTemplate,
-      textMeasurer: fakeMeasurer,
-    });
-
-    const holidayMarker = scene.nodes.find(
-      (n) => n.semanticId === "main.chinaHolidayMarker" && n.kind === "text",
-    );
-    expect(holidayMarker).toBeDefined();
-    if (holidayMarker && holidayMarker.kind === "text") {
-      expect(holidayMarker.text).toBe("休假");
-    }
-
-    const workdayMarker = scene.nodes.find(
-      (n) => n.semanticId === "main.chinaWorkdayMarker" && n.kind === "text",
-    );
-    expect(workdayMarker).toBeDefined();
-    if (workdayMarker && workdayMarker.kind === "text") {
-      expect(workdayMarker.text).toBe("补班");
-    }
-
-    const chinaHolidayName = scene.nodes.find(
-      (n) => n.semanticId === "main.chinaHolidayName" && n.kind === "text",
-    );
-    expect(chinaHolidayName).toBeDefined();
-    if (chinaHolidayName && chinaHolidayName.kind === "text") {
-      expect(chinaHolidayName.text).toBe("劳动节");
-    }
-  });
-
-  it("renders both China and Japan holiday information when they coexist on the same date", () => {
     const calendar = generateCalendarMonth(
       2027,
       5,
       new Map([
         [
-          "2027-05-05",
+          "2027-05-01",
           {
-            china: { type: "holiday", name: "端午节" },
-            japan: { name: "こどもの日" },
+            occurrences: [
+              {
+                layerId: cnLayer.id,
+                calendarId: cnLayer.calendarId,
+                type: "holiday",
+                name: "劳动节",
+              },
+            ],
+          },
+        ],
+        [
+          "2027-05-08",
+          {
+            occurrences: [
+              {
+                layerId: cnLayer.id,
+                calendarId: cnLayer.calendarId,
+                type: "workday",
+              },
+            ],
           },
         ],
       ]),
@@ -212,22 +281,100 @@ describe("Main Layout", () => {
     const scene = layoutMain({
       calendar,
       template: DEFAULT_MAIN_TEMPLATE,
+      holidayLayers: [cnLayer],
+      textMeasurer: fakeMeasurer,
+    });
+
+    const holidayMarker = scene.nodes.find(
+      (n) =>
+        n.semanticId === `main.holiday.${cnLayer.id}.holidayMarker` &&
+        n.kind === "text",
+    );
+    expect(holidayMarker).toBeDefined();
+    if (holidayMarker && holidayMarker.kind === "text") {
+      expect(holidayMarker.text).toBe("休假");
+    }
+
+    const workdayMarker = scene.nodes.find(
+      (n) =>
+        n.semanticId === `main.holiday.${cnLayer.id}.workdayMarker` &&
+        n.kind === "text",
+    );
+    expect(workdayMarker).toBeDefined();
+    if (workdayMarker && workdayMarker.kind === "text") {
+      expect(workdayMarker.text).toBe("补班");
+    }
+
+    const chinaHolidayName = scene.nodes.find(
+      (n) =>
+        n.semanticId === `main.holiday.${cnLayer.id}.name` &&
+        n.kind === "text",
+    );
+    expect(chinaHolidayName).toBeDefined();
+    if (chinaHolidayName && chinaHolidayName.kind === "text") {
+      expect(chinaHolidayName.text).toBe("劳动节");
+    }
+  });
+
+  it("renders both China and Japan holiday information when they coexist on the same date", () => {
+    const layers = createDefaultHolidayLayers();
+    const cnLayer = layers[0];
+    const jpLayer = layers[1];
+
+    const calendar = generateCalendarMonth(
+      2027,
+      5,
+      new Map([
+        [
+          "2027-05-05",
+          {
+            occurrences: [
+              {
+                layerId: cnLayer.id,
+                calendarId: cnLayer.calendarId,
+                type: "holiday",
+                name: "端午节",
+              },
+              {
+                layerId: jpLayer.id,
+                calendarId: jpLayer.calendarId,
+                type: "holiday",
+                name: "こどもの日",
+              },
+            ],
+            mainDateColor: jpLayer.main.dateColors.holiday,
+          },
+        ],
+      ]),
+    );
+
+    const scene = layoutMain({
+      calendar,
+      template: DEFAULT_MAIN_TEMPLATE,
+      holidayLayers: layers,
       textMeasurer: fakeMeasurer,
     });
 
     // Date color should be Japan holiday color
     const dateNode = scene.nodes.find(
-      (n) => n.semanticId === "main.date" && n.kind === "text" && n.text === "5",
+      (n) =>
+        n.semanticId === "main.date" && n.kind === "text" && n.text === "5",
     );
     expect(dateNode).toBeDefined();
     if (dateNode && dateNode.kind === "text") {
-      expect(dateNode.color).toBe(DEFAULT_MAIN_TEMPLATE.colors.japanHoliday);
+      expect(dateNode.color).toBe(jpLayer.main.dateColors.holiday);
     }
 
     // Both markers / names coexist
-    const chinaMarker = scene.nodes.find((n) => n.semanticId === "main.chinaHolidayMarker");
-    const chinaName = scene.nodes.find((n) => n.semanticId === "main.chinaHolidayName");
-    const japanName = scene.nodes.find((n) => n.semanticId === "main.japanHolidayName");
+    const chinaMarker = scene.nodes.find(
+      (n) => n.semanticId === `main.holiday.${cnLayer.id}.holidayMarker`,
+    );
+    const chinaName = scene.nodes.find(
+      (n) => n.semanticId === `main.holiday.${cnLayer.id}.name`,
+    );
+    const japanName = scene.nodes.find(
+      (n) => n.semanticId === `main.holiday.${jpLayer.id}.name`,
+    );
 
     expect(chinaMarker).toBeDefined();
     expect(chinaName).toBeDefined();
@@ -235,35 +382,59 @@ describe("Main Layout", () => {
   });
 
   it("handles image marker template correctly", () => {
-    const calendar = generateCalendarMonth(
-      2027,
-      5,
-      new Map([["2027-05-01", { china: { type: "holiday" } }]]),
-    );
-
-    const imageTemplate: MainTemplate = {
-      ...DEFAULT_MAIN_TEMPLATE,
-      chinaMarkers: {
-        holiday: {
-          type: "image",
-          assetId: "holiday-badge",
-          position: { anchor: "top-right", offsetX: -2, offsetY: 2 },
-          width: 16,
-          height: 16,
-          opacity: 0.9,
+    const layers = createDefaultHolidayLayers();
+    const cnLayer = {
+      ...layers[0],
+      main: {
+        ...layers[0].main,
+        holidayMarker: {
+          enabled: true,
+          marker: {
+            type: "image" as const,
+            assetId: "holiday-badge",
+            position: {
+              anchor: "top-right" as const,
+              offsetX: -2,
+              offsetY: 2,
+            },
+            width: 16,
+            height: 16,
+            opacity: 0.9,
+          },
         },
-        workday: DEFAULT_MAIN_TEMPLATE.chinaMarkers.workday,
       },
     };
 
+    const calendar = generateCalendarMonth(
+      2027,
+      5,
+      new Map([
+        [
+          "2027-05-01",
+          {
+            occurrences: [
+              {
+                layerId: cnLayer.id,
+                calendarId: cnLayer.calendarId,
+                type: "holiday",
+              },
+            ],
+          },
+        ],
+      ]),
+    );
+
     const scene = layoutMain({
       calendar,
-      template: imageTemplate,
+      template: DEFAULT_MAIN_TEMPLATE,
+      holidayLayers: [cnLayer],
       textMeasurer: fakeMeasurer,
     });
 
     const imageNode = scene.nodes.find(
-      (n) => n.semanticId === "main.chinaHolidayMarker" && n.kind === "image",
+      (n) =>
+        n.semanticId === `main.holiday.${cnLayer.id}.holidayMarker` &&
+        n.kind === "image",
     );
     expect(imageNode).toBeDefined();
     if (imageNode && imageNode.kind === "image") {
@@ -385,14 +556,14 @@ describe("Main Layout", () => {
     });
 
     const borderNodes = scene.nodes.filter(
-      (n) => n.semanticId === "main.grid" && (n.kind === "rect" || n.kind === "line"),
+      (n) =>
+        n.semanticId === "main.grid" &&
+        (n.kind === "rect" || n.kind === "line"),
     );
-    // 12 date grid borders (1 rect + 6 vertical + 5 horizontal lines for 6-week month) + 9 weekday row borders (3 outer lines + 6 vertical lines) = 21 border nodes
+    // 12 date grid borders + 9 weekday row borders = 21 border nodes
     expect(borderNodes.length).toBe(21);
 
-    // Weekday row does not create an outer rect that would draw a redundant bottom edge at y=50
     const rectNodes = borderNodes.filter((n) => n.kind === "rect");
     expect(rectNodes).toHaveLength(1); // Only the date grid outer rect
   });
 });
-

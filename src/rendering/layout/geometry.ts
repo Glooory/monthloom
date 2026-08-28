@@ -1,4 +1,103 @@
+import type { ImageMarkerTemplate, MarkerTemplate } from "../../domain/template/primitives";
 import type { Rect, RenderNode } from "../scene/types";
+import { applyOffset, getAnchorPoint } from "./anchors";
+import { positionText, type TextMeasurer } from "./textMetrics";
+
+
+
+export function calculateImageMarkerBounds(
+  cell: Rect,
+  marker: ImageMarkerTemplate,
+): { x: number; y: number } {
+  const pt = applyOffset(
+    getAnchorPoint(cell, marker.position.anchor),
+    marker.position,
+  );
+  let x: number;
+  let y: number;
+
+  if (marker.position.anchor.endsWith("-left")) {
+    x = pt.x;
+  } else if (marker.position.anchor.endsWith("-right")) {
+    x = pt.x - marker.width;
+  } else {
+    x = pt.x - marker.width / 2;
+  }
+
+  if (marker.position.anchor.startsWith("top-")) {
+    y = pt.y;
+  } else if (marker.position.anchor.startsWith("bottom-")) {
+    y = pt.y - marker.height;
+  } else {
+    y = pt.y - marker.height / 2;
+  }
+
+  return { x, y };
+}
+
+export function buildMarkerRenderNode(args: {
+  marker: MarkerTemplate;
+  cell: Rect;
+  semanticId: string;
+  instanceKey: string;
+  measurer: TextMeasurer;
+  opacityMultiplier?: number;
+}): RenderNode | null {
+
+  const {
+    marker,
+    cell,
+    semanticId,
+    instanceKey,
+    measurer,
+    opacityMultiplier = 1,
+  } = args;
+
+  if (marker.type === "text") {
+    if (!marker.value) return null;
+    const markerPos = positionText({
+      text: marker.value,
+      cell,
+      position: marker.position,
+      typography: marker.typography,
+      measurer,
+    });
+    return {
+      kind: "text",
+      semanticId,
+      instanceKey,
+      text: marker.value,
+      originX: markerPos.originX,
+      baselineY: markerPos.baselineY,
+      metrics: markerPos.metrics,
+      cell,
+      position: marker.position,
+      typography: marker.typography,
+      color: marker.typography.color,
+      opacity: marker.typography.opacity * opacityMultiplier,
+    };
+  }
+
+  if (marker.type === "image") {
+    const imgBounds = calculateImageMarkerBounds(cell, marker);
+    return {
+      kind: "image",
+      semanticId,
+      instanceKey,
+      assetId: marker.assetId,
+      x: imgBounds.x,
+      y: imgBounds.y,
+      width: marker.width,
+      height: marker.height,
+      opacity: marker.opacity * opacityMultiplier,
+      cell,
+      position: marker.position,
+    };
+  }
+
+  return null;
+}
+
 
 export type GridGeometry = Readonly<{
   bounds: Rect;

@@ -1,9 +1,13 @@
-import type { HolidayInfo } from "../../domain/holiday/types";
 import { DEFAULT_MAIN_TEMPLATE, DEFAULT_MINI_TEMPLATE } from "../../domain/template/defaults";
 import type { MainTemplate } from "../../domain/template/mainTemplate";
 import type { MiniTemplate } from "../../domain/template/miniTemplate";
 import type { AssetResolver, BinaryAsset } from "../../resources/assets/types";
 import type { FontCatalog } from "../../resources/fonts/types";
+import type { HolidayIndex, ResolvedHolidayDate } from "../../domain/holiday/types";
+import {
+  BUILTIN_CHINA_CALENDAR_ID,
+  BUILTIN_JAPAN_CALENDAR_ID,
+} from "../../domain/holiday/types";
 
 export const PHASE3_FONT_CATALOG: FontCatalog = {
   "font-en": {
@@ -32,31 +36,33 @@ export const SAMPLE_MONTHS = [
   { year: 2027, month: 5, label: "2027-05 (6 weeks)" },
 ] as const;
 
-export const FIXTURE_HOLIDAYS = new Map<string, HolidayInfo>([
+export const FIXTURE_HOLIDAYS: HolidayIndex = new Map<string, ResolvedHolidayDate>([
   // 2026-02 (4-week month)
-  ["2026-02-11", { japan: { name: "建国記念の日" } }],
-  ["2026-02-17", { china: { type: "holiday", name: "春节" } }],
-  ["2026-02-15", { china: { type: "workday" } }],
+  ["2026-02-11", { occurrences: [{ layerId: "jp", calendarId: BUILTIN_JAPAN_CALENDAR_ID, type: "holiday" as const, name: "建国記念の日" }] }],
+  ["2026-02-17", { occurrences: [{ layerId: "cn", calendarId: BUILTIN_CHINA_CALENDAR_ID, type: "holiday" as const, name: "春节" }] }],
+  ["2026-02-15", { occurrences: [{ layerId: "cn", calendarId: BUILTIN_CHINA_CALENDAR_ID, type: "workday" as const }] }],
 
   // 2027-02 (5-week month)
-  ["2027-02-06", { china: { type: "holiday", name: "春节" } }],
-  ["2027-02-11", { japan: { name: "建国記念の日" } }],
-  ["2027-02-14", { china: { type: "workday" } }],
+  ["2027-02-06", { occurrences: [{ layerId: "cn", calendarId: BUILTIN_CHINA_CALENDAR_ID, type: "holiday" as const, name: "春节" }] }],
+  ["2027-02-11", { occurrences: [{ layerId: "jp", calendarId: BUILTIN_JAPAN_CALENDAR_ID, type: "holiday" as const, name: "建国記念の日" }] }],
+  ["2027-02-14", { occurrences: [{ layerId: "cn", calendarId: BUILTIN_CHINA_CALENDAR_ID, type: "workday" as const }] }],
 
   // 2027-05 (6-week month)
-  ["2027-04-30", { china: { type: "workday" } }], // adjacent previous month
-  ["2027-05-01", { china: { type: "holiday", name: "劳动节" } }],
-  ["2027-05-03", { japan: { name: "憲法記念日" } }],
-  ["2027-05-04", { japan: { name: "みどりの日" } }],
+  ["2027-04-30", { occurrences: [{ layerId: "cn", calendarId: BUILTIN_CHINA_CALENDAR_ID, type: "workday" as const }] }],
+  ["2027-05-01", { occurrences: [{ layerId: "cn", calendarId: BUILTIN_CHINA_CALENDAR_ID, type: "holiday" as const, name: "劳动节" }] }],
+  ["2027-05-03", { occurrences: [{ layerId: "jp", calendarId: BUILTIN_JAPAN_CALENDAR_ID, type: "holiday" as const, name: "憲法記念日" }] }],
+  ["2027-05-04", { occurrences: [{ layerId: "jp", calendarId: BUILTIN_JAPAN_CALENDAR_ID, type: "holiday" as const, name: "みどりの日" }] }],
   [
     "2027-05-05",
     {
-      china: { type: "holiday", name: "端午节" },
-      japan: { name: "こどもの日" },
+      occurrences: [
+        { layerId: "cn", calendarId: BUILTIN_CHINA_CALENDAR_ID, type: "holiday" as const, name: "端午节" },
+        { layerId: "jp", calendarId: BUILTIN_JAPAN_CALENDAR_ID, type: "holiday" as const, name: "こどもの日" },
+      ],
     },
-  ], // coexisting same-date
-  ["2027-05-08", { china: { type: "workday" } }],
-  ["2027-06-05", { china: { type: "holiday", name: "芒种" } }], // adjacent next month
+  ],
+  ["2027-05-08", { occurrences: [{ layerId: "cn", calendarId: BUILTIN_CHINA_CALENDAR_ID, type: "workday" as const }] }],
+  ["2027-06-05", { occurrences: [{ layerId: "cn", calendarId: BUILTIN_CHINA_CALENDAR_ID, type: "holiday" as const, name: "芒种" }] }],
 ]);
 
 export const PHASE3_MAIN_TEMPLATE: MainTemplate = {
@@ -80,51 +86,10 @@ export const PHASE3_MAIN_TEMPLATE: MainTemplate = {
       fontWeight: 400,
     },
   },
-  chinaHolidayName: {
-    ...DEFAULT_MAIN_TEMPLATE.chinaHolidayName,
-    typography: {
-      ...DEFAULT_MAIN_TEMPLATE.chinaHolidayName.typography,
-      fontId: "font-zh",
-      fontWeight: 400,
-    },
-  },
-  japanHolidayName: {
-    ...DEFAULT_MAIN_TEMPLATE.japanHolidayName,
-    typography: {
-      ...DEFAULT_MAIN_TEMPLATE.japanHolidayName.typography,
-      fontId: "font-ja",
-      fontWeight: 400,
-    },
-  },
-  chinaMarkers: {
-    holiday: {
-      type: "text",
-      value: "休",
-      position: { anchor: "top-right", offsetX: -8, offsetY: 8 },
-      typography: {
-        fontId: "font-zh",
-        fontSize: 10,
-        fontWeight: 400,
-        fontStyle: "normal",
-        letterSpacing: 0,
-        color: "#DC2626",
-        opacity: 1,
-      },
-    },
-    workday: {
-      type: "text",
-      value: "班",
-      position: { anchor: "top-right", offsetX: -8, offsetY: 8 },
-      typography: {
-        fontId: "font-zh",
-        fontSize: 10,
-        fontWeight: 400,
-        fontStyle: "normal",
-        letterSpacing: 0,
-        color: "#4B5563",
-        opacity: 1,
-      },
-    },
+  colors: {
+    ...DEFAULT_MAIN_TEMPLATE.colors,
+    sunday: "#dc2626",
+    saturday: "#2563eb",
   },
 };
 
@@ -137,7 +102,7 @@ export const PHASE3_MINI_TEMPLATE: MiniTemplate = {
       typography: {
         ...DEFAULT_MINI_TEMPLATE.monthRow.label.typography,
         fontId: "font-en",
-        fontWeight: 400,
+        fontWeight: 700,
       },
     },
   },
@@ -163,34 +128,30 @@ export const PHASE3_MINI_TEMPLATE: MiniTemplate = {
 };
 
 export function createPhase3AssetResolver(): AssetResolver {
-  const cache = new Map<string, BinaryAsset>();
+  const assets = new Map<string, BinaryAsset>();
+
+  // A tiny valid 1x1 PNG or mock icon for image marker testing
+  const dummyPngData = new Uint8Array([
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,
+    0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+    0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4, 0x89, 0x00, 0x00, 0x00,
+    0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9c, 0x63, 0x00, 0x01, 0x00, 0x00,
+    0x05, 0x00, 0x01, 0x0d, 0x0a, 0x2d, 0xb4, 0x00, 0x00, 0x00, 0x00, 0x49,
+    0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
+  ]);
+
+  assets.set("phase3-marker", {
+    mimeType: "image/png",
+    bytes: dummyPngData.buffer,
+  });
 
   return {
-    async resolve(assetId: string): Promise<BinaryAsset> {
-      if (cache.has(assetId)) {
-        return cache.get(assetId)!;
+    async resolve(id: string): Promise<BinaryAsset> {
+      const asset = assets.get(id);
+      if (!asset) {
+        throw new Error(`Asset not found: ${id}`);
       }
-
-      if (assetId === "phase3-marker") {
-        const baseUrl = import.meta.env.BASE_URL || "/";
-        const cleanBase = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
-        const markerUrl = `${cleanBase}phase3-marker.png`;
-
-        const response = await fetch(markerUrl);
-        if (!response.ok) {
-          throw new Error(`Failed to load marker image from ${markerUrl}: HTTP ${response.status}`);
-        }
-
-        const bytes = await response.arrayBuffer();
-        const asset: BinaryAsset = {
-          bytes,
-          mimeType: "image/png",
-        };
-        cache.set(assetId, asset);
-        return asset;
-      }
-
-      throw new Error(`Unknown assetId: "${assetId}"`);
+      return asset;
     },
   };
 }

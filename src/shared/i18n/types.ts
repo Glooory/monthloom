@@ -39,16 +39,10 @@ export interface TranslationDictionary {
     miniBadge: string;
     mainWeekday: string;
     mainDate: string;
-    mainChinaHolidayName: string;
-    mainJapanHolidayName: string;
-    mainChinaHolidayMarker: string;
-    mainChinaWorkdayMarker: string;
     mainGrid: string;
     miniMonthLabel: string;
     miniWeekday: string;
     miniDate: string;
-    miniHolidayDot: string;
-    miniWorkdayDot: string;
     canvasRoot: string;
   };
   inspector: {
@@ -98,7 +92,6 @@ export interface TranslationDictionary {
     weekdayColorLabel: string;
     sundayColorLabel: string;
     saturdayColorLabel: string;
-    japanHolidayColorLabel: string;
     markerHeading: string;
     markerTypeLabel: string;
     markerTypeText: string;
@@ -140,7 +133,7 @@ export interface TranslationDictionary {
       japanese: string;
     };
     columnsLabel: string;
-    dayLabels: [string, string, string, string, string, string, string];
+    dayLabels: string[];
     columnPlaceholder: (index: number) => string;
   };
   pagePreview: {
@@ -176,15 +169,8 @@ export interface TranslationDictionary {
     projectNameLabel: string;
     targetYearLabel: string;
     holidaySectionTitle: string;
-    importChinaBtn: string;
-    replaceChinaBtn: string;
-    clearChinaBtn: (days: number) => string;
-    importJapanBtn: string;
-    replaceJapanBtn: string;
-    clearJapanBtn: (days: number) => string;
+    holidayLibraryBtn: (count: number) => string;
     diagnosticsHeading: string;
-    missingChinaDataset: string;
-    missingJapanDataset: string;
   };
   persistence: {
     heading: string;
@@ -212,8 +198,15 @@ export interface TranslationDictionary {
     exportBundleSuccess: string;
     exportBundleError: (err: string) => string;
     importProjectSuccess: (name: string) => string;
+    importProjectSuccessWithHolidays: (
+      name: string,
+      addedCalendars: number,
+      addedRecords: number,
+      skippedConflicts: number,
+    ) => string;
     importTemplateSuccess: (name: string) => string;
     importBundleError: (err: string) => string;
+    bundleNotice: string;
     projectsModalTitle: string;
     templatesModalTitle: string;
     noProjectsText: string;
@@ -241,5 +234,112 @@ export interface TranslationDictionary {
     reloadAppBtn: string;
     fontLoadError: (msg: string) => string;
     previewRenderError: (msg: string) => string;
+  };
+  holidayLibrary: {
+    title: string;
+    addCalendarBtn: string;
+    importCalendarBtn: string;
+    newCalendarPrompt: string;
+    customCalendarDefaultName: string;
+    renameCalendarBtn: string;
+    deleteCalendarBtn: string;
+    deleteCalendarConfirm: (name: string) => string;
+    deleteCalendarBlocked: string;
+    calendarListHeading: string;
+    recordCount: (count: number) => string;
+    coverageStatus: {
+      confirmed: string;
+      unconfirmed: string;
+      unknown: string;
+    };
+    markConfirmedBtn: string;
+    lastSync: (dateStr: string) => string;
+    yearCoverageHeading: (year: number) => string;
+    syncBtn: string;
+    syncing: string;
+    syncSuccess: string;
+    syncError: (msg: string) => string;
+    importProviderBtn: string;
+    importMonthloomBtn: string;
+    exportMonthloomBtn: string;
+    addRecordBtn: string;
+    addRangeBtn: string;
+    yearLabel: string;
+    recordTable: {
+      date: string;
+      type: string;
+      name: string;
+      provenance: string;
+      actions: string;
+      holidayType: string;
+      workdayType: string;
+      provSource: string;
+      provModified: string;
+      provAdded: string;
+      provDeleted: string;
+      editBtn: string;
+      deleteBtn: string;
+      restoreBtn: string;
+      noRecords: string;
+    };
+    dialog: {
+      addTitle: string;
+      editTitle: string;
+      singleTab: string;
+      rangeTab: string;
+      dateLabel: string;
+      startDateLabel: string;
+      endDateLabel: string;
+      typeLabel: string;
+      nameLabel: string;
+      namePlaceholder: string;
+      cancelBtn: string;
+      saveBtn: string;
+    };
+    confirmation: {
+      title: string;
+      addedLabel: (count: number) => string;
+      updatedLabel: (count: number) => string;
+      deletedLabel: (count: number) => string;
+      retainedOverridesLabel: (count: number) => string;
+      confirmBtn: string;
+      cancelBtn: string;
+    };
+  };
+  holidayLayersUI: {
+    treeTitle: (count: number) => string;
+    addLayerBtn: string;
+    selectCalendarPlaceholder: string;
+    missingCalendarBadge: string;
+    missingCalendarWarning: string;
+    missingCalendar: (calendarId: string) => string;
+    colorPriorityHint: string;
+    expandGroupTitle: string;
+    collapseGroupTitle: string;
+    noDataForCurrentYear: string;
+    selectRebindCalendar: string;
+    toggleLayerTitle: string;
+    deleteLayerTitle: string;
+    moveUpTitle: string;
+    moveDownTitle: string;
+    elements: {
+      name: string;
+      holidayMarkerMain: string;
+      workdayMarkerMain: string;
+      dateColors: string;
+      holidayMarkerMini: string;
+      workdayMarkerMini: string;
+    };
+    inspector: {
+      showNameLabel: string;
+      enableHolidayMarkerMain: string;
+      enableHolidayMarkerMini: string;
+      enableWorkdayMarkerMain: string;
+      enableWorkdayMarkerMini: string;
+      dateColorsHeading: string;
+      enableDateColorsLabel: string;
+      holidayDateColorLabel: string;
+      workdayDateColorLabel: string;
+    };
   };
 }

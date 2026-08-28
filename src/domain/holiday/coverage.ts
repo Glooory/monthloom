@@ -1,29 +1,39 @@
 import { addDays, compareDate, toISODate } from "../date/date";
 import type { DateRange, LocalDate } from "../date/types";
 import type {
-  DateCoverage,
+  HolidayCalendar,
+  HolidayCoverage,
   HolidayDiagnostic,
-  HolidaySource,
 } from "./types";
 
-export function isDateCovered(
+export function calculateRequiredHolidayRange(targetYear: number): DateRange {
+  const nextYear = targetYear + 1;
+  const isNextLeap =
+    nextYear % 4 === 0 && (nextYear % 100 !== 0 || nextYear % 400 === 0);
+  return {
+    start: { year: targetYear - 1, month: 12, day: 1 },
+    end: { year: nextYear, month: 2, day: isNextLeap ? 29 : 28 },
+  };
+}
+
+export function isDateInConfirmedCoverage(
   date: LocalDate,
-  coverage: DateCoverage,
+  coverageList: readonly HolidayCoverage[],
+  calendarId: string,
 ): boolean {
-  for (const range of coverage.ranges) {
-    if (
-      compareDate(range.start, date) <= 0 &&
-      compareDate(date, range.end) <= 0
-    ) {
+  for (const cov of coverageList) {
+    if (cov.calendarId !== calendarId || cov.status !== "confirmed") continue;
+    if (compareDate(cov.start, date) <= 0 && compareDate(date, cov.end) <= 0) {
       return true;
     }
   }
   return false;
 }
 
-export function getUncoveredRanges(
+export function getUncoveredCalendarRanges(
   required: DateRange,
-  coverage: DateCoverage,
+  coverageList: readonly HolidayCoverage[],
+  calendarId: string,
 ): readonly DateRange[] {
   const gaps: DateRange[] = [];
   let cursor = required.start;
@@ -31,7 +41,7 @@ export function getUncoveredRanges(
   let gapEnd: LocalDate | null = null;
 
   while (compareDate(cursor, required.end) <= 0) {
-    if (!isDateCovered(cursor, coverage)) {
+    if (!isDateInConfirmedCoverage(cursor, coverageList, calendarId)) {
       if (!gapStart) {
         gapStart = cursor;
       }
@@ -53,16 +63,19 @@ export function getUncoveredRanges(
   return gaps;
 }
 
-export function createCoverageDiagnostics(
-  source: HolidaySource,
-  required: DateRange,
-  coverage: DateCoverage,
-): readonly HolidayDiagnostic[] {
-  const gaps = getUncoveredRanges(required, coverage);
-
+export function createCalendarCoverageDiagnostics(args: {
+  calendar: HolidayCalendar;
+  requiredRange: DateRange;
+  coverage: readonly HolidayCoverage[];
+}): readonly HolidayDiagnostic[] {
+  const gaps = getUncoveredCalendarRanges(
+    args.requiredRange,
+    args.coverage,
+    args.calendar.id,
+  );
   return gaps.map((gap) => ({
     level: "warning",
     code: "holiday-coverage-gap",
-    message: `${source} holiday data does not cover ${toISODate(gap.start)} through ${toISODate(gap.end)}.`,
+    message: `${args.calendar.name} holiday data does not cover ${toISODate(gap.start)} through ${toISODate(gap.end)}.`,
   }));
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { generateCalendarMonth } from "./generateCalendarMonth";
+import type { HolidayIndex } from "../holiday/types";
 
 describe("generateCalendarMonth", () => {
   it("generates a 4-week month when 28 days start on Sunday", () => {
@@ -55,18 +56,22 @@ describe("generateCalendarMonth", () => {
   });
 
   it("enriches calendar cells with normalized holiday info for both current and adjacent months", () => {
-    const holidays = new Map([
+    const holidays: HolidayIndex = new Map([
       [
         "2027-01-01",
         {
-          china: { type: "holiday" as const, name: "元旦" },
-          japan: { name: "元日" },
+          occurrences: [
+            { layerId: "cn", calendarId: "cn", type: "holiday" as const, name: "元旦" },
+            { layerId: "jp", calendarId: "jp", type: "holiday" as const, name: "元日" },
+          ],
         },
       ],
       [
         "2026-12-31",
         {
-          japan: { name: "大晦日" },
+          occurrences: [
+            { layerId: "jp", calendarId: "jp", type: "holiday" as const, name: "大晦日" },
+          ],
         },
       ],
     ]);
@@ -81,8 +86,10 @@ describe("generateCalendarMonth", () => {
         c.date.day === 1,
     );
     expect(jan1?.holiday).toEqual({
-      china: { type: "holiday", name: "元旦" },
-      japan: { name: "元日" },
+      occurrences: [
+        { layerId: "cn", calendarId: "cn", type: "holiday", name: "元旦" },
+        { layerId: "jp", calendarId: "jp", type: "holiday", name: "元日" },
+      ],
     });
 
     const dec31 = cells.find(
@@ -94,7 +101,9 @@ describe("generateCalendarMonth", () => {
     expect(dec31).toBeDefined();
     expect(dec31?.inCurrentMonth).toBe(false);
     expect(dec31?.holiday).toEqual({
-      japan: { name: "大晦日" },
+      occurrences: [
+        { layerId: "jp", calendarId: "jp", type: "holiday", name: "大晦日" },
+      ],
     });
   });
 

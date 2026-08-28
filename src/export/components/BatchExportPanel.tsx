@@ -1,12 +1,16 @@
 import React, { useState } from "react";
 import { useWorkspaceStore } from "../../workspace/state/workspaceStore";
 import { useDocumentStore } from "../../editor/state/documentStore";
-import { computeWorkspaceHolidayIndex } from "../../workspace/holiday/holidayWorkspace";
+import { useHolidayLibraryStore } from "../../workspace/state/holidayLibraryStore";
+import { resolveHolidayIndex } from "../../domain/holiday/resolveHolidayIndex";
 import { createFormalExportCalendarSet } from "../formal/monthSet";
 import { collectFormalExportFontRequirements } from "../formal/fontRequirements";
 import { resolveFontEngine } from "../../resources/fonts/resolveFonts";
 import { renderFormalDocuments } from "../formal/renderFormalDocuments";
-import { createFormalExportZip, downloadExportZip } from "../formal/createExportZip";
+import {
+  createFormalExportZip,
+  downloadExportZip,
+} from "../formal/createExportZip";
 import { persistentAssetStore } from "../../editor/assets/persistentAssetStore";
 import { useI18n } from "../../shared/i18n/i18nStore";
 import type { ExportMode } from "../formal/types";
@@ -17,8 +21,9 @@ export const BatchExportPanel: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const { targetYear, chinaHolidayDataset, japanHolidayDataset } = useWorkspaceStore();
+  const { targetYear } = useWorkspaceStore();
   const { document } = useDocumentStore();
+  const holidayLibrary = useHolidayLibraryStore((s) => s.snapshot);
 
   const handleExport = async () => {
     if (isExporting) return;
@@ -27,9 +32,9 @@ export const BatchExportPanel: React.FC = () => {
 
     try {
       // 1. Compute holiday index
-      const holidayIndex = computeWorkspaceHolidayIndex({
-        chinaHolidayDataset,
-        japanHolidayDataset,
+      const holidayIndex = resolveHolidayIndex({
+        library: holidayLibrary,
+        layers: document.holidayLayers ?? [],
       });
 
       // 2. Create 13 Main + 15 Mini formal calendars
@@ -45,6 +50,7 @@ export const BatchExportPanel: React.FC = () => {
         calendarSet,
         mainTemplate: document.mainTemplate,
         miniTemplate: document.miniTemplate,
+        holidayLayers: document.holidayLayers,
       });
 
       // 4. Resolve font engine once for the entire batch
@@ -59,6 +65,7 @@ export const BatchExportPanel: React.FC = () => {
         calendarSet,
         mainTemplate: document.mainTemplate,
         miniTemplate: document.miniTemplate,
+        holidayLayers: document.holidayLayers,
         mode: exportMode,
         fontEngine,
         assetResolver: persistentAssetStore,
@@ -87,8 +94,24 @@ export const BatchExportPanel: React.FC = () => {
         borderRadius: "var(--radius-lg)",
       }}
     >
-      <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "6px" }}>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <div
+        style={{
+          fontWeight: 600,
+          fontSize: "14px",
+          color: "var(--text-primary)",
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+        }}
+      >
+        <svg
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
           <polyline points="7 10 12 15 17 10" />
           <line x1="12" y1="15" x2="12" y2="3" />
@@ -96,14 +119,23 @@ export const BatchExportPanel: React.FC = () => {
         {t.export.heading}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "10px",
+        }}
+      >
         <label
           style={{
             display: "flex",
             alignItems: "flex-start",
             gap: "10px",
             padding: "10px 12px",
-            background: exportMode === "outlined" ? "var(--accent-primary-light)" : "var(--bg-surface-raised)",
+            background:
+              exportMode === "outlined"
+                ? "var(--accent-primary-light)"
+                : "var(--bg-surface-raised)",
             border: `1px solid ${exportMode === "outlined" ? "rgba(99, 102, 241, 0.4)" : "var(--border-subtle)"}`,
             borderRadius: "var(--radius-md)",
             cursor: "pointer",
@@ -122,7 +154,13 @@ export const BatchExportPanel: React.FC = () => {
           />
           <div>
             <div style={{ fontWeight: 600 }}>{t.export.outlinedTitle}</div>
-            <div style={{ color: "var(--text-muted)", fontSize: "11px", marginTop: "2px" }}>
+            <div
+              style={{
+                fontSize: "11px",
+                color: "var(--text-secondary)",
+                marginTop: "2px",
+              }}
+            >
               {t.export.outlinedDesc}
             </div>
           </div>
@@ -134,7 +172,10 @@ export const BatchExportPanel: React.FC = () => {
             alignItems: "flex-start",
             gap: "10px",
             padding: "10px 12px",
-            background: exportMode === "editable" ? "var(--accent-primary-light)" : "var(--bg-surface-raised)",
+            background:
+              exportMode === "editable"
+                ? "var(--accent-primary-light)"
+                : "var(--bg-surface-raised)",
             border: `1px solid ${exportMode === "editable" ? "rgba(99, 102, 241, 0.4)" : "var(--border-subtle)"}`,
             borderRadius: "var(--radius-md)",
             cursor: "pointer",
@@ -153,7 +194,13 @@ export const BatchExportPanel: React.FC = () => {
           />
           <div>
             <div style={{ fontWeight: 600 }}>{t.export.editableTitle}</div>
-            <div style={{ color: "var(--text-muted)", fontSize: "11px", marginTop: "2px" }}>
+            <div
+              style={{
+                fontSize: "11px",
+                color: "var(--text-secondary)",
+                marginTop: "2px",
+              }}
+            >
               {t.export.editableDesc}
             </div>
           </div>
@@ -165,9 +212,8 @@ export const BatchExportPanel: React.FC = () => {
           style={{
             fontSize: "12px",
             color: "var(--accent-rose)",
-            backgroundColor: "rgba(244, 63, 94, 0.1)",
-            border: "1px solid rgba(244, 63, 94, 0.25)",
             padding: "8px 12px",
+            background: "rgba(244, 63, 94, 0.1)",
             borderRadius: "var(--radius-sm)",
           }}
         >
@@ -175,38 +221,60 @@ export const BatchExportPanel: React.FC = () => {
         </div>
       )}
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", marginTop: "4px" }}>
-        <button
-          type="button"
-          onClick={handleExport}
-          disabled={isExporting}
-          className="studio-btn studio-btn-primary"
-          style={{ padding: "8px 18px", fontSize: "13px", fontWeight: 600 }}
-        >
-          {isExporting ? (
-            <>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: "spin 1s linear infinite" }}>
-                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-              </svg>
-              {t.export.exportBtnLoading}
-            </>
-          ) : (
-            <>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="8 17 12 21 16 17" />
-                <line x1="12" y1="12" x2="12" y2="21" />
-                <path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29" />
-              </svg>
-              {t.export.exportBtnNormal}
-            </>
-          )}
-        </button>
+      <button
+        type="button"
+        disabled={isExporting}
+        onClick={handleExport}
+        className="studio-btn studio-btn-accent"
+        style={{
+          padding: "10px",
+          fontWeight: 600,
+          justifyContent: "center",
+          gap: "8px",
+        }}
+      >
+        {isExporting ? (
+          <>
+            <div
+              style={{
+                width: "14px",
+                height: "14px",
+                border: "2px solid white",
+                borderTopColor: "transparent",
+                borderRadius: "50%",
+                animation: "spin 0.8s linear infinite",
+              }}
+            />
+            {t.export.exportBtnLoading}
+          </>
+        ) : (
+          <>
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            {t.export.exportBtnNormal}
+          </>
+        )}
+      </button>
 
-        <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-          {t.export.summaryNotice(targetYear)}
-        </span>
+      <div
+        style={{
+          fontSize: "11px",
+          color: "var(--text-muted)",
+          textAlign: "center",
+        }}
+      >
+        {t.export.summaryNotice(targetYear)}
       </div>
     </div>
   );
 };
-

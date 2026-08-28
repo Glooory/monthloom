@@ -5,7 +5,9 @@ import { createMonthloomBundle } from "../bundle/exportBundle";
 import { importMonthloomBundle } from "../bundle/importBundle";
 import { ProjectRepository } from "../db/projectRepository";
 import { useWorkspaceStore } from "../../workspace/state/workspaceStore";
+import { useHolidayLibraryStore } from "../../workspace/state/holidayLibraryStore";
 import { useI18n } from "../../shared/i18n/i18nStore";
+
 
 export const PersistenceControls: React.FC = () => {
   const { t } = useI18n();
@@ -134,8 +136,21 @@ export const PersistenceControls: React.FC = () => {
       const result = await importMonthloomBundle({ bundleData: file });
       await reloadLists();
       if (result.type === "project") {
+        await useHolidayLibraryStore.getState().refresh();
         await projectOperations.loadProject(result.id);
-        showStatus(t.persistence.importProjectSuccess(result.name));
+        const summary = result.holidaySummary;
+        if (summary) {
+          showStatus(
+            t.persistence.importProjectSuccessWithHolidays(
+              result.name,
+              summary.addedCalendars,
+              summary.addedRecords,
+              summary.skippedOverrideConflicts,
+            ),
+          );
+        } else {
+          showStatus(t.persistence.importProjectSuccess(result.name));
+        }
       } else {
         showStatus(t.persistence.importTemplateSuccess(result.name));
       }
@@ -144,6 +159,7 @@ export const PersistenceControls: React.FC = () => {
     }
     e.target.value = "";
   };
+
 
   return (
     <div
@@ -227,6 +243,10 @@ export const PersistenceControls: React.FC = () => {
         >
           {t.persistence.importBundleBtn}
         </button>
+      </div>
+
+      <div style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: 1.4 }}>
+        💡 {t.persistence.bundleNotice}
       </div>
 
       {/* Save Template inline */}

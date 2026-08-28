@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { buildGridBorderNodes, createGridGeometry } from "./geometry";
+import {
+  buildGridBorderNodes,
+  buildMarkerRenderNode,
+  calculateImageMarkerBounds,
+  createGridGeometry,
+} from "./geometry";
+
 
 describe("Grid Geometry", () => {
   it("computes row-major grid cells for 7x4, 7x5, and 7x6 configurations", () => {
@@ -188,5 +194,96 @@ describe("Grid Geometry", () => {
       strokeWidth: 1,
     });
   });
-});
 
+  it("calculates image marker bounds correctly for various anchors", () => {
+    const cell = { x: 100, y: 100, width: 80, height: 60 };
+
+    // Top-right anchor with offset (-8, 8)
+    const topRt = calculateImageMarkerBounds(cell, {
+      type: "image",
+      assetId: "asset-1",
+      position: { anchor: "top-right", offsetX: -8, offsetY: 8 },
+      width: 16,
+      height: 16,
+      opacity: 1,
+    });
+    // cell right = 180, pt.x = 180 - 8 = 172. Since anchor ends with -right, x = 172 - 16 = 156.
+    // cell top = 100, pt.y = 100 + 8 = 108. Since anchor starts with top-, y = 108.
+    expect(topRt).toEqual({ x: 156, y: 108 });
+
+    // Center anchor with 0 offset
+    const center = calculateImageMarkerBounds(cell, {
+      type: "image",
+      assetId: "asset-1",
+      position: { anchor: "center", offsetX: 0, offsetY: 0 },
+      width: 20,
+      height: 20,
+      opacity: 1,
+    });
+    // center x = 140 - 10 = 130, center y = 130 - 10 = 120
+    expect(center).toEqual({ x: 130, y: 120 });
+  });
+
+  it("builds text and image marker render nodes respecting opacity multiplier", () => {
+    const cell = { x: 50, y: 50, width: 100, height: 100 };
+    const mockMeasurer = {
+      measure: () => ({ width: 10, height: 10, ascent: 8, descent: 2, capHeight: 7 }),
+    };
+
+    // Text marker
+    const textNode = buildMarkerRenderNode({
+      marker: {
+        type: "text",
+        value: "休",
+        position: { anchor: "top-right", offsetX: -4, offsetY: 4 },
+        typography: {
+          fontId: "default-sans",
+          fontWeight: 700,
+          fontStyle: "normal",
+          fontSize: 10,
+          letterSpacing: 0,
+          color: "#EF4444",
+          opacity: 0.8,
+        },
+      },
+      cell,
+      semanticId: "main.holiday.layer1.holidayMarker",
+      instanceKey: "main.holiday.layer1.holidayMarker:2027-01-01",
+      measurer: mockMeasurer,
+      opacityMultiplier: 0.5,
+    });
+
+    expect(textNode).not.toBeNull();
+    expect(textNode?.kind).toBe("text");
+    if (textNode?.kind === "text") {
+      expect(textNode.text).toBe("休");
+      expect(textNode.color).toBe("#EF4444");
+      expect(textNode.opacity).toBeCloseTo(0.4); // 0.8 * 0.5
+    }
+
+    // Image marker
+    const imageNode = buildMarkerRenderNode({
+      marker: {
+        type: "image",
+        assetId: "asset-img-1",
+        position: { anchor: "top-left", offsetX: 4, offsetY: 4 },
+        width: 12,
+        height: 12,
+        opacity: 0.9,
+      },
+      cell,
+      semanticId: "mini.holiday.layer1.holidayMarker",
+      instanceKey: "mini.holiday.layer1.holidayMarker:2027-01-01",
+      measurer: mockMeasurer,
+      opacityMultiplier: 1,
+    });
+
+
+    expect(imageNode).not.toBeNull();
+    expect(imageNode?.kind).toBe("image");
+    if (imageNode?.kind === "image") {
+      expect(imageNode.assetId).toBe("asset-img-1");
+      expect(imageNode.opacity).toBeCloseTo(0.9);
+    }
+  });
+});

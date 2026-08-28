@@ -7,18 +7,18 @@ Monthloom is a client-side web application for creating and batch-exporting prod
 1. **Set the Target Calendar Year**
    - Use the **Workspace Controls** at the top left to set your target calendar year (e.g. `2027`).
 
-2. **Import Holiday Datasets**
-   - Import **China Holiday JSON** (Timor / NianJia format, e.g. `2026.json` or `2027.json`).
-   - Import **Japan Holiday JSON** (Holidays JP format, e.g. `ja.json`).
-   - Review the **Holiday Coverage Diagnostics** banner to ensure complete coverage for the entire year span ($Y-1$ December through $Y+1$ February).
+2. **Manage Holiday Library**
+   - Click **节假日资料库** in the workspace header to view and manage calendars.
+   - Sync or import holiday data (China Timor format, Japan Holidays JP format, or native Monthloom JSON).
+   - Add or edit manual date overrides directly within any calendar.
+   - Review holiday coverage status across the required 15-month span ($Y-1$ December through $Y+1$ February).
 
-3. **Customize Templates in the Template Editor**
+3. **Customize Templates & Holiday Layers**
    - Switch between **Main Template** (full-size monthly page) and **Mini Template** (compact monthly thumbnail).
-   - Click any visual element (Date grid, Month name, Year number, Weekday header, Border, Image marker) to edit its properties in the Inspector:
-     - **Position & Anchor**: Change coordinate anchor alignments and pixel offsets.
-     - **Typography**: Set font family, weight, style, and font size.
-     - **Colors**: Configure text, weekend, and holiday colors.
-     - **Borders & Markers**: Adjust stroke width, padding, and image markers.
+   - In the **节假日图层 (Holiday Layers)** panel:
+     - Add, remove, reorder, or toggle holiday layers bound to specific calendars.
+     - Customize holiday name typography, holiday markers, workday markers, and date color highlights for each layer.
+   - Click any canvas element (Date grid, Weekday header, Month name, etc.) to inspect and edit typography, borders, and positions.
 
 4. **Configure Page Preview & Background**
    - Under **Page Preview Settings**, adjust page margins, padding, and layout dimensions.
@@ -30,7 +30,7 @@ Monthloom is a client-side web application for creating and batch-exporting prod
 
 6. **Save Project & Backup**
    - Click **Save Project** under Project Persistence to save your current work to browser IndexedDB.
-   - Click **Backup (.monthloom)** to download a complete, self-contained bundle containing your project configuration, holiday datasets, and embedded image assets.
+   - Click **Backup (.monthloom)** to download a complete bundle containing your project, templates, full holiday library snapshot, and image assets.
 
 7. **Export Formal SVGs**
    - Under **Formal Batch Export**, select **Outlined (Production Default)** or **Editable**.

@@ -1,5 +1,5 @@
 import type { DayOfWeek, LocalDate } from "../date/types";
-import type { HolidayInfo } from "../holiday/types";
+import type { ResolvedHolidayDate } from "../holiday/resolveHolidayIndex";
 
 export type YearMonth = Readonly<{
   year: number;
@@ -10,7 +10,7 @@ export type CalendarCell = Readonly<{
   date: LocalDate;
   dayOfWeek: DayOfWeek;
   inCurrentMonth: boolean;
-  holiday?: HolidayInfo;
+  holiday?: ResolvedHolidayDate;
 }>;
 
 export type CalendarWeek = readonly CalendarCell[];

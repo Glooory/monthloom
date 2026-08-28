@@ -1,35 +1,64 @@
-import type { EditorDocument, EditableSemanticId, PositionableSemanticId, CalendarColors } from "./types";
-import type { Position, Typography, MarkerTemplate, DotTemplate } from "../../domain/template/primitives";
+import type {
+  EditorDocument,
+  EditableSemanticId,
+  PositionableSemanticId,
+  CalendarColors,
+} from "./types";
+import type {
+  Position,
+  Typography,
+} from "../../domain/template/primitives";
 import type { FontDescriptor } from "../../domain/template/font";
-import { DEFAULT_MAIN_WEEKDAYS, DEFAULT_MINI_WEEKDAYS } from "../../domain/template/defaults";
+import {
+  DEFAULT_MAIN_WEEKDAYS,
+  DEFAULT_MINI_WEEKDAYS,
+} from "../../domain/template/defaults";
+import { parseHolidaySemanticId } from "./holidaySemanticId";
 
 export function getElementPosition(
   document: EditorDocument,
   semanticId: PositionableSemanticId,
 ): Position {
+  const parsedHoliday = parseHolidaySemanticId(semanticId);
+  if (parsedHoliday) {
+    const layer = document.holidayLayers?.find(
+      (l) => l.id === parsedHoliday.layerId,
+    );
+    if (layer) {
+      if (parsedHoliday.target === "main") {
+        if (parsedHoliday.element === "name") {
+          return layer.main.name.position;
+        }
+        if (parsedHoliday.element === "holidayMarker") {
+          return layer.main.holidayMarker.marker.position;
+        }
+        if (parsedHoliday.element === "workdayMarker") {
+          return layer.main.workdayMarker.marker.position;
+        }
+      } else {
+        if (parsedHoliday.element === "holidayMarker") {
+          return layer.mini.holidayMarker.marker.position;
+        }
+        if (parsedHoliday.element === "workdayMarker") {
+          return layer.mini.workdayMarker.marker.position;
+        }
+      }
+    }
+  }
+
   switch (semanticId) {
     case "main.weekday":
       return document.mainTemplate.weekdayRow.weekday.position;
     case "main.date":
       return document.mainTemplate.date.position;
-    case "main.chinaHolidayName":
-      return document.mainTemplate.chinaHolidayName.position;
-    case "main.japanHolidayName":
-      return document.mainTemplate.japanHolidayName.position;
-    case "main.chinaHolidayMarker":
-      return document.mainTemplate.chinaMarkers.holiday.position;
-    case "main.chinaWorkdayMarker":
-      return document.mainTemplate.chinaMarkers.workday.position;
     case "mini.monthLabel":
       return document.miniTemplate.monthRow.label.position;
     case "mini.weekday":
       return document.miniTemplate.weekdayRow.weekday.position;
     case "mini.date":
       return document.miniTemplate.date.position;
-    case "mini.holidayDot":
-      return document.miniTemplate.markers.holidayDot.position;
-    case "mini.workdayDot":
-      return document.miniTemplate.markers.workdayDot.position;
+    default:
+      return { anchor: "top-left", offsetX: 0, offsetY: 0 };
   }
 }
 
@@ -38,6 +67,94 @@ export function setElementPosition(
   semanticId: PositionableSemanticId,
   position: Position,
 ): EditorDocument {
+  const parsedHoliday = parseHolidaySemanticId(semanticId);
+  if (parsedHoliday && document.holidayLayers) {
+    const nextLayers = document.holidayLayers.map((layer) => {
+      if (layer.id !== parsedHoliday.layerId) return layer;
+      if (parsedHoliday.target === "main") {
+        if (parsedHoliday.element === "name") {
+          return {
+            ...layer,
+            main: {
+              ...layer.main,
+              name: {
+                ...layer.main.name,
+                position,
+              },
+            },
+          };
+        }
+        if (parsedHoliday.element === "holidayMarker") {
+          return {
+            ...layer,
+            main: {
+              ...layer.main,
+              holidayMarker: {
+                ...layer.main.holidayMarker,
+                marker: {
+                  ...layer.main.holidayMarker.marker,
+                  position,
+                },
+              },
+            },
+          };
+        }
+        if (parsedHoliday.element === "workdayMarker") {
+          return {
+            ...layer,
+            main: {
+              ...layer.main,
+              workdayMarker: {
+                ...layer.main.workdayMarker,
+                marker: {
+                  ...layer.main.workdayMarker.marker,
+                  position,
+                },
+              },
+            },
+          };
+        }
+      } else {
+        if (parsedHoliday.element === "holidayMarker") {
+          return {
+            ...layer,
+            mini: {
+              ...layer.mini,
+              holidayMarker: {
+                ...layer.mini.holidayMarker,
+                marker: {
+                  ...layer.mini.holidayMarker.marker,
+                  position,
+                },
+              },
+            },
+          };
+        }
+        if (parsedHoliday.element === "workdayMarker") {
+          return {
+            ...layer,
+            mini: {
+              ...layer.mini,
+              workdayMarker: {
+                ...layer.mini.workdayMarker,
+                marker: {
+                  ...layer.mini.workdayMarker.marker,
+                  position,
+                },
+              },
+            },
+          };
+        }
+      }
+      return layer;
+    });
+
+    return {
+      ...document,
+      holidayLayers: nextLayers,
+    };
+  }
+
   switch (semanticId) {
     case "main.weekday":
       return {
@@ -61,56 +178,6 @@ export function setElementPosition(
           date: {
             ...document.mainTemplate.date,
             position,
-          },
-        },
-      };
-    case "main.chinaHolidayName":
-      return {
-        ...document,
-        mainTemplate: {
-          ...document.mainTemplate,
-          chinaHolidayName: {
-            ...document.mainTemplate.chinaHolidayName,
-            position,
-          },
-        },
-      };
-    case "main.japanHolidayName":
-      return {
-        ...document,
-        mainTemplate: {
-          ...document.mainTemplate,
-          japanHolidayName: {
-            ...document.mainTemplate.japanHolidayName,
-            position,
-          },
-        },
-      };
-    case "main.chinaHolidayMarker":
-      return {
-        ...document,
-        mainTemplate: {
-          ...document.mainTemplate,
-          chinaMarkers: {
-            ...document.mainTemplate.chinaMarkers,
-            holiday: {
-              ...document.mainTemplate.chinaMarkers.holiday,
-              position,
-            },
-          },
-        },
-      };
-    case "main.chinaWorkdayMarker":
-      return {
-        ...document,
-        mainTemplate: {
-          ...document.mainTemplate,
-          chinaMarkers: {
-            ...document.mainTemplate.chinaMarkers,
-            workday: {
-              ...document.mainTemplate.chinaMarkers.workday,
-              position,
-            },
           },
         },
       };
@@ -153,34 +220,8 @@ export function setElementPosition(
           },
         },
       };
-    case "mini.holidayDot":
-      return {
-        ...document,
-        miniTemplate: {
-          ...document.miniTemplate,
-          markers: {
-            ...document.miniTemplate.markers,
-            holidayDot: {
-              ...document.miniTemplate.markers.holidayDot,
-              position,
-            },
-          },
-        },
-      };
-    case "mini.workdayDot":
-      return {
-        ...document,
-        miniTemplate: {
-          ...document.miniTemplate,
-          markers: {
-            ...document.miniTemplate.markers,
-            workdayDot: {
-              ...document.miniTemplate.markers.workdayDot,
-              position,
-            },
-          },
-        },
-      };
+    default:
+      return document;
   }
 }
 
@@ -188,23 +229,38 @@ export function getTypography(
   document: EditorDocument,
   semanticId: EditableSemanticId,
 ): Typography | null {
+  const parsedHoliday = parseHolidaySemanticId(semanticId);
+  if (parsedHoliday) {
+    const layer = document.holidayLayers?.find(
+      (l) => l.id === parsedHoliday.layerId,
+    );
+    if (layer) {
+      if (parsedHoliday.target === "main") {
+        if (parsedHoliday.element === "name") {
+          return layer.main.name.typography;
+        }
+        if (
+          parsedHoliday.element === "holidayMarker" &&
+          layer.main.holidayMarker.marker.type === "text"
+        ) {
+          return layer.main.holidayMarker.marker.typography;
+        }
+        if (
+          parsedHoliday.element === "workdayMarker" &&
+          layer.main.workdayMarker.marker.type === "text"
+        ) {
+          return layer.main.workdayMarker.marker.typography;
+        }
+      }
+    }
+    return null;
+  }
+
   switch (semanticId) {
     case "main.weekday":
       return document.mainTemplate.weekdayRow.weekday.typography;
     case "main.date":
       return document.mainTemplate.date.typography;
-    case "main.chinaHolidayName":
-      return document.mainTemplate.chinaHolidayName.typography;
-    case "main.japanHolidayName":
-      return document.mainTemplate.japanHolidayName.typography;
-    case "main.chinaHolidayMarker":
-      return document.mainTemplate.chinaMarkers.holiday.type === "text"
-        ? document.mainTemplate.chinaMarkers.holiday.typography
-        : null;
-    case "main.chinaWorkdayMarker":
-      return document.mainTemplate.chinaMarkers.workday.type === "text"
-        ? document.mainTemplate.chinaMarkers.workday.typography
-        : null;
     case "mini.monthLabel":
       return document.miniTemplate.monthRow.label.typography;
     case "mini.weekday":
@@ -212,8 +268,7 @@ export function getTypography(
     case "mini.date":
       return document.miniTemplate.date.typography;
     case "main.grid":
-    case "mini.holidayDot":
-    case "mini.workdayDot":
+    default:
       return null;
   }
 }
@@ -223,6 +278,69 @@ export function setTypography(
   semanticId: EditableSemanticId,
   typography: Typography,
 ): EditorDocument {
+  const parsedHoliday = parseHolidaySemanticId(semanticId);
+  if (parsedHoliday && document.holidayLayers) {
+    const nextLayers = document.holidayLayers.map((layer) => {
+      if (layer.id !== parsedHoliday.layerId) return layer;
+      if (parsedHoliday.target === "main") {
+        if (parsedHoliday.element === "name") {
+          return {
+            ...layer,
+            main: {
+              ...layer.main,
+              name: {
+                ...layer.main.name,
+                typography,
+              },
+            },
+          };
+        }
+        if (
+          parsedHoliday.element === "holidayMarker" &&
+          layer.main.holidayMarker.marker.type === "text"
+        ) {
+          return {
+            ...layer,
+            main: {
+              ...layer.main,
+              holidayMarker: {
+                ...layer.main.holidayMarker,
+                marker: {
+                  ...layer.main.holidayMarker.marker,
+                  typography,
+                },
+              },
+            },
+          };
+        }
+        if (
+          parsedHoliday.element === "workdayMarker" &&
+          layer.main.workdayMarker.marker.type === "text"
+        ) {
+          return {
+            ...layer,
+            main: {
+              ...layer.main,
+              workdayMarker: {
+                ...layer.main.workdayMarker,
+                marker: {
+                  ...layer.main.workdayMarker.marker,
+                  typography,
+                },
+              },
+            },
+          };
+        }
+      }
+      return layer;
+    });
+
+    return {
+      ...document,
+      holidayLayers: nextLayers,
+    };
+  }
+
   switch (semanticId) {
     case "main.weekday":
       return {
@@ -246,58 +364,6 @@ export function setTypography(
           date: {
             ...document.mainTemplate.date,
             typography,
-          },
-        },
-      };
-    case "main.chinaHolidayName":
-      return {
-        ...document,
-        mainTemplate: {
-          ...document.mainTemplate,
-          chinaHolidayName: {
-            ...document.mainTemplate.chinaHolidayName,
-            typography,
-          },
-        },
-      };
-    case "main.japanHolidayName":
-      return {
-        ...document,
-        mainTemplate: {
-          ...document.mainTemplate,
-          japanHolidayName: {
-            ...document.mainTemplate.japanHolidayName,
-            typography,
-          },
-        },
-      };
-    case "main.chinaHolidayMarker":
-      if (document.mainTemplate.chinaMarkers.holiday.type !== "text") return document;
-      return {
-        ...document,
-        mainTemplate: {
-          ...document.mainTemplate,
-          chinaMarkers: {
-            ...document.mainTemplate.chinaMarkers,
-            holiday: {
-              ...document.mainTemplate.chinaMarkers.holiday,
-              typography,
-            },
-          },
-        },
-      };
-    case "main.chinaWorkdayMarker":
-      if (document.mainTemplate.chinaMarkers.workday.type !== "text") return document;
-      return {
-        ...document,
-        mainTemplate: {
-          ...document.mainTemplate,
-          chinaMarkers: {
-            ...document.mainTemplate.chinaMarkers,
-            workday: {
-              ...document.mainTemplate.chinaMarkers.workday,
-              typography,
-            },
           },
         },
       };
@@ -349,7 +415,9 @@ export function getCalendarColors(
   document: EditorDocument,
   target: "main" | "mini",
 ): CalendarColors {
-  return target === "main" ? document.mainTemplate.colors : document.miniTemplate.colors;
+  return target === "main"
+    ? document.mainTemplate.colors
+    : document.miniTemplate.colors;
 }
 
 export function setCalendarColors(
@@ -413,60 +481,6 @@ export function setGridBorder(
   };
 }
 
-export function getMarkerDetails(
-  document: EditorDocument,
-  id: "main.chinaHolidayMarker" | "main.chinaWorkdayMarker",
-): MarkerTemplate {
-  return id === "main.chinaHolidayMarker"
-    ? document.mainTemplate.chinaMarkers.holiday
-    : document.mainTemplate.chinaMarkers.workday;
-}
-
-export function setMarkerDetails(
-  document: EditorDocument,
-  id: "main.chinaHolidayMarker" | "main.chinaWorkdayMarker",
-  marker: MarkerTemplate,
-): EditorDocument {
-  const key = id === "main.chinaHolidayMarker" ? "holiday" : "workday";
-  return {
-    ...document,
-    mainTemplate: {
-      ...document.mainTemplate,
-      chinaMarkers: {
-        ...document.mainTemplate.chinaMarkers,
-        [key]: marker,
-      },
-    },
-  };
-}
-
-export function getDotDetails(
-  document: EditorDocument,
-  id: "mini.holidayDot" | "mini.workdayDot",
-): DotTemplate {
-  return id === "mini.holidayDot"
-    ? document.miniTemplate.markers.holidayDot
-    : document.miniTemplate.markers.workdayDot;
-}
-
-export function setDotDetails(
-  document: EditorDocument,
-  id: "mini.holidayDot" | "mini.workdayDot",
-  dot: DotTemplate,
-): EditorDocument {
-  const key = id === "mini.holidayDot" ? "holidayDot" : "workdayDot";
-  return {
-    ...document,
-    miniTemplate: {
-      ...document.miniTemplate,
-      markers: {
-        ...document.miniTemplate.markers,
-        [key]: dot,
-      },
-    },
-  };
-}
-
 export function updateFontDescriptor(
   document: EditorDocument,
   fontId: string,
@@ -501,9 +515,18 @@ export function getWeekdayRowSettings(
   document: EditorDocument,
   templateType: "main" | "mini",
 ): WeekdayRowSettings {
-  const row = templateType === "main" ? document.mainTemplate.weekdayRow : document.miniTemplate.weekdayRow;
-  const templateColors = templateType === "main" ? document.mainTemplate.colors : document.miniTemplate.colors;
-  const defaultLabels = templateType === "main" ? DEFAULT_MAIN_WEEKDAYS : DEFAULT_MINI_WEEKDAYS;
+  const row =
+    templateType === "main"
+      ? document.mainTemplate.weekdayRow
+      : document.miniTemplate.weekdayRow;
+  const templateColors =
+    templateType === "main"
+      ? document.mainTemplate.colors
+      : document.miniTemplate.colors;
+  const defaultLabels =
+    templateType === "main"
+      ? DEFAULT_MAIN_WEEKDAYS
+      : DEFAULT_MINI_WEEKDAYS;
 
   return {
     height: row.height,
@@ -536,13 +559,30 @@ export function setWeekdayRowSettings(
         ...document.mainTemplate,
         weekdayRow: {
           ...current,
-          height: settings.height !== undefined ? settings.height : current.height,
-          labels: settings.labels !== undefined ? settings.labels : current.labels,
-          startOfWeek: settings.startOfWeek !== undefined ? settings.startOfWeek : current.startOfWeek,
-          showBorder: settings.showBorder !== undefined ? settings.showBorder : current.showBorder,
-          borderWidth: settings.borderWidth !== undefined ? settings.borderWidth : current.borderWidth,
-          borderColor: settings.borderColor !== undefined ? settings.borderColor : current.borderColor,
-          colors: settings.colors !== undefined ? { ...current.colors, ...settings.colors } : current.colors,
+          height:
+            settings.height !== undefined ? settings.height : current.height,
+          labels:
+            settings.labels !== undefined ? settings.labels : current.labels,
+          startOfWeek:
+            settings.startOfWeek !== undefined
+              ? settings.startOfWeek
+              : current.startOfWeek,
+          showBorder:
+            settings.showBorder !== undefined
+              ? settings.showBorder
+              : current.showBorder,
+          borderWidth:
+            settings.borderWidth !== undefined
+              ? settings.borderWidth
+              : current.borderWidth,
+          borderColor:
+            settings.borderColor !== undefined
+              ? settings.borderColor
+              : current.borderColor,
+          colors:
+            settings.colors !== undefined
+              ? { ...current.colors, ...settings.colors }
+              : current.colors,
           weekday: {
             ...current.weekday,
             typography: nextTypography,
@@ -561,13 +601,30 @@ export function setWeekdayRowSettings(
         ...document.miniTemplate,
         weekdayRow: {
           ...current,
-          height: settings.height !== undefined ? settings.height : current.height,
-          labels: settings.labels !== undefined ? settings.labels : current.labels,
-          startOfWeek: settings.startOfWeek !== undefined ? settings.startOfWeek : current.startOfWeek,
-          showBorder: settings.showBorder !== undefined ? settings.showBorder : current.showBorder,
-          borderWidth: settings.borderWidth !== undefined ? settings.borderWidth : current.borderWidth,
-          borderColor: settings.borderColor !== undefined ? settings.borderColor : current.borderColor,
-          colors: settings.colors !== undefined ? { ...current.colors, ...settings.colors } : current.colors,
+          height:
+            settings.height !== undefined ? settings.height : current.height,
+          labels:
+            settings.labels !== undefined ? settings.labels : current.labels,
+          startOfWeek:
+            settings.startOfWeek !== undefined
+              ? settings.startOfWeek
+              : current.startOfWeek,
+          showBorder:
+            settings.showBorder !== undefined
+              ? settings.showBorder
+              : current.showBorder,
+          borderWidth:
+            settings.borderWidth !== undefined
+              ? settings.borderWidth
+              : current.borderWidth,
+          borderColor:
+            settings.borderColor !== undefined
+              ? settings.borderColor
+              : current.borderColor,
+          colors:
+            settings.colors !== undefined
+              ? { ...current.colors, ...settings.colors }
+              : current.colors,
           weekday: {
             ...current.weekday,
             typography: nextTypography,
@@ -657,5 +714,3 @@ export function setTemplateDimensions(
     };
   }
 }
-
-

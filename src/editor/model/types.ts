@@ -2,31 +2,31 @@ import type { MainTemplate } from "../../domain/template/mainTemplate";
 import type { MiniTemplate } from "../../domain/template/miniTemplate";
 import type { PagePreviewConfig } from "../../domain/pagePreview/types";
 import type { FontCatalog } from "../../resources/fonts/types";
+import type { HolidayLayer } from "../../domain/template/holidayLayer";
+import type { HolidaySemanticId } from "./holidaySemanticId";
 
 export type CalendarColors = MainTemplate["colors"];
 
 export type EditableSemanticId =
   | "main.weekday"
   | "main.date"
-  | "main.chinaHolidayName"
-  | "main.japanHolidayName"
-  | "main.chinaHolidayMarker"
-  | "main.chinaWorkdayMarker"
   | "main.grid"
   | "mini.monthLabel"
   | "mini.weekday"
   | "mini.date"
-  | "mini.holidayDot"
-  | "mini.workdayDot";
+  | HolidaySemanticId;
 
 export type PositionableSemanticId = Exclude<
   EditableSemanticId,
-  "main.grid"
+  | "main.grid"
+  | `main.holiday.${string}.dateColors`
+  | `mini.holiday.${string}.dateColors`
 >;
 
 export type EditorDocument = Readonly<{
   mainTemplate: MainTemplate;
   miniTemplate: MiniTemplate;
+  holidayLayers: readonly HolidayLayer[];
   fontCatalog: FontCatalog;
   pagePreview: PagePreviewConfig;
 }>;
@@ -45,6 +45,7 @@ export type DragSession = Readonly<{
 
 export type WeekdayResizeSession = Readonly<{
   deltaY: number;
+  templateType: "main" | "mini";
 }>;
 
 export type EditorUiState = {

@@ -1,78 +1,50 @@
 import { describe, expect, it } from "vitest";
-import { buildHolidayIndex } from "./holidayIndex";
-import type { HolidayDataset } from "./types";
+import { createDefaultHolidayLayers } from "../template/holidayLayer";
+import { resolveHolidayIndex } from "./resolveHolidayIndex";
+import { base, fixtureLibrary } from "./testFixtures";
 
-describe("buildHolidayIndex", () => {
-  it("merges China and Japan information on the same date", () => {
-    const china: HolidayDataset = {
-      source: "china-timor",
-      entries: [
-        {
-          date: { year: 2027, month: 1, day: 1 },
-          info: {
-            china: {
-              type: "holiday",
-              name: "元旦",
-            },
-          },
-        },
+describe("resolveHolidayIndex", () => {
+  it("resolves multi-layer occurrences and later layer date text color override", () => {
+    const [cnLayer, jpLayer] = createDefaultHolidayLayers();
+    const library = fixtureLibrary({
+      baseRecords: [
+        base(cnLayer.calendarId, "2027-01-01", "holiday", "元旦"),
+        base(jpLayer.calendarId, "2027-01-01", "holiday", "元日"),
       ],
-      coverage: { ranges: [] },
-      diagnostics: [],
-    };
-
-    const japan: HolidayDataset = {
-      source: "japan-holidays-jp",
-      entries: [
-        {
-          date: { year: 2027, month: 1, day: 1 },
-          info: {
-            japan: {
-              name: "元日",
-            },
-          },
-        },
-      ],
-      coverage: { ranges: [] },
-      diagnostics: [],
-    };
-
-    const index = buildHolidayIndex([china, japan]);
-
-    expect(index.get("2027-01-01")).toEqual({
-      china: {
-        type: "holiday",
-        name: "元旦",
-      },
-      japan: {
-        name: "元日",
-      },
     });
+
+    const index = resolveHolidayIndex({ library, layers: [cnLayer, jpLayer] });
+    const resolved = index.get("2027-01-01");
+    expect(resolved).toBeDefined();
+    expect(resolved?.occurrences).toHaveLength(2);
+    expect(resolved?.occurrences[0]).toMatchObject({
+      calendarId: cnLayer.calendarId,
+      name: "元旦",
+    });
+    expect(resolved?.occurrences[1]).toMatchObject({
+      calendarId: jpLayer.calendarId,
+      name: "元日",
+    });
+    expect(resolved?.mainDateColor).toBe(jpLayer.main.dateColors.holiday);
+    expect(resolved?.miniDateColor).toBe(jpLayer.mini.dateColors.holiday);
   });
 
-  it("stores separate dates under strict zero-padded ISO keys", () => {
-    const dataset: HolidayDataset = {
-      source: "japan-holidays-jp",
-      entries: [
-        {
-          date: { year: 2027, month: 5, day: 3 },
-          info: { japan: { name: "憲法記念日" } },
-        },
-        {
-          date: { year: 2027, month: 5, day: 4 },
-          info: { japan: { name: "みどりの日" } },
-        },
+  it("ignores disabled layers", () => {
+    const [cnLayer, jpLayer] = createDefaultHolidayLayers();
+    const disabledCn = { ...cnLayer, enabled: false };
+    const library = fixtureLibrary({
+      baseRecords: [
+        base(cnLayer.calendarId, "2027-01-01", "holiday", "元旦"),
+        base(jpLayer.calendarId, "2027-01-01", "holiday", "元日"),
       ],
-      coverage: { ranges: [] },
-      diagnostics: [],
-    };
+    });
 
-    const index = buildHolidayIndex([dataset]);
-
-    expect(index.size).toBe(2);
-    expect(index.has("2027-05-03")).toBe(true);
-    expect(index.has("2027-05-04")).toBe(true);
-    expect(index.get("2027-05-03")).toEqual({ japan: { name: "憲法記念日" } });
-    expect(index.get("2027-05-04")).toEqual({ japan: { name: "みどりの日" } });
+    const index = resolveHolidayIndex({
+      library,
+      layers: [disabledCn, jpLayer],
+    });
+    const resolved = index.get("2027-01-01");
+    expect(resolved?.occurrences).toHaveLength(1);
+    expect(resolved?.occurrences[0].calendarId).toBe(jpLayer.calendarId);
   });
 });

@@ -1,4 +1,5 @@
-import type { DotTemplate, TextElementTemplate } from "./primitives";
+import type { TextElementTemplate } from "./primitives";
+import type { CalendarBaseColors } from "./mainTemplate";
 
 export type MiniTemplate = Readonly<{
   width: number;
@@ -25,16 +26,5 @@ export type MiniTemplate = Readonly<{
   }>;
 
   date: TextElementTemplate;
-
-  markers: Readonly<{
-    holidayDot: DotTemplate;
-    workdayDot: DotTemplate;
-  }>;
-
-  colors: Readonly<{
-    default: string;
-    sunday: string;
-    saturday: string;
-    japanHoliday: string;
-  }>;
+  colors: CalendarBaseColors;
 }>;

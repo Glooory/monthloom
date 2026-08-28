@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { useWorkspaceStore } from "../state/workspaceStore";
+import { useDocumentStore } from "../../editor/state/documentStore";
+import { useHolidayLibraryStore } from "../state/holidayLibraryStore";
 import { getWorkspaceHolidayDiagnostics } from "../holiday/holidayWorkspace";
-import { HolidayImportControls } from "./HolidayImportControls";
 import { HolidayDiagnostics } from "./HolidayDiagnostics";
+import { HolidayLibraryPanel } from "./HolidayLibraryPanel";
 import { useI18n } from "../../shared/i18n/i18nStore";
 
 export const WorkspaceControls: React.FC = () => {
@@ -10,19 +12,19 @@ export const WorkspaceControls: React.FC = () => {
   const {
     projectName,
     targetYear,
-    chinaHolidayDataset,
-    japanHolidayDataset,
     setProjectInfo,
     setTargetYear,
-    setChinaHolidayDataset,
-    setJapanHolidayDataset,
     currentProjectId,
   } = useWorkspaceStore();
 
+  const document = useDocumentStore((s) => s.document);
+  const holidayLibrary = useHolidayLibraryStore((s) => s.snapshot);
+  const [showLibraryModal, setShowLibraryModal] = useState(false);
+
   const diagnostics = getWorkspaceHolidayDiagnostics({
     targetYear,
-    chinaHolidayDataset,
-    japanHolidayDataset,
+    library: holidayLibrary,
+    layers: document.holidayLayers ?? [],
   });
 
   return (
@@ -37,7 +39,13 @@ export const WorkspaceControls: React.FC = () => {
         borderRadius: "var(--radius-lg)",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <input
           type="text"
           value={projectName}
@@ -53,7 +61,10 @@ export const WorkspaceControls: React.FC = () => {
         />
 
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <label htmlFor="target-year-input" style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
+          <label
+            htmlFor="target-year-input"
+            style={{ fontSize: "12px", color: "var(--text-secondary)" }}
+          >
             {t.workspace.targetYearLabel}
           </label>
           <input
@@ -68,15 +79,45 @@ export const WorkspaceControls: React.FC = () => {
         </div>
       </div>
 
-      <HolidayImportControls
-        chinaDataset={chinaHolidayDataset}
-        japanDataset={japanHolidayDataset}
-        onImportChina={setChinaHolidayDataset}
-        onImportJapan={setJapanHolidayDataset}
-      />
+      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+        <button
+          type="button"
+          onClick={() => setShowLibraryModal(true)}
+          className="studio-btn studio-btn-secondary"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            flex: 1,
+            justifyContent: "center",
+          }}
+        >
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+          {t.workspace.holidayLibraryBtn(holidayLibrary.calendars.length)}
+        </button>
+      </div>
+
 
       <HolidayDiagnostics diagnostics={diagnostics} />
+
+      <HolidayLibraryPanel
+        isOpen={showLibraryModal}
+        onClose={() => setShowLibraryModal(false)}
+        targetYear={targetYear}
+        activeDocument={document}
+      />
     </div>
   );
 };
-

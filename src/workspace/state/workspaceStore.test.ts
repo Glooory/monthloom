@@ -11,8 +11,6 @@ describe("workspaceStore", () => {
     expect(state.targetYear).toBe(2027);
     expect(state.projectName).toBe("未命名项目");
     expect(state.currentProjectId).toBeNull();
-    expect(state.chinaHolidayDataset).toBeNull();
-    expect(state.japanHolidayDataset).toBeNull();
   });
 
   it("updates target year", () => {

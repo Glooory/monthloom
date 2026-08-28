@@ -68,21 +68,6 @@ export const ColorInspector: React.FC<ColorInspectorProps> = ({
               <span style={{ fontSize: 11, color: "#94a3b8" }}>{calendarColors.saturday}</span>
             </div>
           </div>
-
-          <div className="field-row">
-            <span className="field-label">{t.inspector.japanHolidayColorLabel}</span>
-            <div className="color-input-container">
-              <input
-                type="color"
-                className="color-picker-input"
-                value={calendarColors.japanHoliday}
-                onChange={(e) =>
-                  onChangeCalendarColors({ ...calendarColors, japanHoliday: e.target.value })
-                }
-              />
-              <span style={{ fontSize: 11, color: "#94a3b8" }}>{calendarColors.japanHoliday}</span>
-            </div>
-          </div>
         </div>
       </div>
     );

@@ -1,50 +1,31 @@
 import type { CalendarMonth } from "../../domain/calendar/types";
 import type { DayOfWeek } from "../../domain/date/types";
 import type { MainTemplate } from "../../domain/template/mainTemplate";
-import type { ImageMarkerTemplate } from "../../domain/template/primitives";
+import type { HolidayLayer } from "../../domain/template/holidayLayer";
 import type { Rect, RenderNode, RenderScene } from "../scene/types";
 import { DEFAULT_MAIN_WEEKDAYS } from "../../domain/template/defaults";
-import { applyOffset, getAnchorPoint } from "./anchors";
 import { resolveDateColor, resolveWeekdayColor } from "./colorRules";
-import { buildGridBorderNodes, createGridGeometry } from "./geometry";
+import {
+  buildGridBorderNodes,
+  buildMarkerRenderNode,
+  createGridGeometry,
+} from "./geometry";
+
+
 import { positionText, type TextMeasurer } from "./textMetrics";
-
-function calculateImageMarkerBounds(
-  cell: Rect,
-  marker: ImageMarkerTemplate,
-): { x: number; y: number } {
-  const pt = applyOffset(getAnchorPoint(cell, marker.position.anchor), marker.position);
-  let x: number;
-  let y: number;
-
-  if (marker.position.anchor.endsWith("-left")) {
-    x = pt.x;
-  } else if (marker.position.anchor.endsWith("-right")) {
-    x = pt.x - marker.width;
-  } else {
-    x = pt.x - marker.width / 2;
-  }
-
-  if (marker.position.anchor.startsWith("top-")) {
-    y = pt.y;
-  } else if (marker.position.anchor.startsWith("bottom-")) {
-    y = pt.y - marker.height;
-  } else {
-    y = pt.y - marker.height / 2;
-  }
-
-  return { x, y };
-}
 
 export function layoutMain(args: {
   calendar: CalendarMonth;
   template: MainTemplate;
   textMeasurer: TextMeasurer;
   weekdays?: readonly string[];
+  holidayLayers?: readonly HolidayLayer[];
 }): RenderScene {
-  const { calendar, template, textMeasurer } = args;
-  const weekdays = args.weekdays ?? template.weekdayRow.labels ?? DEFAULT_MAIN_WEEKDAYS;
-  const startOfWeek = calendar.startOfWeek ?? template.weekdayRow.startOfWeek ?? 0;
+  const { calendar, template, textMeasurer, holidayLayers } = args;
+  const weekdays =
+    args.weekdays ?? template.weekdayRow.labels ?? DEFAULT_MAIN_WEEKDAYS;
+  const startOfWeek =
+    calendar.startOfWeek ?? template.weekdayRow.startOfWeek ?? 0;
 
   const width = template.width;
   const height = template.height;
@@ -55,8 +36,12 @@ export function layoutMain(args: {
 
   // 1. Weekday row
   const hasDateGridBorder =
-    (template.dateGrid.showBorder ?? true) && template.dateGrid.borderWidth > 0;
-  if (template.weekdayRow.showBorder && (template.weekdayRow.borderWidth ?? 1) > 0) {
+    (template.dateGrid.showBorder ?? true) &&
+    template.dateGrid.borderWidth > 0;
+  if (
+    template.weekdayRow.showBorder &&
+    (template.weekdayRow.borderWidth ?? 1) > 0
+  ) {
     const weekdayBorderNodes = buildGridBorderNodes({
       bounds: { x: 0, y: 0, width, height: weekdayRowHeight },
       columns: 7,
@@ -90,9 +75,12 @@ export function layoutMain(args: {
       measurer: textMeasurer,
     });
     const color = resolveWeekdayColor(dayOfWeek, {
-      default: template.weekdayRow.colors?.default ?? template.weekdayRow.weekday.typography.color,
+      default:
+        template.weekdayRow.colors?.default ??
+        template.weekdayRow.weekday.typography.color,
       sunday: template.weekdayRow.colors?.sunday ?? template.colors.sunday,
-      saturday: template.weekdayRow.colors?.saturday ?? template.colors.saturday,
+      saturday:
+        template.weekdayRow.colors?.saturday ?? template.colors.saturday,
     });
     nodes.push({
       kind: "text",
@@ -127,7 +115,10 @@ export function layoutMain(args: {
     rows: calendar.weekCount,
   });
 
-  if ((template.dateGrid.showBorder ?? true) && template.dateGrid.borderWidth > 0) {
+  if (
+    (template.dateGrid.showBorder ?? true) &&
+    template.dateGrid.borderWidth > 0
+  ) {
     const borderNodes = buildGridBorderNodes({
       bounds: dateGridBounds,
       columns: 7,
@@ -156,7 +147,7 @@ export function layoutMain(args: {
 
       // Date text
       const dateText = String(cellData.date.day);
-      const dateColor = resolveDateColor(cellData, template.colors);
+      const dateColor = resolveDateColor(cellData, template.colors, "main");
       const datePos = positionText({
         text: dateText,
         cell: cellRect,
@@ -179,111 +170,71 @@ export function layoutMain(args: {
         opacity: template.date.typography.opacity * opacityMultiplier,
       });
 
-      // China Holiday / Workday Marker
-      if (cellData.holiday?.china?.type) {
-        const markerType = cellData.holiday.china.type;
-        const markerTemplate =
-          markerType === "holiday"
-            ? template.chinaMarkers.holiday
-            : template.chinaMarkers.workday;
+      // Dynamic Holiday Layers
+      if (cellData.holiday?.occurrences && holidayLayers) {
+        for (const occurrence of cellData.holiday.occurrences) {
+          const layer = holidayLayers.find((l) => l.id === occurrence.layerId);
+          if (!layer || !layer.enabled) continue;
 
-        const semanticId =
-          markerType === "holiday"
-            ? "main.chinaHolidayMarker"
-            : "main.chinaWorkdayMarker";
+          // 1. Holiday Name
+          if (
+            occurrence.type === "holiday" &&
+            occurrence.name &&
+            layer.main.showName
+          ) {
+            const namePos = positionText({
+              text: occurrence.name,
+              cell: cellRect,
+              position: layer.main.name.position,
+              typography: layer.main.name.typography,
+              measurer: textMeasurer,
+            });
+            const semanticId = `main.holiday.${layer.id}.name`;
+            nodes.push({
+              kind: "text",
+              semanticId,
+              instanceKey: `${semanticId}:${dateKey}`,
+              text: occurrence.name,
+              originX: namePos.originX,
+              baselineY: namePos.baselineY,
+              metrics: namePos.metrics,
+              cell: cellRect,
+              position: layer.main.name.position,
+              typography: layer.main.name.typography,
+              color: layer.main.name.typography.color,
+              opacity: layer.main.name.typography.opacity * opacityMultiplier,
+            });
+          }
 
-        if (markerTemplate.type === "text") {
-          const markerPos = positionText({
-            text: markerTemplate.value,
-            cell: cellRect,
-            position: markerTemplate.position,
-            typography: markerTemplate.typography,
-            measurer: textMeasurer,
-          });
-          nodes.push({
-            kind: "text",
-            semanticId,
-            instanceKey: `${semanticId}:${dateKey}`,
-            text: markerTemplate.value,
-            originX: markerPos.originX,
-            baselineY: markerPos.baselineY,
-            metrics: markerPos.metrics,
-            cell: cellRect,
-            position: markerTemplate.position,
-            typography: markerTemplate.typography,
-            color: markerTemplate.typography.color,
-            opacity: markerTemplate.typography.opacity * opacityMultiplier,
-          });
-        } else if (markerTemplate.type === "image") {
-          const imgBounds = calculateImageMarkerBounds(cellRect, markerTemplate);
-          nodes.push({
-            kind: "image",
-            semanticId,
-            instanceKey: `${semanticId}:${dateKey}`,
-            assetId: markerTemplate.assetId,
-            x: imgBounds.x,
-            y: imgBounds.y,
-            width: markerTemplate.width,
-            height: markerTemplate.height,
-            opacity: markerTemplate.opacity * opacityMultiplier,
-            cell: cellRect,
-            position: markerTemplate.position,
-          });
+          // 2. Holiday / Workday Marker
+          const markerConfig =
+            occurrence.type === "holiday"
+              ? layer.main.holidayMarker
+              : layer.main.workdayMarker;
+
+          if (markerConfig.enabled) {
+            const semanticId =
+              occurrence.type === "holiday"
+                ? `main.holiday.${layer.id}.holidayMarker`
+                : `main.holiday.${layer.id}.workdayMarker`;
+
+            const markerNode = buildMarkerRenderNode({
+              marker: markerConfig.marker,
+              cell: cellRect,
+              semanticId,
+              instanceKey: `${semanticId}:${dateKey}`,
+              measurer: textMeasurer,
+              opacityMultiplier,
+            });
+
+            if (markerNode) {
+              nodes.push(markerNode);
+            }
+          }
         }
       }
-
-      // China Holiday Name
-      if (cellData.holiday?.china?.name) {
-        const chinaNameText = cellData.holiday.china.name;
-        const chinaNamePos = positionText({
-          text: chinaNameText,
-          cell: cellRect,
-          position: template.chinaHolidayName.position,
-          typography: template.chinaHolidayName.typography,
-          measurer: textMeasurer,
-        });
-        nodes.push({
-          kind: "text",
-          semanticId: "main.chinaHolidayName",
-          instanceKey: `main.chinaHolidayName:${dateKey}`,
-          text: chinaNameText,
-          originX: chinaNamePos.originX,
-          baselineY: chinaNamePos.baselineY,
-          metrics: chinaNamePos.metrics,
-          cell: cellRect,
-          position: template.chinaHolidayName.position,
-          typography: template.chinaHolidayName.typography,
-          color: template.chinaHolidayName.typography.color,
-          opacity: template.chinaHolidayName.typography.opacity * opacityMultiplier,
-        });
-      }
-
-      // Japan Holiday Name
-      if (cellData.holiday?.japan?.name) {
-        const japanNameText = cellData.holiday.japan.name;
-        const japanNamePos = positionText({
-          text: japanNameText,
-          cell: cellRect,
-          position: template.japanHolidayName.position,
-          typography: template.japanHolidayName.typography,
-          measurer: textMeasurer,
-        });
-        nodes.push({
-          kind: "text",
-          semanticId: "main.japanHolidayName",
-          instanceKey: `main.japanHolidayName:${dateKey}`,
-          text: japanNameText,
-          originX: japanNamePos.originX,
-          baselineY: japanNamePos.baselineY,
-          metrics: japanNamePos.metrics,
-          cell: cellRect,
-          position: template.japanHolidayName.position,
-          typography: template.japanHolidayName.typography,
-          color: template.japanHolidayName.typography.color,
-          opacity: template.japanHolidayName.typography.opacity * opacityMultiplier,
-        });
-      }
     }
+
   }
 
   return {
@@ -292,4 +243,3 @@ export function layoutMain(args: {
     nodes,
   };
 }
-

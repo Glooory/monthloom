@@ -87,52 +87,6 @@ describe("renderCalendarSvg Orchestration", () => {
         fontWeight: 400,
       },
     },
-    chinaHolidayName: {
-      ...DEFAULT_MAIN_TEMPLATE.chinaHolidayName,
-      typography: {
-        ...DEFAULT_MAIN_TEMPLATE.chinaHolidayName.typography,
-        fontId: "default-sans",
-        fontWeight: 400,
-      },
-    },
-    japanHolidayName: {
-      ...DEFAULT_MAIN_TEMPLATE.japanHolidayName,
-      typography: {
-        ...DEFAULT_MAIN_TEMPLATE.japanHolidayName.typography,
-        fontId: "default-sans",
-        fontWeight: 400,
-      },
-    },
-    chinaMarkers: {
-      holiday: {
-        type: "text",
-        value: "休",
-        position: { anchor: "top-right", offsetX: -8, offsetY: 8 },
-        typography: {
-          fontId: "default-sans",
-          fontSize: 10,
-          fontWeight: 400,
-          fontStyle: "normal",
-          letterSpacing: 0,
-          color: "#DC2626",
-          opacity: 1,
-        },
-      },
-      workday: {
-        type: "text",
-        value: "班",
-        position: { anchor: "top-right", offsetX: -8, offsetY: 8 },
-        typography: {
-          fontId: "default-sans",
-          fontSize: 10,
-          fontWeight: 400,
-          fontStyle: "normal",
-          letterSpacing: 0,
-          color: "#4B5563",
-          opacity: 1,
-        },
-      },
-    },
   };
 
   const testMiniTemplate: MiniTemplate = {

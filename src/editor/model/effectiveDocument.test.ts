@@ -44,7 +44,7 @@ describe("effectiveDocument", () => {
     const effective = createEffectiveDocument({
       document: doc,
       drag: null,
-      weekdayResize: { deltaY: 12 },
+      weekdayResize: { templateType: "main", deltaY: 12 },
     });
 
     expect(effective.mainTemplate.weekdayRow.height).toBe(initialHeight + 12);
@@ -54,14 +54,14 @@ describe("effectiveDocument", () => {
     const clampedUnder = createEffectiveDocument({
       document: doc,
       drag: null,
-      weekdayResize: { deltaY: -100 },
+      weekdayResize: { templateType: "main", deltaY: -100 },
     });
     expect(clampedUnder.mainTemplate.weekdayRow.height).toBe(0);
 
     const clampedOver = createEffectiveDocument({
       document: doc,
       drag: null,
-      weekdayResize: { deltaY: 1000 },
+      weekdayResize: { templateType: "main", deltaY: 1000 },
     });
     expect(clampedOver.mainTemplate.weekdayRow.height).toBe(doc.mainTemplate.height - 1);
   });

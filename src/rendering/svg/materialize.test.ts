@@ -85,7 +85,7 @@ describe("Production SVG Materializer", () => {
         },
         {
           kind: "dot",
-          semanticId: "mini.holidayDot",
+          semanticId: "mini.holiday.layer-1.holidayMarker",
           cx: 25,
           cy: 35,
           radius: 2,
@@ -94,7 +94,7 @@ describe("Production SVG Materializer", () => {
         },
         {
           kind: "image",
-          semanticId: "main.chinaHolidayMarker",
+          semanticId: "main.holiday.layer-1.holidayMarker",
           assetId: "badge-icon",
           x: 10,
           y: 20,

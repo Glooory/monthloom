@@ -8,20 +8,27 @@ describe("Referenced assets and remapping", () => {
     const doc = createDefaultEditorDocument();
     const docWithAssets = {
       ...doc,
-      mainTemplate: {
-        ...doc.mainTemplate,
-        chinaMarkers: {
-          ...doc.mainTemplate.chinaMarkers,
-          holiday: {
-            type: "image" as const,
-            assetId: "old-marker-id",
-            position: { anchor: "top-right" as const, offsetX: -8, offsetY: 8 },
-            width: 14,
-            height: 14,
-            opacity: 1,
-          },
-        },
-      },
+      holidayLayers: doc.holidayLayers.map((l, i) =>
+        i === 0
+          ? {
+              ...l,
+              main: {
+                ...l.main,
+                holidayMarker: {
+                  ...l.main.holidayMarker,
+                  marker: {
+                    type: "image" as const,
+                    assetId: "old-marker-id",
+                    position: { anchor: "top-right" as const, offsetX: -8, offsetY: 8 },
+                    width: 14,
+                    height: 14,
+                    opacity: 1,
+                  },
+                },
+              },
+            }
+          : l,
+      ),
       fontCatalog: {
         ...doc.fontCatalog,
         "custom-font": {
@@ -53,7 +60,7 @@ describe("Referenced assets and remapping", () => {
     ]);
 
     const remapped = remapDocumentAssetIds(docWithAssets, map);
-    const holidayMarker = remapped.mainTemplate.chinaMarkers.holiday;
+    const holidayMarker = remapped.holidayLayers[0].main.holidayMarker.marker;
     expect(holidayMarker.type === "image" && holidayMarker.assetId).toBe("new-marker-id");
     expect(remapped.fontCatalog["custom-font"].source).toEqual({
       type: "local",

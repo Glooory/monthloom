@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { temporal } from "zundo";
 import { DEFAULT_PAGE_PREVIEW_CONFIG } from "../../domain/pagePreview/defaults";
 import { DEFAULT_MAIN_TEMPLATE, DEFAULT_MINI_TEMPLATE } from "../../domain/template/defaults";
+import { createDefaultHolidayLayers } from "../../domain/template/holidayLayer";
 import type { EditorDocument } from "../model/types";
 import type { FontCatalog } from "../../resources/fonts/types";
 
@@ -24,23 +25,29 @@ export const DEFAULT_FONT_CATALOG: FontCatalog = {
     style: "normal",
     source: { type: "google", family: "Noto Sans" },
   },
-  "main.chinaHoliday": {
+  "main.holiday.builtin-cn-layer.name": {
     family: "Noto Sans SC",
     weight: 400,
     style: "normal",
     source: { type: "google", family: "Noto Sans SC" },
   },
-  "main.japanHoliday": {
+  "main.holiday.builtin-cn-layer.marker": {
+    family: "Noto Sans SC",
+    weight: 500,
+    style: "normal",
+    source: { type: "google", family: "Noto Sans SC" },
+  },
+  "main.holiday.builtin-jp-layer.name": {
     family: "Noto Sans JP",
     weight: 400,
     style: "normal",
     source: { type: "google", family: "Noto Sans JP" },
   },
-  "main.marker": {
-    family: "Noto Sans SC",
+  "main.holiday.builtin-jp-layer.marker": {
+    family: "Noto Sans JP",
     weight: 500,
     style: "normal",
-    source: { type: "google", family: "Noto Sans SC" },
+    source: { type: "google", family: "Noto Sans JP" },
   },
   "mini.monthLabel": {
     family: "Noto Sans",
@@ -82,42 +89,6 @@ export function createDefaultEditorDocument(): EditorDocument {
         fontId: "main.date",
       },
     },
-    chinaHolidayName: {
-      ...DEFAULT_MAIN_TEMPLATE.chinaHolidayName,
-      typography: {
-        ...DEFAULT_MAIN_TEMPLATE.chinaHolidayName.typography,
-        fontId: "main.chinaHoliday",
-      },
-    },
-    japanHolidayName: {
-      ...DEFAULT_MAIN_TEMPLATE.japanHolidayName,
-      typography: {
-        ...DEFAULT_MAIN_TEMPLATE.japanHolidayName.typography,
-        fontId: "main.japanHoliday",
-      },
-    },
-    chinaMarkers: {
-      holiday:
-        DEFAULT_MAIN_TEMPLATE.chinaMarkers.holiday.type === "text"
-          ? {
-              ...DEFAULT_MAIN_TEMPLATE.chinaMarkers.holiday,
-              typography: {
-                ...DEFAULT_MAIN_TEMPLATE.chinaMarkers.holiday.typography,
-                fontId: "main.marker",
-              },
-            }
-          : DEFAULT_MAIN_TEMPLATE.chinaMarkers.holiday,
-      workday:
-        DEFAULT_MAIN_TEMPLATE.chinaMarkers.workday.type === "text"
-          ? {
-              ...DEFAULT_MAIN_TEMPLATE.chinaMarkers.workday,
-              typography: {
-                ...DEFAULT_MAIN_TEMPLATE.chinaMarkers.workday.typography,
-                fontId: "main.marker",
-              },
-            }
-          : DEFAULT_MAIN_TEMPLATE.chinaMarkers.workday,
-    },
   };
 
   const miniTemplate = {
@@ -154,6 +125,7 @@ export function createDefaultEditorDocument(): EditorDocument {
   return {
     mainTemplate,
     miniTemplate,
+    holidayLayers: createDefaultHolidayLayers(),
     fontCatalog: DEFAULT_FONT_CATALOG,
     pagePreview: DEFAULT_PAGE_PREVIEW_CONFIG,
   };

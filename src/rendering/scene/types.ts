@@ -3,16 +3,11 @@ import type { Position, Typography } from "../../domain/template/primitives";
 export type SemanticElementId =
   | "main.weekday"
   | "main.date"
-  | "main.chinaHolidayName"
-  | "main.japanHolidayName"
-  | "main.chinaHolidayMarker"
-  | "main.chinaWorkdayMarker"
   | "main.grid"
   | "mini.monthLabel"
   | "mini.weekday"
   | "mini.date"
-  | "mini.holidayDot"
-  | "mini.workdayDot";
+  | (string & {});
 
 export type Rect = Readonly<{
   x: number;

@@ -97,7 +97,7 @@
 - Produces: `holidayRecordId(calendarId, date)`, `resolveEffectiveRecords(library, calendarId)`, `calculateRequiredHolidayRange(targetYear)`.
 - Produces: `createCalendarCoverageDiagnostics({ calendar, requiredRange, coverage })`.
 
-- [ ] **Step 1: Write test fixtures and precedence tests for effective records**
+- [x] **Step 1: Write test fixtures and precedence tests for effective records**
 
 Create `src/domain/holiday/testFixtures.ts`:
 ```ts
@@ -238,12 +238,12 @@ describe("resolveEffectiveRecords", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests and verify failure**
+- [x] **Step 2: Run tests and verify failure**
 
 Run: `npm test -- src/domain/holiday/effectiveRecords.test.ts`
 Expected: FAIL due to missing files.
 
-- [ ] **Step 3: Define canonical types in `src/domain/holiday/types.ts`**
+- [x] **Step 3: Define canonical types in `src/domain/holiday/types.ts`**
 
 Export:
 ```ts
@@ -353,7 +353,7 @@ export function holidayRecordId(calendarId: string, date: LocalDate): string {
 }
 ```
 
-- [ ] **Step 4: Implement `resolveEffectiveRecords` in `src/domain/holiday/effectiveRecords.ts`**
+- [x] **Step 4: Implement `resolveEffectiveRecords` in `src/domain/holiday/effectiveRecords.ts`**
 
 ```ts
 import { toISODate } from "../date/date";
@@ -396,7 +396,7 @@ export function resolveEffectiveRecords(
 }
 ```
 
-- [ ] **Step 5: Implement generic coverage diagnostics in `src/domain/holiday/coverage.ts`**
+- [x] **Step 5: Implement generic coverage diagnostics in `src/domain/holiday/coverage.ts`**
 
 ```ts
 import { addDays, compareDate, toISODate } from "../date/date";
@@ -472,12 +472,12 @@ export function createCalendarCoverageDiagnostics(args: {
 }
 ```
 
-- [ ] **Step 6: Run tests and verify PASS**
+- [x] **Step 6: Run tests and verify PASS**
 
 Run: `npm test -- src/domain/holiday/effectiveRecords.test.ts src/domain/holiday/coverage.test.ts`
 Expected: PASS.
 
-- [ ] **Step 7: Commit Task 1**
+- [x] **Step 7: Commit Task 1**
 
 ```bash
 git add src/domain/holiday
@@ -504,7 +504,7 @@ git commit -m "feat: implement canonical holiday domain, effective records, and 
 - Produces: `createDefaultHolidayLayers()`, `addHolidayLayer`, `updateHolidayLayer`, `moveHolidayLayer`, `removeHolidayLayer`, `getHolidayLayer`, `rebindHolidayLayer`.
 - Changes: `EditorDocument` gains `holidayLayers: readonly HolidayLayer[]`.
 
-- [ ] **Step 1: Write layer unit tests**
+- [x] **Step 1: Write layer unit tests**
 
 In `src/domain/template/holidayLayer.test.ts`:
 ```ts
@@ -555,12 +555,12 @@ describe("holidayLayer domain", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify failure**
+- [x] **Step 2: Run test to verify failure**
 
 Run: `npm test -- src/domain/template/holidayLayer.test.ts`
 Expected: FAIL.
 
-- [ ] **Step 3: Implement `src/domain/template/holidayLayer.ts`**
+- [x] **Step 3: Implement `src/domain/template/holidayLayer.ts`**
 
 ```ts
 import { BUILTIN_CHINA_CALENDAR_ID, BUILTIN_JAPAN_CALENDAR_ID } from "../holiday/types";
@@ -865,7 +865,7 @@ export function rebindHolidayLayer(
 }
 ```
 
-- [ ] **Step 4: Update `EditorDocument` and Zod schemas**
+- [x] **Step 4: Update `EditorDocument` and Zod schemas**
 
 In `src/editor/model/types.ts`:
 ```ts
@@ -881,12 +881,12 @@ export type EditorDocument = Readonly<{
 In `src/domain/template/defaults.ts`:
 Update `createDefaultEditorDocument()` to include `holidayLayers: createDefaultHolidayLayers()`.
 
-- [ ] **Step 5: Run tests and verify PASS**
+- [x] **Step 5: Run tests and verify PASS**
 
 Run: `npm test -- src/domain/template/holidayLayer.test.ts src/editor/state/documentStore.test.ts`
 Expected: PASS.
 
-- [ ] **Step 6: Commit Task 2**
+- [x] **Step 6: Commit Task 2**
 
 ```bash
 git add src/domain/template src/editor/model/types.ts src/editor/state/documentStore.ts
@@ -921,7 +921,7 @@ git commit -m "feat: add template-owned holiday layers and defaults"
 - Produces: `resolveHolidayIndex({ library, layers }): HolidayIndex`.
 - Produces: Dynamic scene nodes for Main name/markers and Mini markers.
 
-- [ ] **Step 1: Write `resolveHolidayIndex` tests**
+- [x] **Step 1: Write `resolveHolidayIndex` tests**
 
 In `src/domain/holiday/holidayIndex.test.ts`:
 ```ts
@@ -952,7 +952,7 @@ describe("resolveHolidayIndex", () => {
 });
 ```
 
-- [ ] **Step 2: Implement `src/domain/holiday/resolveHolidayIndex.ts`**
+- [x] **Step 2: Implement `src/domain/holiday/resolveHolidayIndex.ts`**
 
 ```ts
 import { toISODate } from "../date/date";
@@ -1027,7 +1027,7 @@ export function resolveHolidayIndex(args: {
 }
 ```
 
-- [ ] **Step 3: Update `layoutMain` and `layoutMini` to render dynamic layers**
+- [x] **Step 3: Update `layoutMain` and `layoutMini` to render dynamic layers**
 
 In `mainLayout.ts`:
 - Accept `holidayLayers?: readonly HolidayLayer[]`.
@@ -1040,7 +1040,7 @@ In `miniLayout.ts`:
 - For each cell, iterate `cellData.holiday?.occurrences`.
 - Render holiday/workday marker if `configured.enabled` with semanticId `mini.holiday.${layer.id}.holiday-marker` or `mini.holiday.${layer.id}.workday-marker`. Mini never renders names.
 
-- [ ] **Step 4: Update `colorRules.ts`**
+- [x] **Step 4: Update `colorRules.ts`**
 
 Update `resolveDateColor`:
 ```ts
@@ -1058,16 +1058,16 @@ export function resolveDateColor(
 }
 ```
 
-- [ ] **Step 5: Update font text collection and callers**
+- [x] **Step 5: Update font text collection and callers**
 
 Update `collectMainFontText` and `collectMiniFontText` to accept `holidayLayers` and collect text across all enabled layers. Update `useEditorFontEngine`, `renderDocuments`, and `renderFormalDocuments`.
 
-- [ ] **Step 6: Run domain, layout, and render tests**
+- [x] **Step 6: Run domain, layout, and render tests**
 
 Run: `npm test -- src/domain/holiday src/rendering src/resources/fonts src/preview src/export`
 Expected: PASS.
 
-- [ ] **Step 7: Commit Task 3**
+- [x] **Step 7: Commit Task 3**
 
 ```bash
 git add src/domain/holiday src/domain/calendar src/rendering src/resources/fonts src/editor/fonts src/preview src/export
@@ -1090,7 +1090,7 @@ git commit -m "feat: implement dynamic holiday rendering for Main and Mini"
 - Produces: `HolidayLibraryRepository` (`ensureBuiltins`, `getSnapshot`, `applyBaseUpdate`, `putOverride`, `clearOverride`, `deleteCalendar`, `recordSyncFailure`).
 - Produces: `useHolidayLibraryStore` (`snapshot`, `status`, `error`, `hydrate`, `refresh`).
 
-- [ ] **Step 1: Write repository tests**
+- [x] **Step 1: Write repository tests**
 
 In `src/persistence/db/holidayLibraryRepository.test.ts`:
 ```ts
@@ -1145,7 +1145,7 @@ describe("HolidayLibraryRepository", () => {
 });
 ```
 
-- [ ] **Step 2: Update `MonthloomDatabase` in `src/persistence/db/monthloomDb.ts`**
+- [x] **Step 2: Update `MonthloomDatabase` in `src/persistence/db/monthloomDb.ts`**
 
 Switch db name to `MonthloomDB-v2` and add table definitions:
 ```ts
@@ -1157,7 +1157,7 @@ holidaySyncStates!: EntityTable<HolidaySyncState, "calendarId">;
 ```
 Add to `.stores({...})`.
 
-- [ ] **Step 3: Implement `HolidayLibraryRepository` in `src/persistence/db/holidayLibraryRepository.ts`**
+- [x] **Step 3: Implement `HolidayLibraryRepository` in `src/persistence/db/holidayLibraryRepository.ts`**
 
 Implement atomic methods with Dexie transactions:
 - `ensureBuiltins()`
@@ -1168,7 +1168,7 @@ Implement atomic methods with Dexie transactions:
 - `deleteCalendar(calendarId: string): Promise<void>`
 - `recordSyncFailure(calendarId: string, errorMessage: string, attemptedAt: string): Promise<void>`
 
-- [ ] **Step 4: Implement `src/workspace/state/holidayLibraryStore.ts`**
+- [x] **Step 4: Implement `src/workspace/state/holidayLibraryStore.ts`**
 
 Create Zustand store:
 ```ts
@@ -1181,12 +1181,12 @@ export type HolidayLibraryStore = {
 };
 ```
 
-- [ ] **Step 5: Run persistence & store tests**
+- [x] **Step 5: Run persistence & store tests**
 
 Run: `npm test -- src/persistence/db/holidayLibraryRepository.test.ts src/workspace/state/holidayLibraryStore.test.ts`
 Expected: PASS.
 
-- [ ] **Step 6: Commit Task 4**
+- [x] **Step 6: Commit Task 4**
 
 ```bash
 git add src/persistence/db src/persistence/schema/holidayLibrarySchema.ts src/workspace/state/holidayLibraryStore.ts
@@ -1212,7 +1212,7 @@ git commit -m "feat: implement global holiday library persistence and store"
 - Produces: `parseMonthloomHolidayJson`, `serializeMonthloomHolidayJson`.
 - Produces: `HolidayLibraryOperations` class for sync, import, manual single date / date range add, edit, delete, restore, and coverage confirmation.
 
-- [ ] **Step 1: Write provider adapters and Monthloom JSON tests**
+- [x] **Step 1: Write provider adapters and Monthloom JSON tests**
 
 In `src/domain/holiday/monthloomJson.test.ts`:
 Test strict format validation, duplicate dates rejection, and roundtrip serialization.
@@ -1220,11 +1220,11 @@ Test strict format validation, duplicate dates rejection, and roundtrip serializ
 In `src/workspace/holiday/holidayLibraryOperations.test.ts`:
 Test `prepareSyncYear`, `applyPreparedUpdate`, `upsertManualDateRange`, `deleteRecord`, `restoreSourceRecord`, and `deleteCalendar` (verifying template reference checks).
 
-- [ ] **Step 2: Implement adapters and direct browser fetch in `chinaTimorHolidayAdapter.ts` & `japanHolidaysJpAdapter.ts`**
+- [x] **Step 2: Implement adapters and direct browser fetch in `chinaTimorHolidayAdapter.ts` & `japanHolidaysJpAdapter.ts`**
 
 Implement `fetchChinaHolidayYear(year, fetchImpl)` and `fetchJapanHolidayYear(year, fetchImpl)` converting response to `HolidayBaseUpdate`.
 
-- [ ] **Step 3: Implement `src/domain/holiday/monthloomJson.ts`**
+- [x] **Step 3: Implement `src/domain/holiday/monthloomJson.ts`**
 
 Strict Zod schema validating format `"monthloom-holidays"`, version `1`, unique dates, and valid ISO strings.
 Export:
@@ -1237,7 +1237,7 @@ export function serializeMonthloomHolidayJson(args: {
 }): string;
 ```
 
-- [ ] **Step 4: Implement `src/workspace/holiday/holidayLibraryOperations.ts`**
+- [x] **Step 4: Implement `src/workspace/holiday/holidayLibraryOperations.ts`**
 
 Include:
 - `createCalendar(name: string): Promise<HolidayCalendar>`
@@ -1253,12 +1253,12 @@ Include:
 - `restoreSourceRecord(calendarId: string, date: LocalDate): Promise<void>`
 - `markCoverageConfirmed(calendarId: string, range: DateRange): Promise<void>`
 
-- [ ] **Step 5: Run tests and verify PASS**
+- [x] **Step 5: Run tests and verify PASS**
 
 Run: `npm test -- src/domain/holiday/adapters src/domain/holiday/monthloomJson.test.ts src/workspace/holiday/holidayLibraryOperations.test.ts`
 Expected: PASS.
 
-- [ ] **Step 6: Commit Task 5**
+- [x] **Step 6: Commit Task 5**
 
 ```bash
 git add src/domain/holiday src/workspace/holiday
@@ -1283,11 +1283,11 @@ git commit -m "feat: implement holiday synchronization, JSON exchange, and opera
 - Consumes: `useHolidayLibraryStore`, `HolidayLibraryOperations`.
 - Produces: Complete, accessible Holiday Library management card/panel.
 
-- [ ] **Step 1: Write UI unit tests for modal validation and action dispatch**
+- [x] **Step 1: Write UI unit tests for modal validation and action dispatch**
 
 Test `HolidayRecordDialog` validating ISO dates, switching between single date and date range, and submitting `upsertManualRecord` / `upsertManualDateRange`.
 
-- [ ] **Step 2: Implement `HolidayLibraryPanel.tsx` and child components**
+- [x] **Step 2: Implement `HolidayLibraryPanel.tsx` and child components**
 
 - Left list (`HolidayCalendarList`): built-in/custom calendars, record count, current target year coverage badge (`confirmed`/`unconfirmed`/`unknown`), "Add Calendar" button.
 - Right detail (`HolidayCalendarDetail`):
@@ -1298,20 +1298,20 @@ Test `HolidayRecordDialog` validating ISO dates, switching between single date a
   - Record table: Date, Type badge (`holiday` / `workday`), Name, Provenance badge (`数据源记录`, `人工修改`, `人工新增`), Edit, Delete, and Restore Source buttons.
   - Summary Confirmation Dialog before applying sync/import.
 
-- [ ] **Step 3: Implement `HolidayRecordDialog.tsx`**
+- [x] **Step 3: Implement `HolidayRecordDialog.tsx`**
 
 Tabs/toggle for "Single Date" vs "Date Range":
 - Single Date: Date input, Type radio (`holiday` / `workday`), Name input.
 - Date Range: Start Date input, End Date input, Type radio, Name input.
 
-- [ ] **Step 4: Add complete bilingual localization in `zh.ts` & `en.ts`**
+- [x] **Step 4: Add complete bilingual localization in `zh.ts` & `en.ts`**
 
-- [ ] **Step 5: Run tests and verify PASS**
+- [x] **Step 5: Run tests and verify PASS**
 
 Run: `npm test -- src/workspace/components src/shared/i18n`
 Expected: PASS.
 
-- [ ] **Step 6: Commit Task 6**
+- [x] **Step 6: Commit Task 6**
 
 ```bash
 git add src/workspace/components src/shared/i18n
@@ -1338,7 +1338,7 @@ git commit -m "feat: implement global holiday library management UI"
 - Updates `EditableSemanticId` and `PositionableSemanticId` to include dynamic holiday IDs.
 - Updates `getElementPosition`, `setElementPosition`, `getTypography`, `setTypography`, `applyDragCommit`.
 
-- [ ] **Step 1: Write semantic ID parser and template binding tests**
+- [x] **Step 1: Write semantic ID parser and template binding tests**
 
 In `src/editor/model/holidaySemanticId.test.ts`:
 Test `buildHolidaySemanticId` and `parseHolidaySemanticId` roundtrips for `main` and `mini` (rejecting mini name IDs).
@@ -1346,14 +1346,14 @@ Test `buildHolidaySemanticId` and `parseHolidaySemanticId` roundtrips for `main`
 In `src/editor/model/templateBindings.test.ts`:
 Test getting and setting position, typography, and markers for dynamic layer elements.
 
-- [ ] **Step 2: Implement `src/editor/model/holidaySemanticId.ts`**
+- [x] **Step 2: Implement `src/editor/model/holidaySemanticId.ts`**
 
 ```ts
 export type HolidayLayerElement =
   | "name"
-  | "holiday-marker"
-  | "workday-marker"
-  | "date-colors";
+  | "holidayMarker"
+  | "workdayMarker"
+  | "dateColors";
 
 export type HolidaySemanticId =
   | `main.holiday.${string}.${HolidayLayerElement}`
@@ -1386,20 +1386,20 @@ export function parseHolidaySemanticId(id: string): {
 }
 ```
 
-- [ ] **Step 3: Update `templateBindings.ts` for dynamic holiday routing**
+- [x] **Step 3: Update `templateBindings.ts` for dynamic holiday routing**
 
 Add branches for `parseHolidaySemanticId(semanticId)` in `getElementPosition`, `setElementPosition`, `getTypography`, `setTypography`.
 
-- [ ] **Step 4: Update `hitTargets.ts` and `drag.ts`**
+- [x] **Step 4: Update `hitTargets.ts` and `drag.ts`**
 
 Verify dynamic nodes generate hit targets and calculate anchor-relative drag deltas cleanly.
 
-- [ ] **Step 5: Run tests and verify PASS**
+- [x] **Step 5: Run tests and verify PASS**
 
 Run: `npm test -- src/editor/model src/editor/interaction src/editor/selection`
 Expected: PASS.
 
-- [ ] **Step 6: Commit Task 7**
+- [x] **Step 6: Commit Task 7**
 
 ```bash
 git add src/editor/model src/editor/interaction src/editor/selection
@@ -1426,7 +1426,7 @@ git commit -m "feat: support dynamic holiday semantic IDs and template bindings"
 - Produces: `HolidayLayerTree` with reorder handles, enable/disable toggle, remove, missing calendar indicator, and rebind select.
 - Produces: `HolidayLayerInspector` for Name, Holiday Marker, Workday Marker, Date Colors.
 
-- [ ] **Step 1: Implement `HolidayLayerTree.tsx`**
+- [x] **Step 1: Implement `HolidayLayerTree.tsx`**
 
 - Collapsible "Holiday Layers" group in the left editor sidebar.
 - "Add Layer" (+) button with dropdown filtering out calendars already in the template.
@@ -1436,22 +1436,22 @@ git commit -m "feat: support dynamic holiday semantic IDs and template bindings"
   - Mini: Holiday Marker, Workday Marker, Date Colors.
 - Clicking canvas element selects corresponding layer child item.
 
-- [ ] **Step 2: Implement `HolidayLayerInspector.tsx` and `HolidayDateColorInspector.tsx`**
+- [x] **Step 2: Implement `HolidayLayerInspector.tsx` and `HolidayDateColorInspector.tsx`**
 
 - When `name` selected: `showName` checkbox, `PositionInspector`, `TypographyInspector`.
-- When `holiday-marker` or `workday-marker` selected: `enabled` toggle, `MarkerInspector` (text/image, size, position, typography/asset).
-- When `date-colors` selected: `HolidayDateColorInspector` (`enabled` toggle, holiday color picker, workday color picker).
+- When `holidayMarker` or `workdayMarker` selected: `enabled` toggle, `MarkerInspector` (text/image, size, position, typography/asset).
+- When `dateColors` selected: `HolidayDateColorInspector` (`enabled` toggle, holiday color picker, workday color picker).
 
-- [ ] **Step 3: Integrate into `TemplateEditor.tsx` and `Inspector.tsx`**
+- [x] **Step 3: Integrate into `TemplateEditor.tsx` and `Inspector.tsx`**
 
 Replace static holiday items in `TemplateEditor` layers list with `HolidayLayerTree`. Route dynamic selections in `Inspector` to `HolidayLayerInspector`.
 
-- [ ] **Step 4: Run editor and i18n tests**
+- [x] **Step 4: Run editor and i18n tests**
 
 Run: `npm test -- src/editor src/shared/i18n`
 Expected: PASS.
 
-- [ ] **Step 5: Commit Task 8**
+- [x] **Step 5: Commit Task 8**
 
 ```bash
 git add src/editor src/shared/i18n
@@ -1481,7 +1481,7 @@ git commit -m "feat: implement holiday layer tree and inspector in editor"
 - Bundle manifest v2: project bundle contains `holiday-library.json`; template bundle does not.
 - Non-destructive library merge on project import with conflict summary reporting.
 
-- [ ] **Step 1: Write snapshot and bundle roundtrip tests**
+- [x] **Step 1: Write snapshot and bundle roundtrip tests**
 
 In `src/persistence/schema/snapshot.test.ts`:
 Verify `ProjectSnapshotV1` contains `document.holidayLayers` and no fixed holiday dataset fields.
@@ -1489,15 +1489,15 @@ Verify `ProjectSnapshotV1` contains `document.holidayLayers` and no fixed holida
 In `src/persistence/bundle/bundle.test.ts`:
 Verify project bundle contains `holiday-library.json`, imports non-destructively, keeps local overrides on conflict, and reports `skippedManualConflicts`. Verify template bundle contains no `holiday-library.json`.
 
-- [ ] **Step 2: Update snapshot schemas**
+- [x] **Step 2: Update snapshot schemas**
 
 Remove `chinaHolidayDataset` and `japanHolidayDataset` from `ProjectSnapshotV1` and its Zod schema.
 
-- [ ] **Step 3: Update `collectReferencedAssetIds` and `remapDocumentAssetIds`**
+- [x] **Step 3: Update `collectReferencedAssetIds` and `remapDocumentAssetIds`**
 
 Iterate `document.holidayLayers` and extract/remap image asset IDs from Main and Mini markers.
 
-- [ ] **Step 4: Update bundle manifest, export, and import**
+- [x] **Step 4: Update bundle manifest, export, and import**
 
 In `exportBundle.ts`:
 For project bundles, load snapshot from `HolidayLibraryRepository` and write `holiday-library.json`.
@@ -1508,12 +1508,12 @@ For project bundles, validate `holiday-library.json`, load local library snapsho
 In `PersistenceControls.tsx`:
 Display the spec notice: "项目包将包含 Monthloom 中的完整节假日资料库，以便在其他设备上继续使用。"
 
-- [ ] **Step 5: Run persistence tests**
+- [x] **Step 5: Run persistence tests**
 
 Run: `npm test -- src/persistence`
 Expected: PASS.
 
-- [ ] **Step 6: Commit Task 9**
+- [x] **Step 6: Commit Task 9**
 
 ```bash
 git add src/persistence
@@ -1546,7 +1546,7 @@ git commit -m "feat: bundle full holiday library with projects and merge on impo
 - `App.tsx` hydrates `holidayLibraryStore`, derives single `holidayIndex` and coverage diagnostics, and mounts `HolidayLibraryPanel`.
 - Editor, preview, and export consume identical `holidayIndex` and `document.holidayLayers`.
 
-- [ ] **Step 1: Clean up `workspaceStore.ts`**
+- [x] **Step 1: Clean up `workspaceStore.ts`**
 
 Remove `chinaHolidayDataset` and `japanHolidayDataset`. Workspace state holds:
 ```ts
@@ -1561,7 +1561,7 @@ export type WorkspaceState = {
 };
 ```
 
-- [ ] **Step 2: Update `holidayWorkspace.ts`**
+- [x] **Step 2: Update `holidayWorkspace.ts`**
 
 Export:
 ```ts
@@ -1572,7 +1572,7 @@ export function getWorkspaceHolidayDiagnostics(args: {
 }): readonly HolidayDiagnostic[];
 ```
 
-- [ ] **Step 3: Integrate in `App.tsx`**
+- [x] **Step 3: Integrate in `App.tsx`**
 
 - Call `useHolidayLibraryStore.getState().hydrate()` in an initial effect.
 - Derive `holidayIndex`:
@@ -1586,15 +1586,15 @@ export function getWorkspaceHolidayDiagnostics(args: {
 - Derive diagnostics from targetYear, holidayLibrary, and document.holidayLayers.
 - Mount `<HolidayLibraryPanel />` in the workspace view.
 
-- [ ] **Step 4: Pass `holidayIndex` and `document.holidayLayers` to `FullYearPreview` and `BatchExportPanel`**
+- [x] **Step 4: Pass `holidayIndex` and `document.holidayLayers` to `FullYearPreview` and `BatchExportPanel`**
 
-- [ ] **Step 5: Run integration tests and full build**
+- [x] **Step 5: Run integration tests and full build**
 
 Run: `npm test -- src/app src/workspace src/preview src/export`
 Run: `npm run build`
 Expected: PASS.
 
-- [ ] **Step 6: Commit Task 10**
+- [x] **Step 6: Commit Task 10**
 
 ```bash
 git add src/app src/workspace src/preview src/export src/shared/i18n
@@ -1621,24 +1621,24 @@ git commit -m "feat: wire global holiday library into app, preview, and batch ex
 - Clean repository with zero legacy China/Japan template slots or workspace fields.
 - Updated user documentation.
 
-- [ ] **Step 1: Scan for legacy fields**
+- [x] **Step 1: Scan for legacy fields**
 
 Run:
 ```bash
 rg -n "chinaHoliday|japanHoliday|chinaMarkers|holidayDot|workdayDot|chinaHolidayDataset|japanHolidayDataset" src
 ```
 
-- [ ] **Step 2: Clean up legacy template fields**
+- [x] **Step 2: Clean up legacy template fields**
 
 In `mainTemplate.ts`: remove `chinaHolidayName`, `japanHolidayName`, `chinaMarkers`, and `japanHoliday` color.
 In `miniTemplate.ts`: remove `markers`, and `japanHoliday` color.
 `CalendarBaseColors` is `{ default: string; sunday: string; saturday: string }`.
 
-- [ ] **Step 3: Update verification fixtures and user documentation**
+- [x] **Step 3: Update verification fixtures and user documentation**
 
 Update `holiday-json.md`, `backup-and-recovery.md`, `getting-started.md`.
 
-- [ ] **Step 4: Run complete verification**
+- [x] **Step 4: Run complete verification**
 
 Run: `npm test`
 Expected: All tests pass.
@@ -1646,7 +1646,7 @@ Expected: All tests pass.
 Run: `npm run build`
 Expected: TypeScript and Vite production bundle pass.
 
-- [ ] **Step 5: Verify no compatibility or legacy residue remains**
+- [x] **Step 5: Verify no compatibility or legacy residue remains**
 
 Run:
 ```bash
@@ -1655,7 +1655,7 @@ git diff --check
 ```
 Expected: No matches in application logic; clean git diff.
 
-- [ ] **Step 6: Commit Task 11**
+- [x] **Step 6: Commit Task 11**
 
 ```bash
 git add src docs/user
@@ -1666,8 +1666,8 @@ git commit -m "chore: clean up fixed holiday legacy fields and update documentat
 
 ## Final Verification Checklist
 
-1. [ ] **Test Suite**: Run `npm test` — all test files pass.
-2. [ ] **Typecheck & Production Build**: Run `npm run build` — `tsc -b` and Vite bundle succeed.
-3. [ ] **Formal Output Invariant**: Run `npm test -- src/domain/calendar/monthSequence.test.ts src/export/formal src/preview/fullYear/calendarSet.test.ts` — exactly 13 Main + 15 Mini = 28 SVGs.
-4. [ ] **Timezone Invariant**: Run `rg -n "new Date\([^)]*,[^)]*,[^)]*\)" src/domain src/workspace src/rendering` — no browser-local date arithmetic.
-5. [ ] **Architecture Boundary**: Run `rg -n "chinaHolidayDataset|japanHolidayDataset|main\.chinaHoliday|main\.japanHoliday|mini\.holidayDot|mini\.workdayDot" src` — no legacy slots exist.
+1. [x] **Test Suite**: Run `npm test` — all test files pass (80 test files, 277 tests passed).
+2. [x] **Typecheck & Production Build**: Run `npm run build` — `tsc -b` and Vite bundle succeed with 0 errors.
+3. [x] **Formal Output Invariant**: Run `npm test -- src/domain/calendar/monthSequence.test.ts src/export/formal src/preview/fullYear/calendarSet.test.ts` — exactly 13 Main + 15 Mini = 28 SVGs.
+4. [x] **Timezone Invariant**: Run `rg -n "new Date\([^)]*,[^)]*,[^)]*\)" src/domain src/workspace src/rendering` — no browser-local date arithmetic.
+5. [x] **Architecture Boundary**: Run `rg -n "chinaHolidayDataset|japanHolidayDataset|main\.chinaHoliday|main\.japanHoliday|mini\.holidayDot|mini\.workdayDot" src` — no legacy slots exist.

@@ -8,7 +8,7 @@ export const bundleAssetEntrySchema = z.object({
 
 export const bundleManifestSchema = z.object({
   format: z.literal("monthloom-bundle"),
-  version: z.literal(1),
+  version: z.literal(2),
   type: z.enum(["project", "template"]),
   exportedAt: z.string(),
   generator: z.string(),

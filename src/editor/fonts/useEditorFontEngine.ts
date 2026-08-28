@@ -21,15 +21,25 @@ export function computeFontRequirementKey(args: {
   document: EditorDocument;
 }): { key: string; requirements: ReturnType<typeof mergeFontTextRequirements> } {
   const { calendar, document } = args;
-  const mainReq = collectMainFontText({ calendar, template: document.mainTemplate });
-  const miniReq = collectMiniFontText({ calendar, template: document.miniTemplate });
+  const mainReq = collectMainFontText({
+    calendar,
+    template: document.mainTemplate,
+    holidayLayers: document.holidayLayers,
+  });
+  const miniReq = collectMiniFontText({
+    calendar,
+    template: document.miniTemplate,
+    holidayLayers: document.holidayLayers,
+  });
   const requirements = mergeFontTextRequirements([mainReq, miniReq]);
 
   const parts: string[] = [];
   for (const [fontId, chars] of requirements) {
     const desc = document.fontCatalog[fontId];
     const sourceKey =
-      desc?.source.type === "local" ? desc.source.assetId : (desc?.source.family ?? "");
+      desc?.source.type === "local"
+        ? desc.source.assetId
+        : (desc?.source.family ?? "");
     parts.push(
       `${fontId}=${chars}@${desc?.family ?? ""}:${desc?.weight ?? 0}:${desc?.style ?? ""}:${sourceKey}`,
     );
@@ -98,22 +108,7 @@ export function useEditorFontEngine(args: {
     return () => {
       isMounted = false;
     };
-  }, [
-    calendar,
-    document.fontCatalog,
-    document.mainTemplate.date.typography.fontId,
-    document.mainTemplate.weekdayRow.weekday.typography.fontId,
-    document.mainTemplate.weekdayRow.labels,
-    document.mainTemplate.chinaHolidayName.typography.fontId,
-    document.mainTemplate.japanHolidayName.typography.fontId,
-    document.mainTemplate.chinaMarkers,
-    document.miniTemplate.monthRow.label.typography.fontId,
-    document.miniTemplate.weekdayRow.weekday.typography.fontId,
-    document.miniTemplate.weekdayRow.labels,
-    document.miniTemplate.date.typography.fontId,
-    assetResolver,
-    fetchImpl,
-  ]);
+  }, [calendar, document, assetResolver, fetchImpl]);
 
   return state;
 }

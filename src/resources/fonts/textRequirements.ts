@@ -1,6 +1,7 @@
 import type { CalendarMonth } from "../../domain/calendar/types";
 import type { MainTemplate } from "../../domain/template/mainTemplate";
 import type { MiniTemplate } from "../../domain/template/miniTemplate";
+import type { HolidayLayer } from "../../domain/template/holidayLayer";
 import {
   DEFAULT_MAIN_WEEKDAYS,
   DEFAULT_MINI_WEEKDAYS,
@@ -11,7 +12,11 @@ function uniqueCharacters(text: string): string {
   return [...new Set(Array.from(text))].join("");
 }
 
-function appendText(map: Map<string, string>, fontId: string, text: string): void {
+function appendText(
+  map: Map<string, string>,
+  fontId: string,
+  text: string,
+): void {
   if (!fontId || !text) return;
   const existing = map.get(fontId) ?? "";
   map.set(fontId, existing + text);
@@ -21,9 +26,11 @@ export function collectMainFontText(args: {
   calendar: CalendarMonth;
   template: MainTemplate;
   weekdays?: readonly string[];
+  holidayLayers?: readonly HolidayLayer[];
 }): FontTextRequirements {
-  const { calendar, template } = args;
-  const weekdays = args.weekdays ?? template.weekdayRow.labels ?? DEFAULT_MAIN_WEEKDAYS;
+  const { calendar, template, holidayLayers } = args;
+  const weekdays =
+    args.weekdays ?? template.weekdayRow.labels ?? DEFAULT_MAIN_WEEKDAYS;
   const rawMap = new Map<string, string>();
 
   // 1. Weekday row
@@ -35,36 +42,49 @@ export function collectMainFontText(args: {
   for (const week of calendar.weeks) {
     for (const cellData of week) {
       // Date number
-      appendText(rawMap, template.date.typography.fontId, String(cellData.date.day));
+      appendText(
+        rawMap,
+        template.date.typography.fontId,
+        String(cellData.date.day),
+      );
 
-      // China marker (if text type)
-      if (cellData.holiday?.china?.type) {
-        const marker =
-          cellData.holiday.china.type === "holiday"
-            ? template.chinaMarkers.holiday
-            : template.chinaMarkers.workday;
+      // Dynamic Holiday Layers
+      if (cellData.holiday?.occurrences && holidayLayers) {
+        for (const occurrence of cellData.holiday.occurrences) {
+          const layer = holidayLayers.find((l) => l.id === occurrence.layerId);
+          if (!layer || !layer.enabled) continue;
 
-        if (marker.type === "text") {
-          appendText(rawMap, marker.typography.fontId, marker.value);
+          // Holiday name
+          if (
+            occurrence.type === "holiday" &&
+            occurrence.name &&
+            layer.main.showName
+          ) {
+            appendText(
+              rawMap,
+              layer.main.name.typography.fontId,
+              occurrence.name,
+            );
+          }
+
+          // Marker
+          const markerConfig =
+            occurrence.type === "holiday"
+              ? layer.main.holidayMarker
+              : layer.main.workdayMarker;
+
+          if (
+            markerConfig.enabled &&
+            markerConfig.marker.type === "text" &&
+            markerConfig.marker.value
+          ) {
+            appendText(
+              rawMap,
+              markerConfig.marker.typography.fontId,
+              markerConfig.marker.value,
+            );
+          }
         }
-      }
-
-      // China holiday name
-      if (cellData.holiday?.china?.name) {
-        appendText(
-          rawMap,
-          template.chinaHolidayName.typography.fontId,
-          cellData.holiday.china.name,
-        );
-      }
-
-      // Japan holiday name
-      if (cellData.holiday?.japan?.name) {
-        appendText(
-          rawMap,
-          template.japanHolidayName.typography.fontId,
-          cellData.holiday.japan.name,
-        );
       }
     }
   }
@@ -80,9 +100,11 @@ export function collectMiniFontText(args: {
   calendar: CalendarMonth;
   template: MiniTemplate;
   weekdays?: readonly string[];
+  holidayLayers?: readonly HolidayLayer[];
 }): FontTextRequirements {
-  const { calendar, template } = args;
-  const weekdays = args.weekdays ?? template.weekdayRow.labels ?? DEFAULT_MINI_WEEKDAYS;
+  const { calendar, template, holidayLayers } = args;
+  const weekdays =
+    args.weekdays ?? template.weekdayRow.labels ?? DEFAULT_MINI_WEEKDAYS;
   const rawMap = new Map<string, string>();
 
   // 1. Month label: YYYY-M
@@ -98,7 +120,38 @@ export function collectMiniFontText(args: {
   for (const week of calendar.weeks) {
     for (const cellData of week) {
       if (cellData.inCurrentMonth) {
-        appendText(rawMap, template.date.typography.fontId, String(cellData.date.day));
+        appendText(
+          rawMap,
+          template.date.typography.fontId,
+          String(cellData.date.day),
+        );
+
+        // Dynamic Holiday Layer markers
+        if (cellData.holiday?.occurrences && holidayLayers) {
+          for (const occurrence of cellData.holiday.occurrences) {
+            const layer = holidayLayers.find(
+              (l) => l.id === occurrence.layerId,
+            );
+            if (!layer || !layer.enabled) continue;
+
+            const markerConfig =
+              occurrence.type === "holiday"
+                ? layer.mini.holidayMarker
+                : layer.mini.workdayMarker;
+
+            if (
+              markerConfig.enabled &&
+              markerConfig.marker.type === "text" &&
+              markerConfig.marker.value
+            ) {
+              appendText(
+                rawMap,
+                markerConfig.marker.typography.fontId,
+                markerConfig.marker.value,
+              );
+            }
+          }
+        }
       }
     }
   }

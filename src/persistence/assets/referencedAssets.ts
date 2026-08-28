@@ -1,20 +1,38 @@
 import type { EditorDocument } from "../../editor/model/types";
 
-export function collectReferencedAssetIds(document: EditorDocument): readonly string[] {
+export function collectReferencedAssetIds(
+  document: EditorDocument,
+): readonly string[] {
   const assetIds = new Set<string>();
 
-  // 1. Main template image markers
-  if (
-    document.mainTemplate.chinaMarkers.holiday.type === "image" &&
-    document.mainTemplate.chinaMarkers.holiday.assetId
-  ) {
-    assetIds.add(document.mainTemplate.chinaMarkers.holiday.assetId);
-  }
-  if (
-    document.mainTemplate.chinaMarkers.workday.type === "image" &&
-    document.mainTemplate.chinaMarkers.workday.assetId
-  ) {
-    assetIds.add(document.mainTemplate.chinaMarkers.workday.assetId);
+  // 1. Holiday layers image markers (Main and Mini)
+  if (document.holidayLayers) {
+    for (const layer of document.holidayLayers) {
+      if (
+        layer.main.holidayMarker.marker.type === "image" &&
+        layer.main.holidayMarker.marker.assetId
+      ) {
+        assetIds.add(layer.main.holidayMarker.marker.assetId);
+      }
+      if (
+        layer.main.workdayMarker.marker.type === "image" &&
+        layer.main.workdayMarker.marker.assetId
+      ) {
+        assetIds.add(layer.main.workdayMarker.marker.assetId);
+      }
+      if (
+        layer.mini.holidayMarker.marker.type === "image" &&
+        layer.mini.holidayMarker.marker.assetId
+      ) {
+        assetIds.add(layer.mini.holidayMarker.marker.assetId);
+      }
+      if (
+        layer.mini.workdayMarker.marker.type === "image" &&
+        layer.mini.workdayMarker.marker.assetId
+      ) {
+        assetIds.add(layer.mini.workdayMarker.marker.assetId);
+      }
+    }
   }
 
   // 2. Font catalog local fonts

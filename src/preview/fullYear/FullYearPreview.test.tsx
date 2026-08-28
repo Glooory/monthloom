@@ -46,9 +46,10 @@ function createMockFontEngine(): ResolvedFontEngine {
   faces.set("default-sans", face);
   faces.set("main.weekday", { ...face, fontId: "main.weekday", descriptor: { ...face.descriptor, weight: 600 } });
   faces.set("main.date", { ...face, fontId: "main.date", descriptor: { ...face.descriptor, weight: 500 } });
-  faces.set("main.chinaHoliday", { ...face, fontId: "main.chinaHoliday" });
-  faces.set("main.japanHoliday", { ...face, fontId: "main.japanHoliday" });
-  faces.set("main.marker", { ...face, fontId: "main.marker", descriptor: { ...face.descriptor, weight: 500 } });
+  faces.set("main.holiday.builtin-cn-layer.name", { ...face, fontId: "main.holiday.builtin-cn-layer.name" });
+  faces.set("main.holiday.builtin-cn-layer.marker", { ...face, fontId: "main.holiday.builtin-cn-layer.marker", descriptor: { ...face.descriptor, weight: 500 } });
+  faces.set("main.holiday.builtin-jp-layer.name", { ...face, fontId: "main.holiday.builtin-jp-layer.name" });
+  faces.set("main.holiday.builtin-jp-layer.marker", { ...face, fontId: "main.holiday.builtin-jp-layer.marker", descriptor: { ...face.descriptor, weight: 500 } });
   faces.set("mini.monthLabel", { ...face, fontId: "mini.monthLabel", descriptor: { ...face.descriptor, weight: 600 } });
   faces.set("mini.weekday", { ...face, fontId: "mini.weekday", descriptor: { ...face.descriptor, weight: 500 } });
   faces.set("mini.date", { ...face, fontId: "mini.date" });

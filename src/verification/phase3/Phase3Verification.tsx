@@ -8,6 +8,7 @@ import {
   renderMiniSvgDocument,
 } from "../../rendering/svg/renderCalendarSvg";
 import { SvgPreview } from "../../rendering/svg/SvgPreview";
+import { createDefaultHolidayLayers } from "../../domain/template/holidayLayer";
 import {
   createPhase3AssetResolver,
   FIXTURE_HOLIDAYS,
@@ -46,26 +47,35 @@ export function Phase3Verification(): JSX.Element {
           FIXTURE_HOLIDAYS,
         );
 
-        const mainTemplate = useImageMarker
-          ? {
-              ...PHASE3_MAIN_TEMPLATE,
-              chinaMarkers: {
-                ...PHASE3_MAIN_TEMPLATE.chinaMarkers,
-                holiday: {
-                  type: "image" as const,
-                  assetId: "phase3-marker",
-                  position: { anchor: "top-right" as const, offsetX: -4, offsetY: 4 },
-                  width: 14,
-                  height: 14,
-                  opacity: 1,
-                },
-              },
-            }
-          : PHASE3_MAIN_TEMPLATE;
+        const defaultLayers = createDefaultHolidayLayers();
+        const holidayLayers = useImageMarker
+          ? defaultLayers.map((l) =>
+              l.id === "builtin-cn-layer"
+                ? {
+                    ...l,
+                    main: {
+                      ...l.main,
+                      holidayMarker: {
+                        ...l.main.holidayMarker,
+                        marker: {
+                          type: "image" as const,
+                          assetId: "phase3-marker",
+                          position: { anchor: "top-right" as const, offsetX: -4, offsetY: 4 },
+                          width: 14,
+                          height: 14,
+                          opacity: 1,
+                        },
+                      },
+                    },
+                  }
+                : l,
+            )
+          : defaultLayers;
 
         const main = await renderMainSvgDocument({
           calendar,
-          template: mainTemplate,
+          template: PHASE3_MAIN_TEMPLATE,
+          holidayLayers,
           fontCatalog: PHASE3_FONT_CATALOG,
           assetResolver,
           mode,
@@ -74,6 +84,7 @@ export function Phase3Verification(): JSX.Element {
         const mini = await renderMiniSvgDocument({
           calendar,
           template: PHASE3_MINI_TEMPLATE,
+          holidayLayers,
           fontCatalog: PHASE3_FONT_CATALOG,
           assetResolver,
           mode,
@@ -109,28 +120,37 @@ export function Phase3Verification(): JSX.Element {
         FIXTURE_HOLIDAYS,
       );
 
-      const mainTemplate = useImageMarker
-        ? {
-            ...PHASE3_MAIN_TEMPLATE,
-            chinaMarkers: {
-              ...PHASE3_MAIN_TEMPLATE.chinaMarkers,
-              holiday: {
-                type: "image" as const,
-                assetId: "phase3-marker",
-                position: { anchor: "top-right" as const, offsetX: -4, offsetY: 4 },
-                width: 14,
-                height: 14,
-                opacity: 1,
-              },
-            },
-          }
-        : PHASE3_MAIN_TEMPLATE;
+      const defaultLayers = createDefaultHolidayLayers();
+      const holidayLayers = useImageMarker
+        ? defaultLayers.map((l) =>
+            l.id === "builtin-cn-layer"
+              ? {
+                  ...l,
+                  main: {
+                    ...l.main,
+                    holidayMarker: {
+                      ...l.main.holidayMarker,
+                      marker: {
+                        type: "image" as const,
+                        assetId: "phase3-marker",
+                        position: { anchor: "top-right" as const, offsetX: -4, offsetY: 4 },
+                        width: 14,
+                        height: 14,
+                        opacity: 1,
+                      },
+                    },
+                  },
+                }
+              : l,
+          )
+        : defaultLayers;
 
       const doc =
         target === "main"
           ? await renderMainSvgDocument({
               calendar,
-              template: mainTemplate,
+              template: PHASE3_MAIN_TEMPLATE,
+              holidayLayers,
               fontCatalog: PHASE3_FONT_CATALOG,
               assetResolver,
               mode: exportMode,
@@ -138,6 +158,7 @@ export function Phase3Verification(): JSX.Element {
           : await renderMiniSvgDocument({
               calendar,
               template: PHASE3_MINI_TEMPLATE,
+              holidayLayers,
               fontCatalog: PHASE3_FONT_CATALOG,
               assetResolver,
               mode: exportMode,

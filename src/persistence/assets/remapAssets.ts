@@ -20,33 +20,50 @@ export function remapDocumentAssetIds(
     return marker;
   };
 
-  // 1. Remap Main template markers
-  const mainTemplate = {
-    ...document.mainTemplate,
-    chinaMarkers: {
-      holiday: remapMarker(document.mainTemplate.chinaMarkers.holiday),
-      workday: remapMarker(document.mainTemplate.chinaMarkers.workday),
+  // 1. Remap holiday layers image markers (Main and Mini)
+  const holidayLayers = document.holidayLayers?.map((layer) => ({
+    ...layer,
+    main: {
+      ...layer.main,
+      holidayMarker: {
+        ...layer.main.holidayMarker,
+        marker: remapMarker(layer.main.holidayMarker.marker),
+      },
+      workdayMarker: {
+        ...layer.main.workdayMarker,
+        marker: remapMarker(layer.main.workdayMarker.marker),
+      },
     },
-  };
+    mini: {
+      ...layer.mini,
+      holidayMarker: {
+        ...layer.mini.holidayMarker,
+        marker: remapMarker(layer.mini.holidayMarker.marker),
+      },
+      workdayMarker: {
+        ...layer.mini.workdayMarker,
+        marker: remapMarker(layer.mini.workdayMarker.marker),
+      },
+    },
+  })) ?? [];
 
   // 2. Remap font catalog local fonts
-  const fontCatalogEntries: Array<[string, FontCatalog[string]]> = Object.entries(
-    document.fontCatalog,
-  ).map(([key, descriptor]) => {
-    if (descriptor.source.type === "local") {
-      return [
-        key,
-        {
-          ...descriptor,
-          source: {
-            type: "local",
-            assetId: getMappedId(descriptor.source.assetId),
+  const fontCatalogEntries: Array<[string, FontCatalog[string]]> =
+    Object.entries(document.fontCatalog).map(([key, descriptor]) => {
+      if (descriptor.source.type === "local") {
+        return [
+          key,
+          {
+            ...descriptor,
+            source: {
+              type: "local",
+              assetId: getMappedId(descriptor.source.assetId),
+            },
           },
-        },
-      ];
-    }
-    return [key, descriptor];
-  });
+        ];
+      }
+      return [key, descriptor];
+    });
 
   const fontCatalog: FontCatalog = Object.fromEntries(fontCatalogEntries);
 
@@ -57,7 +74,7 @@ export function remapDocumentAssetIds(
 
   return {
     ...document,
-    mainTemplate,
+    holidayLayers,
     fontCatalog,
     pagePreview: {
       ...document.pagePreview,

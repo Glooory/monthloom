@@ -81,8 +81,9 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
       calendarSet,
       mainTemplate: document.mainTemplate,
       miniTemplate: document.miniTemplate,
+      holidayLayers: document.holidayLayers,
     });
-  }, [calendarSet, document.mainTemplate, document.miniTemplate]);
+  }, [calendarSet, document.mainTemplate, document.miniTemplate, document.holidayLayers]);
 
   // 3. Resolve Font Engine once per unique catalog & character requirements
   useEffect(() => {
@@ -141,6 +142,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
       calendarSet,
       mainTemplate: document.mainTemplate,
       miniTemplate: document.miniTemplate,
+      holidayLayers: document.holidayLayers,
       fontEngine,
       assetResolver,
     })
@@ -160,6 +162,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
     calendarSet,
     document.mainTemplate,
     document.miniTemplate,
+    document.holidayLayers,
     fontEngine,
     assetResolver,
   ]);

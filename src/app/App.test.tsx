@@ -31,14 +31,14 @@ describe("App Integration Smoke Test", () => {
     expect(screen.getByText("上传背景图")).toBeDefined();
 
     // Switch to Workspace Tab
-    const workspaceTabBtn = screen.getByRole("button", { name: /项目与导出/i });
+    const workspaceTabBtn = screen.getByRole("button", {
+      name: /项目与导出/i,
+    });
     expect(workspaceTabBtn).toBeDefined();
     fireEvent.click(workspaceTabBtn);
 
     // Section 1: Workspace Controls
-    expect(screen.getByText("法定节假日数据")).toBeDefined();
-    expect(screen.getByText("导入中国节假日 (JSON)")).toBeDefined();
-    expect(screen.getByText("导入日本节假日 (JSON)")).toBeDefined();
+    expect(screen.getAllByText(/节假日资料库/i).length).toBeGreaterThan(0);
 
     // Section 2: Persistence Controls
     expect(screen.getByText("项目与模板")).toBeDefined();
@@ -56,12 +56,13 @@ describe("App Integration Smoke Test", () => {
     fireEvent.click(langBtn);
 
     // Should switch to English
-    expect(screen.getByText("Holiday Datasets")).toBeDefined();
     expect(screen.getByText("Save Project")).toBeDefined();
     expect(screen.getByText("Batch Export 28 SVGs")).toBeDefined();
 
     // Switch back to editor tab in English
-    const editorTabBtn = screen.getByRole("button", { name: /Template Design/i });
+    const editorTabBtn = screen.getByRole("button", {
+      name: /Template Design/i,
+    });
     expect(editorTabBtn).toBeDefined();
     fireEvent.click(editorTabBtn);
 

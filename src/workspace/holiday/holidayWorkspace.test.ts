@@ -1,92 +1,62 @@
 import { describe, it, expect } from "vitest";
-import type { HolidayDataset } from "../../domain/holiday/types";
+import { getWorkspaceHolidayDiagnostics } from "./holidayWorkspace";
+import { fixtureLibrary } from "../../domain/holiday/testFixtures";
+import { createDefaultHolidayLayers } from "../../domain/template/holidayLayer";
 import {
-  computeWorkspaceHolidayIndex,
-  getWorkspaceHolidayDiagnostics,
-} from "./holidayWorkspace";
+  BUILTIN_CHINA_CALENDAR_ID,
+  BUILTIN_JAPAN_CALENDAR_ID,
+} from "../../domain/holiday/types";
 
 describe("holidayWorkspace", () => {
-  const chinaMock: HolidayDataset = {
-    source: "china-timor",
-    entries: [
-      {
-        date: { year: 2027, month: 1, day: 1 },
-        info: { china: { type: "holiday", name: "元旦" } },
-      },
-    ],
-    coverage: {
-      ranges: [
+  it("computes holiday diagnostics including missing calendar warnings and coverage gaps", () => {
+    const library = fixtureLibrary({
+      calendars: [
         {
-          start: { year: 2026, month: 12, day: 1 },
-          end: { year: 2028, month: 2, day: 29 },
+          id: BUILTIN_CHINA_CALENDAR_ID,
+          name: "中国法定节假日",
+          builtin: true,
+          provider: "china-timor",
+          createdAt: "2026-08-28T00:00:00.000Z",
+          updatedAt: "2026-08-28T00:00:00.000Z",
+        },
+        {
+          id: BUILTIN_JAPAN_CALENDAR_ID,
+          name: "日本祝日",
+          builtin: true,
+          provider: "japan-holidays-jp",
+          createdAt: "2026-08-28T00:00:00.000Z",
+          updatedAt: "2026-08-28T00:00:00.000Z",
         },
       ],
-    },
-    diagnostics: [],
-  };
-
-  const japanMock: HolidayDataset = {
-    source: "japan-holidays-jp",
-    entries: [
-      {
-        date: { year: 2027, month: 1, day: 1 },
-        info: { japan: { name: "元日" } },
-      },
-    ],
-    coverage: {
-      ranges: [
-        {
-          start: { year: 2026, month: 12, day: 1 },
-          end: { year: 2028, month: 2, day: 29 },
-        },
-      ],
-    },
-    diagnostics: [],
-  };
-
-  it("builds a unified HolidayIndex when both datasets are present", () => {
-    const index = computeWorkspaceHolidayIndex({
-      chinaHolidayDataset: chinaMock,
-      japanHolidayDataset: japanMock,
+      coverage: [], // No coverage records -> coverage gaps expected
     });
+    const layers = createDefaultHolidayLayers();
 
-    const jan1 = index.get("2027-01-01");
-    expect(jan1).toEqual({
-      china: { type: "holiday", name: "元旦" },
-      japan: { name: "元日" },
-    });
-  });
-
-  it("builds HolidayIndex when only one dataset is present", () => {
-    const index = computeWorkspaceHolidayIndex({
-      chinaHolidayDataset: chinaMock,
-      japanHolidayDataset: null,
-    });
-
-    const jan1 = index.get("2027-01-01");
-    expect(jan1).toEqual({
-      china: { type: "holiday", name: "元旦" },
-    });
-  });
-
-  it("computes holiday diagnostics including missing dataset warnings and coverage gaps", () => {
     const diagnostics = getWorkspaceHolidayDiagnostics({
       targetYear: 2027,
-      chinaHolidayDataset: null,
-      japanHolidayDataset: {
-        ...japanMock,
-        coverage: {
-          ranges: [
-            {
-              start: { year: 2027, month: 1, day: 1 },
-              end: { year: 2027, month: 12, day: 31 },
-            },
-          ],
-        },
-      },
+      library,
+      layers,
     });
 
-    expect(diagnostics.some((d) => d.code === "china-dataset-missing")).toBe(true);
-    expect(diagnostics.some((d) => d.code === "holiday-coverage-gap")).toBe(true);
+    expect(diagnostics.some((d) => d.code === "holiday-coverage-gap")).toBe(
+      true,
+    );
+  });
+
+  it("reports missing calendar if layer references nonexistent calendar", () => {
+    const library = fixtureLibrary({
+      calendars: [], // No calendars
+    });
+    const layers = createDefaultHolidayLayers();
+
+    const diagnostics = getWorkspaceHolidayDiagnostics({
+      targetYear: 2027,
+      library,
+      layers,
+    });
+
+    expect(
+      diagnostics.some((d) => d.code.startsWith("missing-calendar-")),
+    ).toBe(true);
   });
 });

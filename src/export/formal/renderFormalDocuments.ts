@@ -1,22 +1,36 @@
 import type { MainTemplate } from "../../domain/template/mainTemplate";
 import type { MiniTemplate } from "../../domain/template/miniTemplate";
+import type { HolidayLayer } from "../../domain/template/holidayLayer";
 import { layoutMain } from "../../rendering/layout/mainLayout";
 import { layoutMini } from "../../rendering/layout/miniLayout";
 import type { SvgDocument } from "../../rendering/svg/document";
 import { materializeSvg } from "../../rendering/svg/materialize";
 import type { AssetResolver } from "../../resources/assets/types";
 import type { ResolvedFontEngine } from "../../resources/fonts/fontkitEngine";
-import type { ExportMode, FormalExportCalendarSet, FormalRenderedDocuments } from "./types";
+import type {
+  ExportMode,
+  FormalExportCalendarSet,
+  FormalRenderedDocuments,
+} from "./types";
 
 export async function renderFormalDocuments(args: {
   calendarSet: FormalExportCalendarSet;
   mainTemplate: MainTemplate;
   miniTemplate: MiniTemplate;
+  holidayLayers?: readonly HolidayLayer[];
   mode: ExportMode;
   fontEngine: ResolvedFontEngine;
   assetResolver: AssetResolver;
 }): Promise<FormalRenderedDocuments> {
-  const { calendarSet, mainTemplate, miniTemplate, mode, fontEngine, assetResolver } = args;
+  const {
+    calendarSet,
+    mainTemplate,
+    miniTemplate,
+    holidayLayers,
+    mode,
+    fontEngine,
+    assetResolver,
+  } = args;
 
   const main = new Map<string, SvgDocument>();
   const mini = new Map<string, SvgDocument>();
@@ -26,6 +40,7 @@ export async function renderFormalDocuments(args: {
     const scene = layoutMain({
       calendar,
       template: mainTemplate,
+      holidayLayers,
       textMeasurer: fontEngine,
     });
     const doc = await materializeSvg({
@@ -42,6 +57,7 @@ export async function renderFormalDocuments(args: {
     const scene = layoutMini({
       calendar,
       template: miniTemplate,
+      holidayLayers,
       textMeasurer: fontEngine,
     });
     const doc = await materializeSvg({

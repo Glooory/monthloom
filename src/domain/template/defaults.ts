@@ -65,68 +65,10 @@ export const DEFAULT_MAIN_TEMPLATE: MainTemplate = {
     },
   },
 
-  chinaHolidayName: {
-    position: { anchor: "bottom-left", offsetX: 10, offsetY: -8 },
-    typography: {
-      fontId: "default-sans",
-      fontSize: 11,
-      fontWeight: 400,
-      fontStyle: "normal",
-      letterSpacing: 0,
-      color: "#DC2626",
-      opacity: 1,
-    },
-  },
-
-  japanHolidayName: {
-    position: { anchor: "bottom-right", offsetX: -10, offsetY: -8 },
-    typography: {
-      fontId: "default-sans",
-      fontSize: 11,
-      fontWeight: 400,
-      fontStyle: "normal",
-      letterSpacing: 0,
-      color: "#DC2626",
-      opacity: 1,
-    },
-  },
-
-  chinaMarkers: {
-    holiday: {
-      type: "text",
-      value: "休",
-      position: { anchor: "top-right", offsetX: -8, offsetY: 8 },
-      typography: {
-        fontId: "default-sans",
-        fontSize: 10,
-        fontWeight: 500,
-        fontStyle: "normal",
-        letterSpacing: 0,
-        color: "#DC2626",
-        opacity: 1,
-      },
-    },
-    workday: {
-      type: "text",
-      value: "班",
-      position: { anchor: "top-right", offsetX: -8, offsetY: 8 },
-      typography: {
-        fontId: "default-sans",
-        fontSize: 10,
-        fontWeight: 500,
-        fontStyle: "normal",
-        letterSpacing: 0,
-        color: "#4B5563",
-        opacity: 1,
-      },
-    },
-  },
-
   colors: {
     default: "#1F2937",
     sunday: "#DC2626",
     saturday: "#2563EB",
-    japanHoliday: "#DC2626",
   },
 
   adjacentMonthOpacity: 0.4,
@@ -186,25 +128,9 @@ export const DEFAULT_MINI_TEMPLATE: MiniTemplate = {
     },
   },
 
-  markers: {
-    holidayDot: {
-      position: { anchor: "top-right", offsetX: -4, offsetY: 4 },
-      size: 4,
-      color: "#DC2626",
-      opacity: 1,
-    },
-    workdayDot: {
-      position: { anchor: "top-right", offsetX: -4, offsetY: 4 },
-      size: 4,
-      color: "#6B7280",
-      opacity: 1,
-    },
-  },
-
   colors: {
     default: "#1F2937",
     sunday: "#DC2626",
     saturday: "#2563EB",
-    japanHoliday: "#DC2626",
   },
 };

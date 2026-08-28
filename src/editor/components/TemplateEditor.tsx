@@ -23,6 +23,8 @@ import { resolveSelectedTarget } from "../selection/selection";
 import { EditorToolbar } from "./EditorToolbar";
 import { EditorCanvas } from "./EditorCanvas";
 import { Inspector } from "./Inspector";
+import { HolidayLayerTree } from "./HolidayLayerTree";
+import { useHolidayLibraryStore } from "../../workspace/state/holidayLibraryStore";
 import { useI18n } from "../../shared/i18n/i18nStore";
 import "./editor.css";
 
@@ -95,6 +97,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         template: effectiveDocument.mainTemplate,
         textMeasurer: fontEngine,
         weekdays,
+        holidayLayers: effectiveDocument.holidayLayers,
       });
     } else {
       return layoutMini({
@@ -102,6 +105,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         template: effectiveDocument.miniTemplate,
         textMeasurer: fontEngine,
         weekdays,
+        holidayLayers: effectiveDocument.holidayLayers,
       });
     }
   }, [fontEngine, activeTemplate, calendar, effectiveDocument, weekdays]);
@@ -245,24 +249,20 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
   const [zoom, setZoom] = useState(1);
 
-  const mainLayers: Array<{ id: PositionableSemanticId; label: string; key: string }> = [
+  const mainLayers: Array<{ id: PositionableSemanticId | "main.grid"; label: string; key: string }> = [
     { id: "main.weekday", label: t.layers.mainWeekday, key: "main.weekday:default" },
     { id: "main.date", label: t.layers.mainDate, key: "main.date:default" },
-    { id: "main.chinaHolidayName", label: t.layers.mainChinaHolidayName, key: "main.chinaHolidayName:default" },
-    { id: "main.japanHolidayName", label: t.layers.mainJapanHolidayName, key: "main.japanHolidayName:default" },
-    { id: "main.chinaHolidayMarker", label: t.layers.mainChinaHolidayMarker, key: "main.chinaHolidayMarker:default" },
-    { id: "main.chinaWorkdayMarker", label: t.layers.mainChinaWorkdayMarker, key: "main.chinaWorkdayMarker:default" },
+    { id: "main.grid", label: t.layers.mainGrid, key: "main.grid:default" },
   ];
 
   const miniLayers: Array<{ id: PositionableSemanticId; label: string; key: string }> = [
     { id: "mini.monthLabel", label: t.layers.miniMonthLabel, key: "mini.monthLabel:default" },
     { id: "mini.weekday", label: t.layers.miniWeekday, key: "mini.weekday:default" },
     { id: "mini.date", label: t.layers.miniDate, key: "mini.date:default" },
-    { id: "mini.holidayDot", label: t.layers.miniHolidayDot, key: "mini.holidayDot:default" },
-    { id: "mini.workdayDot", label: t.layers.miniWorkdayDot, key: "mini.workdayDot:default" },
   ];
 
   const currentLayers = activeTemplate === "main" ? mainLayers : miniLayers;
+  const holidayCalendars = useHolidayLibraryStore((s) => s.snapshot.calendars);
 
   return (
     <div className="monthloom-editor">
@@ -333,7 +333,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                   key={layer.id}
                   type="button"
                   className={`layer-item ${isSelected ? "active" : ""}`}
-                  onClick={() => setSelection({ semanticId: layer.id, instanceKey: layer.key })}
+                  onClick={() => setSelection({ semanticId: layer.id as any, instanceKey: layer.key })}
                 >
                   <svg
                     className="layer-icon"
@@ -344,9 +344,6 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                   >
                     {layer.id.includes("date") && <path d="M4 7V4h16v3M9 20h6M12 4v16" />}
                     {layer.id.includes("weekday") && <path d="M3 6h18M3 12h18M3 18h18" />}
-                    {layer.id.includes("Holiday") && <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />}
-                    {layer.id.includes("Marker") && <rect x="3" y="3" width="18" height="18" rx="2" />}
-                    {layer.id.includes("Dot") && <circle cx="12" cy="12" r="7" />}
                     {layer.id.includes("grid") && <rect x="3" y="3" width="18" height="18" rx="2" strokeDasharray="3 3" />}
                     {layer.id.includes("monthLabel") && <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />}
                   </svg>
@@ -354,6 +351,15 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                 </button>
               );
             })}
+
+            <HolidayLayerTree
+              document={document}
+              activeTemplate={activeTemplate}
+              selection={selection}
+              calendars={holidayCalendars}
+              onSelect={setSelection}
+              onCommitDocument={commitDocument}
+            />
           </div>
         </div>
 

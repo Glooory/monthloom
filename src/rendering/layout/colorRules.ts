@@ -5,7 +5,6 @@ export type CalendarColors = Readonly<{
   default: string;
   sunday: string;
   saturday: string;
-  japanHoliday: string;
 }>;
 
 export type WeekdayColorConfig = Readonly<{
@@ -17,9 +16,14 @@ export type WeekdayColorConfig = Readonly<{
 export function resolveDateColor(
   cell: CalendarCell,
   colors: CalendarColors,
+  target: "main" | "mini" = "main",
 ): string {
-  if (cell.holiday?.japan) {
-    return colors.japanHoliday;
+  const holidayColor =
+    target === "main"
+      ? cell.holiday?.mainDateColor
+      : cell.holiday?.miniDateColor;
+  if (holidayColor) {
+    return holidayColor;
   }
   if (cell.dayOfWeek === 0) {
     return colors.sunday;
@@ -42,4 +46,3 @@ export function resolveWeekdayColor(
   }
   return colors.default;
 }
-

@@ -1,5 +1,6 @@
 import type { MainTemplate } from "../../domain/template/mainTemplate";
 import type { MiniTemplate } from "../../domain/template/miniTemplate";
+import type { HolidayLayer } from "../../domain/template/holidayLayer";
 import { layoutMain } from "../../rendering/layout/mainLayout";
 import { layoutMini } from "../../rendering/layout/miniLayout";
 import type { SvgDocument } from "../../rendering/svg/document";
@@ -17,10 +18,18 @@ export async function renderFullYearPreviewDocuments(args: {
   calendarSet: FullYearCalendarSet;
   mainTemplate: MainTemplate;
   miniTemplate: MiniTemplate;
+  holidayLayers?: readonly HolidayLayer[];
   fontEngine: ResolvedFontEngine;
   assetResolver: AssetResolver;
 }): Promise<FullYearPreviewDocuments> {
-  const { calendarSet, mainTemplate, miniTemplate, fontEngine, assetResolver } = args;
+  const {
+    calendarSet,
+    mainTemplate,
+    miniTemplate,
+    holidayLayers,
+    fontEngine,
+    assetResolver,
+  } = args;
 
   const main = new Map<CalendarKey, SvgDocument>();
   const mini = new Map<CalendarKey, SvgDocument>();
@@ -30,6 +39,7 @@ export async function renderFullYearPreviewDocuments(args: {
     const scene = layoutMain({
       calendar,
       template: mainTemplate,
+      holidayLayers,
       textMeasurer: fontEngine,
     });
     const doc = await materializeSvg({
@@ -46,6 +56,7 @@ export async function renderFullYearPreviewDocuments(args: {
     const scene = layoutMini({
       calendar,
       template: miniTemplate,
+      holidayLayers,
       textMeasurer: fontEngine,
     });
     const doc = await materializeSvg({

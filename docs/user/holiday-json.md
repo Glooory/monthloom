@@ -1,12 +1,47 @@
-# Holiday JSON Formats and Usage
+# Holiday Library and Formats
 
-Monthloom supports official holiday and workday override data for China and Japan through standard JSON datasets.
+Monthloom provides a persistent **Global Holiday Library** stored in your browser's IndexedDB, decoupled from individual project templates. Templates bind to calendars via dynamic **Holiday Layers**.
 
-## 1. China Holiday JSON Format
+## 1. Monthloom Holiday Calendar JSON (`monthloom-holidays` v1)
 
-Monthloom accepts JSON files adhering to the Timor / NianJia holiday format (e.g. `2026.json`, `2027.json`).
+Monthloom supports export and import of individual holiday calendars, base records, and coverage ranges using its native exchange format.
 
-### Structure Example
+### Schema Structure
+```json
+{
+  "format": "monthloom-holidays",
+  "version": 1,
+  "calendar": {
+    "id": "builtin-cn-public-holidays",
+    "name": "中国法定节假日"
+  },
+  "records": [
+    {
+      "date": "2027-01-01",
+      "type": "holiday",
+      "name": "元旦"
+    },
+    {
+      "date": "2027-02-06",
+      "type": "workday",
+      "name": "春节调休"
+    }
+  ],
+  "coverage": [
+    {
+      "start": "2027-01-01",
+      "end": "2027-12-31",
+      "status": "confirmed"
+    }
+  ]
+}
+```
+
+## 2. Third-Party Provider JSON Formats
+
+You can directly sync or import third-party datasets into existing or new calendars:
+
+### China Holiday JSON (Timor / NianJia Format)
 ```json
 {
   "holiday": {
@@ -18,14 +53,7 @@ Monthloom accepts JSON files adhering to the Timor / NianJia holiday format (e.g
 }
 ```
 
-- `holiday: true`: Marked as official public holiday (treated as holiday styling/rules).
-- `holiday: false`: Marked as official workday transfer / compensatory working day (treated as working day even if falling on a weekend).
-
-## 2. Japan Holiday JSON Format
-
-Monthloom accepts JSON files following the Holidays JP format (key-value mapping of date strings to holiday names, e.g. `ja.json`).
-
-### Structure Example
+### Japan Holiday JSON (Holidays JP Format)
 ```json
 {
   "2026-01-01": "元日",
@@ -35,10 +63,13 @@ Monthloom accepts JSON files following the Holidays JP format (key-value mapping
 }
 ```
 
-## Coverage Requirements and Diagnostics
+## 3. Manual Overrides and Effective Records
 
-For a target year $Y$, Monthloom displays and renders calendar months spanning from:
-- **$Y-1$ December** (First Mini month)
-- through **$Y+1$ February** (Last Mini month)
+Monthloom allows you to edit or add manual overrides for any date in a calendar.
+- Overrides with `kind: "upsert"` create or replace records for a specific date (holiday or workday).
+- Overrides with `kind: "delete"` create tombstones that suppress base provider records (e.g. removing a holiday).
+- Local manual overrides always take precedence over synced or imported base records.
 
-The **Holiday Coverage Diagnostics** component monitors your imported holiday datasets and warns you if dates within this 15-month span are missing. Monthloom will never guess or extrapolate missing holiday rules.
+## 4. Coverage Requirements and Diagnostics
+
+For target year $Y$, Monthloom monitors required holiday coverage spanning $Y-1$ December through $Y+1$ February (15 months). Missing dates in confirmed coverage ranges trigger non-blocking diagnostics in the workspace.

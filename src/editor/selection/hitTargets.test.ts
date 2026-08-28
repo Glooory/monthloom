@@ -53,8 +53,8 @@ describe("hitTargets", () => {
   it("calculates bounds for image marker nodes", () => {
     const imageNode: SceneImageNode = {
       kind: "image",
-      semanticId: "main.chinaHolidayMarker",
-      instanceKey: "main.chinaHolidayMarker:2027-05-01",
+      semanticId: "main.holiday.layer-1.holidayMarker",
+      instanceKey: "main.holiday.layer-1.holidayMarker:2027-05-01",
       assetId: "img-1",
       x: 120,
       y: 60,
@@ -73,7 +73,7 @@ describe("hitTargets", () => {
 
     const targets = buildEditorHitTargets(scene);
     expect(targets.length).toBe(1);
-    expect(targets[0].semanticId).toBe("main.chinaHolidayMarker");
+    expect(targets[0].semanticId).toBe("main.holiday.layer-1.holidayMarker");
     expect(targets[0].bounds).toEqual({
       x: 120,
       y: 60,
@@ -85,8 +85,8 @@ describe("hitTargets", () => {
   it("calculates bounds for dot marker nodes", () => {
     const dotNode: SceneDotNode = {
       kind: "dot",
-      semanticId: "mini.holidayDot",
-      instanceKey: "mini.holidayDot:2027-05-01",
+      semanticId: "mini.holiday.layer-1.holidayMarker",
+      instanceKey: "mini.holiday.layer-1.holidayMarker:2027-05-01",
       cx: 30,
       cy: 40,
       radius: 2,
@@ -104,7 +104,7 @@ describe("hitTargets", () => {
 
     const targets = buildEditorHitTargets(scene);
     expect(targets.length).toBe(1);
-    expect(targets[0].semanticId).toBe("mini.holidayDot");
+    expect(targets[0].semanticId).toBe("mini.holiday.layer-1.holidayMarker");
     expect(targets[0].bounds).toEqual({
       x: 28,
       y: 38,

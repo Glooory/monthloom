@@ -1,47 +1,5 @@
 import { z } from "zod";
-
-const localDateSchema = z.object({
-  year: z.number(),
-  month: z.number(),
-  day: z.number(),
-});
-
-const dateRangeSchema = z.object({
-  start: localDateSchema,
-  end: localDateSchema,
-});
-
-const holidayDiagnosticSchema = z.object({
-  level: z.enum(["warning", "error"]),
-  code: z.string(),
-  message: z.string(),
-});
-
-const holidayDatasetSchema = z.object({
-  source: z.enum(["china-timor", "japan-holidays-jp"]),
-  entries: z.array(
-    z.object({
-      date: localDateSchema,
-      info: z.object({
-        china: z
-          .object({
-            type: z.enum(["holiday", "workday"]),
-            name: z.string().optional(),
-          })
-          .optional(),
-        japan: z
-          .object({
-            name: z.string(),
-          })
-          .optional(),
-      }),
-    }),
-  ),
-  coverage: z.object({
-    ranges: z.array(dateRangeSchema),
-  }),
-  diagnostics: z.array(holidayDiagnosticSchema),
-});
+import type { EditorDocument } from "../../editor/model/types";
 
 const fontDescriptorSchema = z.object({
   family: z.string(),
@@ -64,11 +22,11 @@ const fontCatalogSchema = z.record(z.string(), fontDescriptorSchema);
 const typographySchema = z.object({
   fontId: z.string(),
   fontSize: z.number(),
-  fontWeight: z.number().optional(),
-  fontStyle: z.enum(["normal", "italic"]).optional(),
-  letterSpacing: z.number().optional(),
+  fontWeight: z.number(),
+  fontStyle: z.enum(["normal", "italic"]),
+  letterSpacing: z.number(),
   color: z.string(),
-  opacity: z.number().optional(),
+  opacity: z.number(),
 });
 
 const positionOffsetSchema = z.object({
@@ -87,26 +45,37 @@ const positionOffsetSchema = z.object({
   offsetY: z.number(),
 });
 
-const markerStyleSchema = z.object({
-  type: z.enum(["text", "image"]),
-  value: z.string().optional(),
-  assetId: z.string().optional(),
+const textMarkerSchema = z.object({
+  type: z.literal("text"),
+  value: z.string(),
   position: positionOffsetSchema,
-  typography: typographySchema.optional(),
-  size: z.number().optional(),
+  typography: typographySchema,
 });
 
-const dotMarkerStyleSchema = z.object({
+const imageMarkerSchema = z.object({
+  type: z.literal("image"),
+  assetId: z.string(),
   position: positionOffsetSchema,
-  size: z.number(),
-  color: z.string(),
-  opacity: z.number().optional(),
+  width: z.number(),
+  height: z.number(),
+  opacity: z.number(),
 });
+
+const markerStyleSchema = z.discriminatedUnion("type", [
+  textMarkerSchema,
+  imageMarkerSchema,
+]);
 
 const weekdayColorsSchema = z.object({
   default: z.string().optional(),
   sunday: z.string().optional(),
   saturday: z.string().optional(),
+});
+
+const baseColorsSchema = z.object({
+  default: z.string(),
+  sunday: z.string(),
+  saturday: z.string(),
 });
 
 const mainTemplateSchema = z.object({
@@ -134,24 +103,7 @@ const mainTemplateSchema = z.object({
     position: positionOffsetSchema,
     typography: typographySchema,
   }),
-  chinaHolidayName: z.object({
-    position: positionOffsetSchema,
-    typography: typographySchema,
-  }),
-  japanHolidayName: z.object({
-    position: positionOffsetSchema,
-    typography: typographySchema,
-  }),
-  chinaMarkers: z.object({
-    holiday: markerStyleSchema,
-    workday: markerStyleSchema,
-  }),
-  colors: z.object({
-    default: z.string(),
-    sunday: z.string(),
-    saturday: z.string(),
-    japanHoliday: z.string(),
-  }),
+  colors: baseColorsSchema,
   adjacentMonthOpacity: z.number(),
 });
 
@@ -182,15 +134,38 @@ const miniTemplateSchema = z.object({
     position: positionOffsetSchema,
     typography: typographySchema,
   }),
-  markers: z.object({
-    holidayDot: dotMarkerStyleSchema,
-    workdayDot: dotMarkerStyleSchema,
+  colors: baseColorsSchema,
+});
+
+const holidayDateColorsSchema = z.object({
+  enabled: z.boolean(),
+  holiday: z.string(),
+  workday: z.string(),
+});
+
+const enabledMarkerStyleSchema = z.object({
+  enabled: z.boolean(),
+  marker: markerStyleSchema,
+});
+
+const holidayLayerSchema = z.object({
+  id: z.string(),
+  calendarId: z.string(),
+  enabled: z.boolean(),
+  main: z.object({
+    showName: z.boolean(),
+    name: z.object({
+      position: positionOffsetSchema,
+      typography: typographySchema,
+    }),
+    holidayMarker: enabledMarkerStyleSchema,
+    workdayMarker: enabledMarkerStyleSchema,
+    dateColors: holidayDateColorsSchema,
   }),
-  colors: z.object({
-    default: z.string(),
-    sunday: z.string(),
-    saturday: z.string(),
-    japanHoliday: z.string(),
+  mini: z.object({
+    holidayMarker: enabledMarkerStyleSchema,
+    workdayMarker: enabledMarkerStyleSchema,
+    dateColors: holidayDateColorsSchema,
   }),
 });
 
@@ -209,15 +184,40 @@ const pagePreviewConfigSchema = z.object({
   backgroundAssetId: z.string().optional(),
 });
 
-export const editorDocumentSchema = z.object({
-  mainTemplate: mainTemplateSchema,
-  miniTemplate: miniTemplateSchema,
-  fontCatalog: fontCatalogSchema,
-  pagePreview: pagePreviewConfigSchema,
-});
+export const editorDocumentSchema = z
+  .object({
+    mainTemplate: mainTemplateSchema,
+    miniTemplate: miniTemplateSchema,
+    holidayLayers: z.array(holidayLayerSchema),
+    fontCatalog: fontCatalogSchema,
+    pagePreview: pagePreviewConfigSchema,
+  })
+  .superRefine((doc, ctx) => {
+    const layerIds = new Set<string>();
+    const calendarIds = new Set<string>();
 
-import type { EditorDocument } from "../../editor/model/types";
-import type { HolidayDataset } from "../../domain/holiday/types";
+    for (let i = 0; i < doc.holidayLayers.length; i++) {
+      const layer = doc.holidayLayers[i];
+      if (layerIds.has(layer.id)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Duplicate holiday layer ID "${layer.id}"`,
+          path: ["holidayLayers", i, "id"],
+        });
+      }
+      layerIds.add(layer.id);
+
+      if (calendarIds.has(layer.calendarId)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Duplicate calendar binding: calendar ID "${layer.calendarId}" is already bound to another layer`,
+          path: ["holidayLayers", i, "calendarId"],
+        });
+      }
+      calendarIds.add(layer.calendarId);
+    }
+  });
+
 
 export type ProjectSnapshotV1 = Readonly<{
   version: 1;
@@ -227,8 +227,6 @@ export type ProjectSnapshotV1 = Readonly<{
   createdAt: string;
   updatedAt: string;
   targetYear: number;
-  chinaHolidayDataset: HolidayDataset | null;
-  japanHolidayDataset: HolidayDataset | null;
   document: EditorDocument;
 }>;
 
@@ -240,7 +238,5 @@ export const projectSnapshotV1Schema: z.ZodType<ProjectSnapshotV1> = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   targetYear: z.number(),
-  chinaHolidayDataset: (holidayDatasetSchema as unknown as z.ZodType<HolidayDataset>).nullable(),
-  japanHolidayDataset: (holidayDatasetSchema as unknown as z.ZodType<HolidayDataset>).nullable(),
   document: editorDocumentSchema as unknown as z.ZodType<EditorDocument>,
 });

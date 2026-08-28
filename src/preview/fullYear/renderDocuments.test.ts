@@ -6,6 +6,7 @@ import type { AssetResolver } from "../../resources/assets/types";
 import { ResolvedFontEngine, type ResolvedFontFace } from "../../resources/fonts/fontkitEngine";
 import type { MainTemplate } from "../../domain/template/mainTemplate";
 import type { MiniTemplate } from "../../domain/template/miniTemplate";
+import type { HolidayLayer } from "../../domain/template/holidayLayer";
 
 function createMockFontEngine(): ResolvedFontEngine {
   const face: ResolvedFontFace = {
@@ -76,52 +77,6 @@ describe("renderFullYearPreviewDocuments", () => {
         fontWeight: 400,
       },
     },
-    chinaHolidayName: {
-      ...DEFAULT_MAIN_TEMPLATE.chinaHolidayName,
-      typography: {
-        ...DEFAULT_MAIN_TEMPLATE.chinaHolidayName.typography,
-        fontId: "default-sans",
-        fontWeight: 400,
-      },
-    },
-    japanHolidayName: {
-      ...DEFAULT_MAIN_TEMPLATE.japanHolidayName,
-      typography: {
-        ...DEFAULT_MAIN_TEMPLATE.japanHolidayName.typography,
-        fontId: "default-sans",
-        fontWeight: 400,
-      },
-    },
-    chinaMarkers: {
-      holiday: {
-        type: "text",
-        value: "休",
-        position: { anchor: "top-right", offsetX: -8, offsetY: 8 },
-        typography: {
-          fontId: "default-sans",
-          fontSize: 10,
-          fontWeight: 400,
-          fontStyle: "normal",
-          letterSpacing: 0,
-          color: "#DC2626",
-          opacity: 1,
-        },
-      },
-      workday: {
-        type: "text",
-        value: "班",
-        position: { anchor: "top-right", offsetX: -8, offsetY: 8 },
-        typography: {
-          fontId: "default-sans",
-          fontSize: 10,
-          fontWeight: 400,
-          fontStyle: "normal",
-          letterSpacing: 0,
-          color: "#4B5563",
-          opacity: 1,
-        },
-      },
-    },
   };
 
   const testMiniTemplate: MiniTemplate = {
@@ -186,5 +141,156 @@ describe("renderFullYearPreviewDocuments", () => {
       expect(doc.height).toBe(testMiniTemplate.height);
       expect(doc.children.length).toBeGreaterThan(0);
     }
+  });
+
+  it("renders holiday names and markers in Main and markers only in Mini", async () => {
+    const holidayIndex = new Map([
+      [
+        "2027-01-01",
+        {
+          occurrences: [
+            {
+              layerId: "layer-cn",
+              calendarId: "cn",
+              type: "holiday" as const,
+              name: "元旦",
+            },
+          ],
+        },
+      ],
+    ]);
+    const calendarSet = createFullYearCalendarSet({
+      targetYear: 2027,
+      holidayIndex,
+    });
+    const fontEngine = createMockFontEngine();
+    const holidayLayers: HolidayLayer[] = [
+      {
+        id: "layer-cn",
+        calendarId: "cn",
+        enabled: true,
+        main: {
+          showName: true,
+          name: {
+            position: { anchor: "bottom-left", offsetX: 0, offsetY: 0 },
+            typography: {
+              fontId: "default-sans",
+              fontSize: 10,
+              fontWeight: 400,
+              fontStyle: "normal",
+              letterSpacing: 0,
+              color: "#DC2626",
+              opacity: 1,
+            },
+          },
+          holidayMarker: {
+            enabled: true,
+            marker: {
+              type: "text",
+              value: "休",
+              position: { anchor: "top-right", offsetX: 0, offsetY: 0 },
+              typography: {
+                fontId: "default-sans",
+                fontSize: 10,
+                fontWeight: 400,
+                fontStyle: "normal",
+                letterSpacing: 0,
+                color: "#DC2626",
+                opacity: 1,
+              },
+            },
+          },
+          workdayMarker: {
+            enabled: false,
+            marker: {
+              type: "text",
+              value: "班",
+              position: { anchor: "top-right", offsetX: 0, offsetY: 0 },
+              typography: {
+                fontId: "default-sans",
+                fontSize: 10,
+                fontWeight: 400,
+                fontStyle: "normal",
+                letterSpacing: 0,
+                color: "#4B5563",
+                opacity: 1,
+              },
+            },
+          },
+          dateColors: { enabled: false, holiday: "#DC2626", workday: "#1F2937" },
+        },
+        mini: {
+          holidayMarker: {
+            enabled: true,
+            marker: {
+              type: "text",
+              value: "•",
+              position: { anchor: "top-right", offsetX: 0, offsetY: 0 },
+              typography: {
+                fontId: "default-sans",
+                fontSize: 10,
+                fontWeight: 400,
+                fontStyle: "normal",
+                letterSpacing: 0,
+                color: "#DC2626",
+                opacity: 1,
+              },
+            },
+          },
+          workdayMarker: {
+            enabled: false,
+            marker: {
+              type: "text",
+              value: "•",
+              position: { anchor: "top-right", offsetX: 0, offsetY: 0 },
+              typography: {
+                fontId: "default-sans",
+                fontSize: 10,
+                fontWeight: 400,
+                fontStyle: "normal",
+                letterSpacing: 0,
+                color: "#6B7280",
+                opacity: 1,
+              },
+            },
+          },
+          dateColors: { enabled: false, holiday: "#DC2626", workday: "#1F2937" },
+        },
+      },
+    ];
+
+    const renderedWithHolidays = await renderFullYearPreviewDocuments({
+      calendarSet,
+      mainTemplate: testMainTemplate,
+      miniTemplate: testMiniTemplate,
+      holidayLayers,
+      fontEngine,
+      assetResolver: mockAssetResolver,
+    });
+
+    const renderedWithoutHolidays = await renderFullYearPreviewDocuments({
+      calendarSet,
+      mainTemplate: testMainTemplate,
+      miniTemplate: testMiniTemplate,
+      holidayLayers: [],
+      fontEngine,
+      assetResolver: mockAssetResolver,
+    });
+
+    const janMainWith = renderedWithHolidays.main.get("2027-1");
+    const janMainWithout = renderedWithoutHolidays.main.get("2027-1");
+    expect(janMainWith).toBeDefined();
+    expect(janMainWithout).toBeDefined();
+    expect(janMainWith!.children.length).toBeGreaterThan(
+      janMainWithout!.children.length,
+    );
+
+    const janMiniWith = renderedWithHolidays.mini.get("2027-1");
+    const janMiniWithout = renderedWithoutHolidays.mini.get("2027-1");
+    expect(janMiniWith).toBeDefined();
+    expect(janMiniWithout).toBeDefined();
+    expect(janMiniWith!.children.length).toBeGreaterThan(
+      janMiniWithout!.children.length,
+    );
   });
 });

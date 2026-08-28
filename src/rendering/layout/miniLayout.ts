@@ -1,11 +1,15 @@
 import type { CalendarMonth } from "../../domain/calendar/types";
 import type { DayOfWeek } from "../../domain/date/types";
 import type { MiniTemplate } from "../../domain/template/miniTemplate";
+import type { HolidayLayer } from "../../domain/template/holidayLayer";
 import type { Rect, RenderNode, RenderScene } from "../scene/types";
 import { DEFAULT_MINI_WEEKDAYS } from "../../domain/template/defaults";
-import { applyOffset, getAnchorPoint } from "./anchors";
 import { resolveDateColor, resolveWeekdayColor } from "./colorRules";
-import { buildGridBorderNodes, createGridGeometry } from "./geometry";
+import {
+  buildGridBorderNodes,
+  buildMarkerRenderNode,
+  createGridGeometry,
+} from "./geometry";
 import { positionText, type TextMeasurer } from "./textMetrics";
 
 export function layoutMini(args: {
@@ -13,10 +17,13 @@ export function layoutMini(args: {
   template: MiniTemplate;
   textMeasurer: TextMeasurer;
   weekdays?: readonly string[];
+  holidayLayers?: readonly HolidayLayer[];
 }): RenderScene {
-  const { calendar, template, textMeasurer } = args;
-  const weekdays = args.weekdays ?? template.weekdayRow.labels ?? DEFAULT_MINI_WEEKDAYS;
-  const startOfWeek = calendar.startOfWeek ?? template.weekdayRow.startOfWeek ?? 0;
+  const { calendar, template, textMeasurer, holidayLayers } = args;
+  const weekdays =
+    args.weekdays ?? template.weekdayRow.labels ?? DEFAULT_MINI_WEEKDAYS;
+  const startOfWeek =
+    calendar.startOfWeek ?? template.weekdayRow.startOfWeek ?? 0;
 
   const width = template.width;
   const height = template.height;
@@ -59,7 +66,10 @@ export function layoutMini(args: {
   });
 
   // 2. Weekday Row
-  if (template.weekdayRow.showBorder && (template.weekdayRow.borderWidth ?? 1) > 0) {
+  if (
+    template.weekdayRow.showBorder &&
+    (template.weekdayRow.borderWidth ?? 1) > 0
+  ) {
     const weekdayBorderNodes = buildGridBorderNodes({
       bounds: { x: 0, y: monthRowHeight, width, height: weekdayRowHeight },
       columns: 7,
@@ -92,10 +102,14 @@ export function layoutMini(args: {
       measurer: textMeasurer,
     });
     const color = resolveWeekdayColor(dayOfWeek, {
-      default: template.weekdayRow.colors?.default ?? template.weekdayRow.weekday.typography.color,
+      default:
+        template.weekdayRow.colors?.default ??
+        template.weekdayRow.weekday.typography.color,
       sunday: template.weekdayRow.colors?.sunday ?? template.colors.sunday,
-      saturday: template.weekdayRow.colors?.saturday ?? template.colors.saturday,
+      saturday:
+        template.weekdayRow.colors?.saturday ?? template.colors.saturday,
     });
+
     nodes.push({
       kind: "text",
       semanticId: "mini.weekday",
@@ -139,8 +153,9 @@ export function layoutMini(args: {
 
       // Current month date
       const dateText = String(cellData.date.day);
-      const dateColor = resolveDateColor(cellData, template.colors);
+      const dateColor = resolveDateColor(cellData, template.colors, "mini");
       const datePos = positionText({
+
         text: dateText,
         cell: cellRect,
         position: template.date.position,
@@ -162,34 +177,36 @@ export function layoutMini(args: {
         opacity: template.date.typography.opacity,
       });
 
-      // China holiday dot / workday dot
-      if (cellData.holiday?.china?.type) {
-        const markerType = cellData.holiday.china.type;
-        const dotTemplate =
-          markerType === "holiday"
-            ? template.markers.holidayDot
-            : template.markers.workdayDot;
+      // Dynamic Holiday Layer markers (Mini never renders holiday names)
+      if (cellData.holiday?.occurrences && holidayLayers) {
+        for (const occurrence of cellData.holiday.occurrences) {
+          const layer = holidayLayers.find((l) => l.id === occurrence.layerId);
+          if (!layer || !layer.enabled) continue;
 
-        const semanticId =
-          markerType === "holiday" ? "mini.holidayDot" : "mini.workdayDot";
+          const markerConfig =
+            occurrence.type === "holiday"
+              ? layer.mini.holidayMarker
+              : layer.mini.workdayMarker;
 
-        const dotCenter = applyOffset(
-          getAnchorPoint(cellRect, dotTemplate.position.anchor),
-          dotTemplate.position,
-        );
+          if (markerConfig.enabled) {
+            const semanticId =
+              occurrence.type === "holiday"
+                ? `mini.holiday.${layer.id}.holidayMarker`
+                : `mini.holiday.${layer.id}.workdayMarker`;
 
-        nodes.push({
-          kind: "dot",
-          semanticId,
-          instanceKey: `${semanticId}:${dateKey}`,
-          cx: dotCenter.x,
-          cy: dotCenter.y,
-          radius: dotTemplate.size / 2,
-          color: dotTemplate.color,
-          opacity: dotTemplate.opacity,
-          cell: cellRect,
-          position: dotTemplate.position,
-        });
+            const markerNode = buildMarkerRenderNode({
+              marker: markerConfig.marker,
+              cell: cellRect,
+              semanticId,
+              instanceKey: `${semanticId}:${dateKey}`,
+              measurer: textMeasurer,
+            });
+
+            if (markerNode) {
+              nodes.push(markerNode);
+            }
+          }
+        }
       }
     }
   }
@@ -200,4 +217,3 @@ export function layoutMini(args: {
     nodes,
   };
 }
-

@@ -1,4 +1,10 @@
-import type { MarkerTemplate, TextElementTemplate } from "./primitives";
+import type { TextElementTemplate } from "./primitives";
+
+export type CalendarBaseColors = Readonly<{
+  default: string;
+  sunday: string;
+  saturday: string;
+}>;
 
 export type MainTemplate = Readonly<{
   width: number;
@@ -26,20 +32,6 @@ export type MainTemplate = Readonly<{
   }>;
 
   date: TextElementTemplate;
-  chinaHolidayName: TextElementTemplate;
-  japanHolidayName: TextElementTemplate;
-
-  chinaMarkers: Readonly<{
-    holiday: MarkerTemplate;
-    workday: MarkerTemplate;
-  }>;
-
-  colors: Readonly<{
-    default: string;
-    sunday: string;
-    saturday: string;
-    japanHoliday: string;
-  }>;
-
+  colors: CalendarBaseColors;
   adjacentMonthOpacity: number;
 }>;

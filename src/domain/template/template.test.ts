@@ -113,8 +113,7 @@ describe("Template Primitives", () => {
     expect(
       DEFAULT_MINI_TEMPLATE.monthRow.height + DEFAULT_MINI_TEMPLATE.weekdayRow.height,
     ).toBeLessThan(DEFAULT_MINI_TEMPLATE.height);
-    expect(DEFAULT_MINI_TEMPLATE.markers.holidayDot.size).toBeGreaterThan(0);
-    expect(DEFAULT_MINI_TEMPLATE.markers.workdayDot.size).toBeGreaterThan(0);
+    expect(DEFAULT_MINI_TEMPLATE.colors.default).toBeDefined();
   });
 });
 

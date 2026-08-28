@@ -1,4 +1,11 @@
 import Dexie, { type EntityTable } from "dexie";
+import type {
+  HolidayBaseRecord,
+  HolidayCalendar,
+  HolidayCoverage,
+  HolidayOverride,
+  HolidaySyncState,
+} from "../../domain/holiday/types";
 import type { ProjectSnapshotV1 } from "../schema/projectSnapshot";
 import type { TemplateSnapshotV1 } from "../schema/templateSnapshot";
 
@@ -25,13 +32,24 @@ export class MonthloomDatabase extends Dexie {
   assets!: EntityTable<StoredAsset, "id">;
   fontCache!: EntityTable<StoredFontCache, "cacheKey">;
 
-  constructor(dbName = "MonthloomDB") {
+  holidayCalendars!: EntityTable<HolidayCalendar, "id">;
+  holidayBaseRecords!: EntityTable<HolidayBaseRecord, "id">;
+  holidayOverrides!: EntityTable<HolidayOverride, "id">;
+  holidayCoverage!: EntityTable<HolidayCoverage, "id">;
+  holidaySyncStates!: EntityTable<HolidaySyncState, "calendarId">;
+
+  constructor(dbName = "MonthloomDB-v2") {
     super(dbName);
     this.version(1).stores({
       projects: "id, name, targetYear, updatedAt",
       templates: "id, name, updatedAt",
       assets: "id, mimeType, createdAt",
       fontCache: "cacheKey, family, weight, style, format, updatedAt",
+      holidayCalendars: "id, name, builtin, provider, createdAt, updatedAt",
+      holidayBaseRecords: "id, calendarId, type, source, updatedAt",
+      holidayOverrides: "id, calendarId, kind, type, updatedAt",
+      holidayCoverage: "id, calendarId, status, source, updatedAt",
+      holidaySyncStates: "calendarId, status, lastAttemptAt, lastSuccessAt",
     });
   }
 }

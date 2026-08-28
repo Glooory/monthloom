@@ -1,5 +1,5 @@
 import { addDays, dayOfWeek, daysInMonth, toISODate } from "../date/date";
-import type { HolidayIndex } from "../holiday/types";
+import type { HolidayIndex } from "../holiday/resolveHolidayIndex";
 import type { CalendarCell, CalendarMonth, CalendarWeek } from "./types";
 
 export function generateCalendarMonth(

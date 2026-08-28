@@ -70,4 +70,24 @@ describe("Project and Template Operations", () => {
     useDocumentStore.temporal.getState().undo();
     expect(useDocumentStore.getState().document.mainTemplate.width).toBe(700);
   });
+
+  it("refreshes holiday library store immediately upon loading a project without requiring reload", async () => {
+    const holidayRepo = projectOps["holidayRepo"];
+    await holidayRepo.ensureBuiltins();
+    await holidayRepo.upsertCalendar({
+      id: "cal-imported-on-load",
+      name: "Imported Calendar",
+      builtin: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    const id = await projectOps.saveCurrentProject("Holiday Test Project");
+
+    // Load project and verify holiday store immediately contains the calendar
+    await projectOps.loadProject(id);
+    const { useHolidayLibraryStore } = await import("../../workspace/state/holidayLibraryStore");
+    const snapshot = useHolidayLibraryStore.getState().snapshot;
+    expect(snapshot.calendars.map((c) => c.id)).toContain("cal-imported-on-load");
+  });
 });

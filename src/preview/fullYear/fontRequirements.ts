@@ -1,5 +1,6 @@
 import type { MainTemplate } from "../../domain/template/mainTemplate";
 import type { MiniTemplate } from "../../domain/template/miniTemplate";
+import type { HolidayLayer } from "../../domain/template/holidayLayer";
 import {
   collectMainFontText,
   collectMiniFontText,
@@ -12,8 +13,9 @@ export function collectFullYearPreviewFontRequirements(args: {
   calendarSet: FullYearCalendarSet;
   mainTemplate: MainTemplate;
   miniTemplate: MiniTemplate;
+  holidayLayers?: readonly HolidayLayer[];
 }): FontTextRequirements {
-  const { calendarSet, mainTemplate, miniTemplate } = args;
+  const { calendarSet, mainTemplate, miniTemplate, holidayLayers } = args;
 
   const requirementsList: FontTextRequirements[] = [];
 
@@ -23,6 +25,7 @@ export function collectFullYearPreviewFontRequirements(args: {
       collectMainFontText({
         calendar,
         template: mainTemplate,
+        holidayLayers,
       }),
     );
   }
@@ -33,6 +36,7 @@ export function collectFullYearPreviewFontRequirements(args: {
       collectMiniFontText({
         calendar,
         template: miniTemplate,
+        holidayLayers,
       }),
     );
   }

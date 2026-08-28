@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { generateCalendarMonth } from "../../domain/calendar/generateCalendarMonth";
+import { createDefaultHolidayLayers } from "../../domain/template/holidayLayer";
 import { DEFAULT_MINI_TEMPLATE } from "../../domain/template/defaults";
 import { layoutMini } from "./miniLayout";
 import type { TextMeasurer } from "./textMetrics";
@@ -27,7 +28,9 @@ describe("Mini Layout", () => {
     expect(scene.height).toBe(DEFAULT_MINI_TEMPLATE.height);
 
     // Month label
-    const monthLabels = scene.nodes.filter((n) => n.semanticId === "mini.monthLabel");
+    const monthLabels = scene.nodes.filter(
+      (n) => n.semanticId === "mini.monthLabel",
+    );
     expect(monthLabels).toHaveLength(1);
     if (monthLabels[0]?.kind === "text") {
       expect(monthLabels[0].text).toBe("2027-2");
@@ -47,7 +50,9 @@ describe("Mini Layout", () => {
     ]);
 
     // No border lines or rects
-    const lines = scene.nodes.filter((n) => n.kind === "line" || n.kind === "rect");
+    const lines = scene.nodes.filter(
+      (n) => n.kind === "line" || n.kind === "rect",
+    );
     expect(lines).toHaveLength(0);
 
     // Date nodes: ONLY current month dates in 2027-02 (28 days in non-leap year Feb)
@@ -59,7 +64,8 @@ describe("Mini Layout", () => {
       expect(typeof firstDateNode.originX).toBe("number");
       expect(typeof firstDateNode.baselineY).toBe("number");
       expect(firstDateNode.metrics).toEqual({
-        width: firstDateNode.text.length * (firstDateNode.typography.fontSize * 0.6),
+        width:
+          firstDateNode.text.length * (firstDateNode.typography.fontSize * 0.6),
         ascent: firstDateNode.typography.fontSize * 0.8,
         descent: -firstDateNode.typography.fontSize * 0.2,
       });
@@ -73,7 +79,9 @@ describe("Mini Layout", () => {
       template: DEFAULT_MINI_TEMPLATE,
       textMeasurer: fakeMeasurer,
     });
-    const labelMay = sceneMay.nodes.find((n) => n.semanticId === "mini.monthLabel");
+    const labelMay = sceneMay.nodes.find(
+      (n) => n.semanticId === "mini.monthLabel",
+    );
     expect(labelMay?.kind === "text" ? labelMay.text : "").toBe("2027-5");
 
     const calendarOct = generateCalendarMonth(2027, 10);
@@ -82,80 +90,54 @@ describe("Mini Layout", () => {
       template: DEFAULT_MINI_TEMPLATE,
       textMeasurer: fakeMeasurer,
     });
-    const labelOct = sceneOct.nodes.find((n) => n.semanticId === "mini.monthLabel");
+    const labelOct = sceneOct.nodes.find(
+      (n) => n.semanticId === "mini.monthLabel",
+    );
     expect(labelOct?.kind === "text" ? labelOct.text : "").toBe("2027-10");
   });
 
-  it("does not render date nodes or dots for adjacent-month cells", () => {
-    const calendar = generateCalendarMonth(
-      2027,
-      5,
-      new Map([
-        ["2027-04-30", { china: { type: "workday" } }], // adjacent previous
-        ["2027-05-01", { china: { type: "holiday" } }], // current
-        ["2027-06-01", { china: { type: "holiday" } }], // adjacent next
-      ]),
-    );
+  it("does not render date nodes or markers for adjacent-month cells", () => {
+    const layers = createDefaultHolidayLayers();
+    const cnLayer = layers[0];
 
-    const scene = layoutMini({
-      calendar,
-      template: DEFAULT_MINI_TEMPLATE,
-      textMeasurer: fakeMeasurer,
-    });
-
-    // 2027 May has 31 days
-    const dateNodes = scene.nodes.filter((n) => n.semanticId === "mini.date");
-    expect(dateNodes).toHaveLength(31);
-
-    // Only 1 holiday dot for 2027-05-01 (adjacent 04-30 workday and 06-01 holiday must not render)
-    const holidayDots = scene.nodes.filter((n) => n.semanticId === "mini.holidayDot");
-    expect(holidayDots).toHaveLength(1);
-
-    const workdayDots = scene.nodes.filter((n) => n.semanticId === "mini.workdayDot");
-    expect(workdayDots).toHaveLength(0);
-  });
-
-  it("renders China holidayDot and workdayDot with radius = size / 2", () => {
-    const calendar = generateCalendarMonth(
-      2027,
-      5,
-      new Map([
-        ["2027-05-01", { china: { type: "holiday" } }],
-        ["2027-05-08", { china: { type: "workday" } }],
-      ]),
-    );
-
-    const scene = layoutMini({
-      calendar,
-      template: DEFAULT_MINI_TEMPLATE,
-      textMeasurer: fakeMeasurer,
-    });
-
-    const holidayDot = scene.nodes.find((n) => n.semanticId === "mini.holidayDot");
-    expect(holidayDot).toBeDefined();
-    if (holidayDot && holidayDot.kind === "dot") {
-      expect(holidayDot.radius).toBe(DEFAULT_MINI_TEMPLATE.markers.holidayDot.size / 2);
-      expect(holidayDot.color).toBe(DEFAULT_MINI_TEMPLATE.markers.holidayDot.color);
-    }
-
-    const workdayDot = scene.nodes.find((n) => n.semanticId === "mini.workdayDot");
-    expect(workdayDot).toBeDefined();
-    if (workdayDot && workdayDot.kind === "dot") {
-      expect(workdayDot.radius).toBe(DEFAULT_MINI_TEMPLATE.markers.workdayDot.size / 2);
-      expect(workdayDot.color).toBe(DEFAULT_MINI_TEMPLATE.markers.workdayDot.color);
-    }
-  });
-
-  it("changes date color for Japanese holiday but does not render holiday name", () => {
     const calendar = generateCalendarMonth(
       2027,
       5,
       new Map([
         [
-          "2027-05-05",
+          "2027-04-30",
           {
-            china: { type: "holiday", name: "端午节" },
-            japan: { name: "こどもの日" },
+            occurrences: [
+              {
+                layerId: cnLayer.id,
+                calendarId: cnLayer.calendarId,
+                type: "workday",
+              },
+            ],
+          },
+        ],
+        [
+          "2027-05-01",
+          {
+            occurrences: [
+              {
+                layerId: cnLayer.id,
+                calendarId: cnLayer.calendarId,
+                type: "holiday",
+              },
+            ],
+          },
+        ],
+        [
+          "2027-06-01",
+          {
+            occurrences: [
+              {
+                layerId: cnLayer.id,
+                calendarId: cnLayer.calendarId,
+                type: "holiday",
+              },
+            ],
           },
         ],
       ]),
@@ -164,16 +146,126 @@ describe("Mini Layout", () => {
     const scene = layoutMini({
       calendar,
       template: DEFAULT_MINI_TEMPLATE,
+      holidayLayers: layers,
+      textMeasurer: fakeMeasurer,
+    });
+
+    // 2027 May has 31 days
+    const dateNodes = scene.nodes.filter((n) => n.semanticId === "mini.date");
+    expect(dateNodes).toHaveLength(31);
+
+    // Only 1 holiday marker for 2027-05-01
+    const holidayMarkers = scene.nodes.filter(
+      (n) => n.semanticId === `mini.holiday.${cnLayer.id}.holidayMarker`,
+    );
+    expect(holidayMarkers).toHaveLength(1);
+
+    const workdayMarkers = scene.nodes.filter(
+      (n) => n.semanticId === `mini.holiday.${cnLayer.id}.workdayMarker`,
+    );
+    expect(workdayMarkers).toHaveLength(0);
+  });
+
+  it("renders China holidayMarker and workdayMarker", () => {
+    const layers = createDefaultHolidayLayers();
+    const cnLayer = layers[0];
+
+    const calendar = generateCalendarMonth(
+      2027,
+      5,
+      new Map([
+        [
+          "2027-05-01",
+          {
+            occurrences: [
+              {
+                layerId: cnLayer.id,
+                calendarId: cnLayer.calendarId,
+                type: "holiday",
+              },
+            ],
+          },
+        ],
+        [
+          "2027-05-08",
+          {
+            occurrences: [
+              {
+                layerId: cnLayer.id,
+                calendarId: cnLayer.calendarId,
+                type: "workday",
+              },
+            ],
+          },
+        ],
+      ]),
+    );
+
+    const scene = layoutMini({
+      calendar,
+      template: DEFAULT_MINI_TEMPLATE,
+      holidayLayers: layers,
+      textMeasurer: fakeMeasurer,
+    });
+
+    const holidayMarker = scene.nodes.find(
+      (n) => n.semanticId === `mini.holiday.${cnLayer.id}.holidayMarker`,
+    );
+    expect(holidayMarker).toBeDefined();
+
+    const workdayMarker = scene.nodes.find(
+      (n) => n.semanticId === `mini.holiday.${cnLayer.id}.workdayMarker`,
+    );
+    expect(workdayMarker).toBeDefined();
+  });
+
+  it("changes date color for Japanese holiday but does not render holiday name", () => {
+    const layers = createDefaultHolidayLayers();
+    const cnLayer = layers[0];
+    const jpLayer = layers[1];
+
+    const calendar = generateCalendarMonth(
+      2027,
+      5,
+      new Map([
+        [
+          "2027-05-05",
+          {
+            occurrences: [
+              {
+                layerId: cnLayer.id,
+                calendarId: cnLayer.calendarId,
+                type: "holiday",
+                name: "端午节",
+              },
+              {
+                layerId: jpLayer.id,
+                calendarId: jpLayer.calendarId,
+                type: "holiday",
+                name: "こどもの日",
+              },
+            ],
+            miniDateColor: jpLayer.mini.dateColors.holiday,
+          },
+        ],
+      ]),
+    );
+
+    const scene = layoutMini({
+      calendar,
+      template: DEFAULT_MINI_TEMPLATE,
+      holidayLayers: layers,
       textMeasurer: fakeMeasurer,
     });
 
     // Date color should be Japan holiday color
     const dateNode = scene.nodes.find(
-      (n) => n.semanticId === "mini.date" && n.kind === "text" && n.text === "5",
+      (n) =>
+        n.semanticId === "mini.date" && n.kind === "text" && n.text === "5",
     );
     expect(dateNode).toBeDefined();
     if (dateNode && dateNode.kind === "text") {
-      expect(dateNode.color).toBe(DEFAULT_MINI_TEMPLATE.colors.japanHoliday);
+      expect(dateNode.color).toBe(jpLayer.mini.dateColors.holiday);
     }
 
     // No text node with holiday name
@@ -183,9 +275,11 @@ describe("Mini Layout", () => {
     );
     expect(holidayNameNode).toBeUndefined();
 
-    // China dot should still render
-    const holidayDot = scene.nodes.find((n) => n.semanticId === "mini.holidayDot");
-    expect(holidayDot).toBeDefined();
+    // China holiday marker should still render
+    const holidayMarker = scene.nodes.find(
+      (n) => n.semanticId === `mini.holiday.${cnLayer.id}.holidayMarker`,
+    );
+    expect(holidayMarker).toBeDefined();
   });
 
   it("maintains fixed scene dimensions across 4, 5, and 6 week calendars", () => {

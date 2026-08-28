@@ -9,10 +9,6 @@ import {
   setCalendarColors,
   getGridBorder,
   setGridBorder,
-  getMarkerDetails,
-  setMarkerDetails,
-  getDotDetails,
-  setDotDetails,
   getWeekdayLabels,
   setWeekdayLabels,
   getWeekdayRowSettings,
@@ -26,15 +22,9 @@ describe("templateBindings", () => {
   const allPositionableIds: PositionableSemanticId[] = [
     "main.weekday",
     "main.date",
-    "main.chinaHolidayName",
-    "main.japanHolidayName",
-    "main.chinaHolidayMarker",
-    "main.chinaWorkdayMarker",
     "mini.monthLabel",
     "mini.weekday",
     "mini.date",
-    "mini.holidayDot",
-    "mini.workdayDot",
   ];
 
   it("round-trips position for every positionable semantic ID without altering other fields", () => {
@@ -67,8 +57,6 @@ describe("templateBindings", () => {
     });
     expect(getTypography(updatedDoc, "main.date")?.fontSize).toBe(24);
 
-    // Mini dot should return null
-    expect(getTypography(doc, "mini.holidayDot")).toBeNull();
     // main.grid should return null
     expect(getTypography(doc, "main.grid")).toBeNull();
   });
@@ -97,46 +85,6 @@ describe("templateBindings", () => {
 
     const updated = setGridBorder(doc, { borderWidth: 3, borderColor: "#000000", showBorder: false });
     expect(getGridBorder(updated)).toEqual({ borderWidth: 3, borderColor: "#000000", showBorder: false });
-  });
-
-  it("handles marker get, set, and type toggle", () => {
-    const doc = createDefaultEditorDocument();
-
-    const holidayMarker = getMarkerDetails(doc, "main.chinaHolidayMarker");
-    expect(holidayMarker.type).toBe("text");
-
-    const imageMarkerDoc = setMarkerDetails(doc, "main.chinaHolidayMarker", {
-      type: "image",
-      assetId: "asset-123",
-      width: 16,
-      height: 16,
-      position: holidayMarker.position,
-      opacity: 0.8,
-    });
-
-    const updatedMarker = getMarkerDetails(imageMarkerDoc, "main.chinaHolidayMarker");
-    expect(updatedMarker.type).toBe("image");
-    if (updatedMarker.type === "image") {
-      expect(updatedMarker.assetId).toBe("asset-123");
-    }
-  });
-
-  it("handles mini dot get and set", () => {
-    const doc = createDefaultEditorDocument();
-
-    const dot = getDotDetails(doc, "mini.holidayDot");
-    expect(dot.size).toBe(4);
-
-    const updated = setDotDetails(doc, "mini.holidayDot", {
-      ...dot,
-      size: 6,
-      color: "#00FF00",
-    });
-    expect(getDotDetails(updated, "mini.holidayDot")).toEqual({
-      ...dot,
-      size: 6,
-      color: "#00FF00",
-    });
   });
 
   it("handles weekday labels get and set for main and mini templates", () => {
@@ -210,5 +158,46 @@ describe("templateBindings", () => {
     const clamped = setTemplateDimensions(doc, "main", { width: 10, height: 20000 });
     expect(getTemplateDimensions(clamped, "main")).toEqual({ width: 50, height: 10000 });
   });
-});
 
+  it("handles dynamic holiday layer position and typography get and set", () => {
+    const doc = createDefaultEditorDocument();
+    const layer = doc.holidayLayers[0];
+    const nameSemanticId = `main.holiday.${layer.id}.name` as PositionableSemanticId;
+
+    // Get position
+    const namePos = getElementPosition(doc, nameSemanticId);
+    expect(namePos).toEqual(layer.main.name.position);
+
+    // Set position
+    const newPos = { anchor: "center" as const, offsetX: 12, offsetY: -8 };
+    const updatedDoc = setElementPosition(doc, nameSemanticId, newPos);
+    expect(getElementPosition(updatedDoc, nameSemanticId)).toEqual(newPos);
+
+    // Get typography
+    const nameTypo = getTypography(doc, nameSemanticId);
+    expect(nameTypo).toEqual(layer.main.name.typography);
+
+    // Set typography
+    const updatedTypoDoc = setTypography(doc, nameSemanticId, {
+      ...nameTypo!,
+      fontSize: 16,
+    });
+    expect(getTypography(updatedTypoDoc, nameSemanticId)?.fontSize).toBe(16);
+
+    // Mini marker position
+    const miniMarkerId = `mini.holiday.${layer.id}.holidayMarker` as PositionableSemanticId;
+    const miniPos = getElementPosition(doc, miniMarkerId);
+    expect(miniPos).toEqual(layer.mini.holidayMarker.marker.position);
+
+    const updatedMiniDoc = setElementPosition(doc, miniMarkerId, {
+      anchor: "top-left",
+      offsetX: 2,
+      offsetY: 2,
+    });
+    expect(getElementPosition(updatedMiniDoc, miniMarkerId)).toEqual({
+      anchor: "top-left",
+      offsetX: 2,
+      offsetY: 2,
+    });
+  });
+});

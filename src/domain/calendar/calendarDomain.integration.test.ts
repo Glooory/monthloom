@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { parseChinaTimorHolidayYear } from "../holiday/adapters/chinaTimorHolidayAdapter";
-import { parseJapanHolidaysJp } from "../holiday/adapters/japanHolidaysJpAdapter";
-import { createCoverageDiagnostics } from "../holiday/coverage";
-import { buildHolidayIndex } from "../holiday/holidayIndex";
+import { normalizeChinaTimorHolidayYear } from "../holiday/adapters/chinaTimorHolidayAdapter";
+import { normalizeJapanHolidaysJp } from "../holiday/adapters/japanHolidaysJpAdapter";
+import { getUncoveredCalendarRanges } from "../holiday/coverage";
+import { resolveHolidayIndex } from "../holiday/resolveHolidayIndex";
+import {
+  BUILTIN_CHINA_CALENDAR_ID,
+  BUILTIN_JAPAN_CALENDAR_ID,
+  type HolidayLibrarySnapshot,
+} from "../holiday/types";
+import { createDefaultHolidayLayers } from "../template/holidayLayer";
 import { generateCalendarMonth } from "./generateCalendarMonth";
 import { calculateRequiredHolidayRange } from "./monthSequence";
 
@@ -33,26 +39,51 @@ describe("Calendar Domain End-to-End Integration", () => {
     };
 
     // 1. Adapter normalization
-    const japanDataset = parseJapanHolidaysJp(japanRaw);
-    const chinaDataset = parseChinaTimorHolidayYear(chinaRaw);
+    const japanUpdate = normalizeJapanHolidaysJp(
+      japanRaw,
+      BUILTIN_JAPAN_CALENDAR_ID,
+      "sync",
+    );
+    const chinaUpdate = normalizeChinaTimorHolidayYear(
+      chinaRaw,
+      BUILTIN_CHINA_CALENDAR_ID,
+      "sync",
+    );
 
-    expect(japanDataset.diagnostics).toEqual([]);
-    expect(chinaDataset.diagnostics).toEqual([]);
+    expect(japanUpdate.records.length).toBe(1);
+    expect(chinaUpdate.records.length).toBe(2);
 
-    expect(chinaDataset.entries).toContainEqual({
-      date: { year: 2027, month: 2, day: 6 },
-      info: {
-        china: {
-          type: "workday",
-          name: "春节前补班",
+    // 2. Build Library snapshot
+    const library: HolidayLibrarySnapshot = {
+      calendars: [
+        {
+          id: BUILTIN_CHINA_CALENDAR_ID,
+          name: "中国法定节假日",
+          builtin: true,
+          provider: "china-timor",
+          createdAt: "2026-08-28T00:00:00.000Z",
+          updatedAt: "2026-08-28T00:00:00.000Z",
         },
-      },
-    });
+        {
+          id: BUILTIN_JAPAN_CALENDAR_ID,
+          name: "日本祝日",
+          builtin: true,
+          provider: "japan-holidays-jp",
+          createdAt: "2026-08-28T00:00:00.000Z",
+          updatedAt: "2026-08-28T00:00:00.000Z",
+        },
+      ],
+      baseRecords: [...chinaUpdate.records, ...japanUpdate.records],
+      overrides: [],
+      coverage: [...chinaUpdate.coverage, ...japanUpdate.coverage],
+      syncStates: [],
+    };
 
-    // 2. Build index
-    const holidayIndex = buildHolidayIndex([chinaDataset, japanDataset]);
+    // 3. Resolve holiday index with default layers
+    const layers = createDefaultHolidayLayers();
+    const holidayIndex = resolveHolidayIndex({ library, layers });
 
-    // 3. Generate Calendar Month (January 2027)
+    // 4. Generate Calendar Month (January 2027)
     const jan2027 = generateCalendarMonth(2027, 1, holidayIndex);
 
     expect(jan2027.year).toBe(2027);
@@ -66,68 +97,50 @@ describe("Calendar Domain End-to-End Integration", () => {
       inCurrentMonth: false,
     });
 
-    // January 1st has merged China and Japan holiday info
+    // January 1st has merged China and Japan holiday occurrences
     const jan1Cell = jan2027.weeks[0][5];
-    expect(jan1Cell).toEqual({
-      date: { year: 2027, month: 1, day: 1 },
-      dayOfWeek: 5,
-      inCurrentMonth: true,
-      holiday: {
-        china: {
-          type: "holiday",
-          name: "元旦",
-        },
-        japan: {
-          name: "元日",
-        },
+    expect(jan1Cell).toBeDefined();
+    expect(jan1Cell.date).toEqual({ year: 2027, month: 1, day: 1 });
+    expect(jan1Cell.inCurrentMonth).toBe(true);
+    expect(jan1Cell.holiday?.occurrences).toEqual([
+      {
+        layerId: "builtin-cn-layer",
+        calendarId: BUILTIN_CHINA_CALENDAR_ID,
+        type: "holiday",
+        name: "元旦",
       },
-    });
+      {
+        layerId: "builtin-jp-layer",
+        calendarId: BUILTIN_JAPAN_CALENDAR_ID,
+        type: "holiday",
+        name: "元日",
+      },
+    ]);
 
-    // 4. Calculate required range for target year 2027
+    // 5. Calculate required range for target year 2027
     const requiredRange = calculateRequiredHolidayRange(2027);
     expect(requiredRange).toEqual({
       start: { year: 2026, month: 12, day: 1 },
       end: { year: 2028, month: 2, day: 29 },
     });
 
-    // 5. Check coverage diagnostics
-    const japanCoverageDiag = createCoverageDiagnostics(
-      japanDataset.source,
-      requiredRange,
-      japanDataset.coverage,
+    // 6. Check coverage gaps
+    const chinaCoverage = library.coverage.filter(
+      (c) => c.calendarId === BUILTIN_CHINA_CALENDAR_ID,
     );
-    expect(japanCoverageDiag).toEqual([
-      {
-        level: "warning",
-        code: "holiday-coverage-gap",
-        message:
-          "japan-holidays-jp holiday data does not cover 2026-12-01 through 2026-12-31.",
-      },
-      {
-        level: "warning",
-        code: "holiday-coverage-gap",
-        message:
-          "japan-holidays-jp holiday data does not cover 2028-01-01 through 2028-02-29.",
-      },
-    ]);
-
-    const chinaCoverageDiag = createCoverageDiagnostics(
-      chinaDataset.source,
+    const chinaGaps = getUncoveredCalendarRanges(
       requiredRange,
-      chinaDataset.coverage,
+      chinaCoverage,
+      BUILTIN_CHINA_CALENDAR_ID,
     );
-    expect(chinaCoverageDiag).toEqual([
+    expect(chinaGaps).toEqual([
       {
-        level: "warning",
-        code: "holiday-coverage-gap",
-        message:
-          "china-timor holiday data does not cover 2026-12-01 through 2026-12-31.",
+        start: { year: 2026, month: 12, day: 1 },
+        end: { year: 2026, month: 12, day: 31 },
       },
       {
-        level: "warning",
-        code: "holiday-coverage-gap",
-        message:
-          "china-timor holiday data does not cover 2028-01-01 through 2028-02-29.",
+        start: { year: 2028, month: 1, day: 1 },
+        end: { year: 2028, month: 2, day: 29 },
       },
     ]);
   });

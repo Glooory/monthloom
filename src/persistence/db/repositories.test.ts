@@ -37,8 +37,6 @@ describe("IndexedDB Repositories", () => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       targetYear: 2027,
-      chinaHolidayDataset: null,
-      japanHolidayDataset: null,
       document: createDefaultEditorDocument(),
     };
 

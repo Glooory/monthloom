@@ -1,17 +1,33 @@
 import JSZip from "jszip";
 import { bundleManifestSchema, type BundleManifest } from "./manifest";
-import { validateProjectSnapshot, validateTemplateSnapshot } from "../schema/validation";
+import {
+  validateHolidayLibrarySnapshot,
+  validateProjectSnapshot,
+  validateTemplateSnapshot,
+} from "../schema/validation";
+import {
+  mergeHolidayLibraries,
+  type HolidayMergeSummary,
+} from "../../domain/holiday/mergeLibrary";
 import { remapDocumentAssetIds } from "../assets/remapAssets";
 import { AssetRepository } from "../db/assetRepository";
+import { HolidayLibraryRepository } from "../db/holidayLibraryRepository";
 import { ProjectRepository } from "../db/projectRepository";
 import { TemplateRepository } from "../db/templateRepository";
-import { db as defaultDb, type MonthloomDatabase, type StoredAsset } from "../db/monthloomDb";
+import {
+  db as defaultDb,
+  type MonthloomDatabase,
+  type StoredAsset,
+} from "../db/monthloomDb";
 
 export type ImportResult = {
   type: "project" | "template";
   id: string;
   name: string;
+  holidaySummary?: HolidayMergeSummary;
+  skippedManualConflicts?: number;
 };
+
 
 export async function importMonthloomBundle(args: {
   bundleData: Blob | ArrayBuffer | Uint8Array;
@@ -32,7 +48,9 @@ export async function importMonthloomBundle(args: {
     const raw = JSON.parse(manifestText);
     manifest = bundleManifestSchema.parse(raw);
   } catch (err) {
-    throw new Error(`Invalid .monthloom manifest: ${err instanceof Error ? err.message : String(err)}`);
+    throw new Error(
+      `Invalid .monthloom manifest: ${err instanceof Error ? err.message : String(err)}`,
+    );
   }
 
   // 2. Read & validate payload
@@ -44,11 +62,17 @@ export async function importMonthloomBundle(args: {
   const rawPayload = JSON.parse(payloadText);
 
   // 3. Read and verify all declared assets into memory
-  const assetBuffers: Array<{ originalId: string; mimeType: string; data: Uint8Array }> = [];
+  const assetBuffers: Array<{
+    originalId: string;
+    mimeType: string;
+    data: Uint8Array;
+  }> = [];
   for (const assetEntry of manifest.assets) {
     const file = zip.file(assetEntry.filename);
     if (!file) {
-      throw new Error(`Missing declared bundle asset file: ${assetEntry.filename}`);
+      throw new Error(
+        `Missing declared bundle asset file: ${assetEntry.filename}`,
+      );
     }
     const data = await file.async("uint8array");
     assetBuffers.push({
@@ -77,35 +101,77 @@ export async function importMonthloomBundle(args: {
   const assetRepo = new AssetRepository(db);
   const projectRepo = new ProjectRepository(db);
   const templateRepo = new TemplateRepository(db);
+  const holidayRepo = new HolidayLibraryRepository(db);
 
   if (manifest.type === "project") {
     const validatedProject = validateProjectSnapshot(rawPayload);
-    const remappedDocument = remapDocumentAssetIds(validatedProject.document, assetIdMap);
+    const remappedDocument = remapDocumentAssetIds(
+      validatedProject.document,
+      assetIdMap,
+    );
     const newProjectId = `project-${crypto.randomUUID()}`;
 
-    await db.transaction("rw", [db.assets, db.projects], async () => {
-      // Save all assets
-      for (const asset of assetsToSave) {
-        await assetRepo.save(asset);
-      }
+    // Require holiday-library.json in project bundle
+    const holidayFile = zip.file("holiday-library.json");
+    if (!holidayFile) {
+      throw new Error(
+        "Invalid .monthloom project bundle: missing holiday-library.json",
+      );
+    }
+    const holidayText = await holidayFile.async("string");
+    const rawHoliday = JSON.parse(holidayText);
+    const incomingHoliday = validateHolidayLibrarySnapshot(rawHoliday);
 
-      // Save project
-      await projectRepo.save({
-        ...validatedProject,
-        id: newProjectId,
-        updatedAt: now,
-        document: remappedDocument,
-      });
-    });
+    let holidaySummary: HolidayMergeSummary | undefined;
+
+    await db.transaction(
+      "rw",
+      [
+        db.assets,
+        db.projects,
+        db.holidayCalendars,
+        db.holidayBaseRecords,
+        db.holidayOverrides,
+        db.holidayCoverage,
+        db.holidaySyncStates,
+      ],
+      async () => {
+        // 1. Ensure builtins & merge holiday library within this transaction
+        await holidayRepo.ensureBuiltins();
+        const localHoliday = await holidayRepo.getSnapshot();
+        const mergeResult = mergeHolidayLibraries(localHoliday, incomingHoliday);
+        holidaySummary = mergeResult.summary;
+        await holidayRepo.restoreSnapshot(mergeResult.merged);
+
+        // 2. Save all assets
+        for (const asset of assetsToSave) {
+          await assetRepo.save(asset);
+        }
+
+        // 3. Save project
+        await projectRepo.save({
+          ...validatedProject,
+          id: newProjectId,
+          updatedAt: now,
+          document: remappedDocument,
+        });
+      },
+    );
 
     return {
       type: "project",
       id: newProjectId,
       name: validatedProject.name,
+      holidaySummary,
+      skippedManualConflicts: holidaySummary?.skippedOverrideConflicts ?? 0,
     };
   } else {
+
     const validatedTemplate = validateTemplateSnapshot(rawPayload);
-    const remappedDocument = remapDocumentAssetIds(validatedTemplate.document, assetIdMap);
+    const remappedDocument = remapDocumentAssetIds(
+      validatedTemplate.document,
+      assetIdMap,
+    );
     const newTemplateId = `template-${crypto.randomUUID()}`;
 
     await db.transaction("rw", [db.assets, db.templates], async () => {

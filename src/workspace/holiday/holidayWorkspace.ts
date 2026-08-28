@@ -1,70 +1,43 @@
-import { calculateRequiredHolidayRange } from "../../domain/calendar/monthSequence";
-import { createCoverageDiagnostics } from "../../domain/holiday/coverage";
-import { buildHolidayIndex } from "../../domain/holiday/holidayIndex";
+import {
+  calculateRequiredHolidayRange,
+  createCalendarCoverageDiagnostics,
+} from "../../domain/holiday/coverage";
 import type {
-  HolidayDataset,
   HolidayDiagnostic,
-  HolidayIndex,
+  HolidayLibrarySnapshot,
 } from "../../domain/holiday/types";
-import { getT } from "../../shared/i18n/i18nStore";
-
-export function computeWorkspaceHolidayIndex(args: {
-  chinaHolidayDataset: HolidayDataset | null;
-  japanHolidayDataset: HolidayDataset | null;
-}): HolidayIndex {
-  const datasets: HolidayDataset[] = [];
-  if (args.chinaHolidayDataset) {
-    datasets.push(args.chinaHolidayDataset);
-  }
-  if (args.japanHolidayDataset) {
-    datasets.push(args.japanHolidayDataset);
-  }
-  return buildHolidayIndex(datasets);
-}
+import type { HolidayLayer } from "../../domain/template/holidayLayer";
 
 export function getWorkspaceHolidayDiagnostics(args: {
   targetYear: number;
-  chinaHolidayDataset: HolidayDataset | null;
-  japanHolidayDataset: HolidayDataset | null;
+  library: HolidayLibrarySnapshot;
+  layers: readonly HolidayLayer[];
 }): readonly HolidayDiagnostic[] {
-  const { targetYear, chinaHolidayDataset, japanHolidayDataset } = args;
+  const { targetYear, library, layers } = args;
   const diagnostics: HolidayDiagnostic[] = [];
-  const t = getT();
-
   const requiredRange = calculateRequiredHolidayRange(targetYear);
 
-  if (!chinaHolidayDataset) {
-    diagnostics.push({
-      level: "warning",
-      code: "china-dataset-missing",
-      message: t.workspace.missingChinaDataset,
-    });
-  } else {
-    diagnostics.push(
-      ...createCoverageDiagnostics(
-        "china-timor",
-        requiredRange,
-        chinaHolidayDataset.coverage,
-      ),
-    );
-    diagnostics.push(...chinaHolidayDataset.diagnostics);
-  }
+  for (const layer of layers) {
+    if (!layer.enabled) continue;
+    const calendar = library.calendars.find((c) => c.id === layer.calendarId);
+    if (!calendar) {
+      diagnostics.push({
+        level: "warning",
+        code: `missing-calendar-${layer.calendarId}`,
+        message: `Holiday calendar "${layer.calendarId}" referenced by holiday layer is missing from the global library.`,
+      });
+      continue;
+    }
 
-  if (!japanHolidayDataset) {
-    diagnostics.push({
-      level: "warning",
-      code: "japan-dataset-missing",
-      message: t.workspace.missingJapanDataset,
-    });
-  } else {
-    diagnostics.push(
-      ...createCoverageDiagnostics(
-        "japan-holidays-jp",
-        requiredRange,
-        japanHolidayDataset.coverage,
-      ),
+    const calendarCoverage = library.coverage.filter(
+      (c) => c.calendarId === layer.calendarId,
     );
-    diagnostics.push(...japanHolidayDataset.diagnostics);
+    const coverageDiags = createCalendarCoverageDiagnostics({
+      calendar,
+      requiredRange,
+      coverage: calendarCoverage,
+    });
+    diagnostics.push(...coverageDiags);
   }
 
   return diagnostics;

@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { generateCalendarMonth } from "../../domain/calendar/generateCalendarMonth";
-import { DEFAULT_MAIN_TEMPLATE, DEFAULT_MINI_TEMPLATE } from "../../domain/template/defaults";
+import {
+  DEFAULT_MAIN_TEMPLATE,
+  DEFAULT_MINI_TEMPLATE,
+} from "../../domain/template/defaults";
+import { createDefaultHolidayLayers } from "../../domain/template/holidayLayer";
 import type { MainTemplate } from "../../domain/template/mainTemplate";
 import type { MiniTemplate } from "../../domain/template/miniTemplate";
 import {
@@ -10,15 +14,124 @@ import {
 } from "./textRequirements";
 
 describe("Font Text Requirements Collection", () => {
-  it("collects all required characters for Main calendar per fontId", () => {
+  it("collects all required characters for Main calendar per fontId with dynamic holiday layers", () => {
+    const [cnLayer, jpLayer] = createDefaultHolidayLayers();
+    const customCnLayer = {
+      ...cnLayer,
+      main: {
+        ...cnLayer.main,
+        name: {
+          ...cnLayer.main.name,
+          typography: {
+            ...cnLayer.main.name.typography,
+            fontId: "font-zh",
+          },
+        },
+        holidayMarker: {
+          ...cnLayer.main.holidayMarker,
+          marker: {
+            type: "text" as const,
+            value: "休",
+            position: { anchor: "top-right" as const, offsetX: -8, offsetY: 8 },
+            typography: {
+              fontId: "font-zh",
+              fontSize: 10,
+              fontWeight: 400,
+              fontStyle: "normal" as const,
+              letterSpacing: 0,
+              color: "#DC2626",
+              opacity: 1,
+            },
+          },
+        },
+        workdayMarker: {
+          ...cnLayer.main.workdayMarker,
+          marker: {
+            type: "text" as const,
+            value: "班",
+            position: { anchor: "top-right" as const, offsetX: -8, offsetY: 8 },
+            typography: {
+              fontId: "font-zh",
+              fontSize: 10,
+              fontWeight: 400,
+              fontStyle: "normal" as const,
+              letterSpacing: 0,
+              color: "#4B5563",
+              opacity: 1,
+            },
+          },
+        },
+      },
+    };
+    const customJpLayer = {
+      ...jpLayer,
+      main: {
+        ...jpLayer.main,
+        name: {
+          ...jpLayer.main.name,
+          typography: {
+            ...jpLayer.main.name.typography,
+            fontId: "font-ja",
+          },
+        },
+      },
+    };
+
     const calendar = generateCalendarMonth(
       2027,
       5,
       new Map([
-        ["2027-04-30", { china: { type: "workday" } }], // adjacent previous
-        ["2027-05-01", { china: { type: "holiday", name: "劳动节" } }], // current
-        ["2027-05-03", { japan: { name: "憲法記念日" } }], // current
-        ["2027-06-05", { china: { type: "holiday", name: "芒种" } }], // adjacent next
+        [
+          "2027-04-30",
+          {
+            occurrences: [
+              {
+                layerId: cnLayer.id,
+                calendarId: cnLayer.calendarId,
+                type: "workday",
+              },
+            ],
+          },
+        ],
+        [
+          "2027-05-01",
+          {
+            occurrences: [
+              {
+                layerId: cnLayer.id,
+                calendarId: cnLayer.calendarId,
+                type: "holiday",
+                name: "劳动节",
+              },
+            ],
+          },
+        ],
+        [
+          "2027-05-03",
+          {
+            occurrences: [
+              {
+                layerId: jpLayer.id,
+                calendarId: jpLayer.calendarId,
+                type: "holiday",
+                name: "憲法記念日",
+              },
+            ],
+          },
+        ],
+        [
+          "2027-06-05",
+          {
+            occurrences: [
+              {
+                layerId: cnLayer.id,
+                calendarId: cnLayer.calendarId,
+                type: "holiday",
+                name: "芒种",
+              },
+            ],
+          },
+        ],
       ]),
     );
 
@@ -41,57 +154,43 @@ describe("Font Text Requirements Collection", () => {
           fontId: "font-en",
         },
       },
-      chinaMarkers: {
-        holiday: {
-          type: "text",
-          value: "休",
-          position: { anchor: "top-right", offsetX: 0, offsetY: 0 },
-          typography: {
-            fontId: "font-zh",
-            fontSize: 10,
-            fontWeight: 400,
-            fontStyle: "normal",
-            letterSpacing: 0,
-            color: "#000",
-            opacity: 1,
-          },
-        },
-        workday: {
-          type: "text",
-          value: "班",
-          position: { anchor: "top-right", offsetX: 0, offsetY: 0 },
-          typography: {
-            fontId: "font-zh",
-            fontSize: 10,
-            fontWeight: 400,
-            fontStyle: "normal",
-            letterSpacing: 0,
-            color: "#000",
-            opacity: 1,
-          },
-        },
-      },
-      chinaHolidayName: {
-        ...DEFAULT_MAIN_TEMPLATE.chinaHolidayName,
-        typography: {
-          ...DEFAULT_MAIN_TEMPLATE.chinaHolidayName.typography,
-          fontId: "font-zh",
-        },
-      },
-      japanHolidayName: {
-        ...DEFAULT_MAIN_TEMPLATE.japanHolidayName,
-        typography: {
-          ...DEFAULT_MAIN_TEMPLATE.japanHolidayName.typography,
-          fontId: "font-ja",
-        },
-      },
     };
 
-    const reqs = collectMainFontText({ calendar, template });
+    const reqs = collectMainFontText({
+      calendar,
+      template,
+      holidayLayers: [customCnLayer, customJpLayer],
+    });
 
     // font-en should have weekdays and all visible dates (including adjacent dates)
     const enText = reqs.get("font-en") ?? "";
-    for (const char of ["S", "u", "n", "M", "o", "T", "e", "W", "d", "h", "F", "r", "i", "a", "t", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]) {
+    for (const char of [
+      "S",
+      "u",
+      "n",
+      "M",
+      "o",
+      "T",
+      "e",
+      "W",
+      "d",
+      "h",
+      "F",
+      "r",
+      "i",
+      "a",
+      "t",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "0",
+    ]) {
       expect(enText).toContain(char);
     }
 
@@ -116,41 +215,89 @@ describe("Font Text Requirements Collection", () => {
   });
 
   it("does not collect text for image markers", () => {
-    const calendar = generateCalendarMonth(
-      2027,
-      5,
-      new Map([["2027-05-01", { china: { type: "holiday" } }]]),
-    );
-
-    const template: MainTemplate = {
-      ...DEFAULT_MAIN_TEMPLATE,
-      chinaMarkers: {
-        holiday: {
-          type: "image",
-          assetId: "marker-123",
-          position: { anchor: "top-right", offsetX: 0, offsetY: 0 },
-          width: 12,
-          height: 12,
-          opacity: 1,
+    const [cnLayer] = createDefaultHolidayLayers();
+    const customCnLayer = {
+      ...cnLayer,
+      main: {
+        ...cnLayer.main,
+        holidayMarker: {
+          enabled: true,
+          marker: {
+            type: "image" as const,
+            assetId: "marker-123",
+            position: {
+              anchor: "top-right" as const,
+              offsetX: 0,
+              offsetY: 0,
+            },
+            width: 12,
+            height: 12,
+            opacity: 1,
+          },
         },
-        workday: DEFAULT_MAIN_TEMPLATE.chinaMarkers.workday,
       },
     };
 
-    const reqs = collectMainFontText({ calendar, template });
-    // Should not throw and should collect standard date/weekday text
-    expect(reqs.size).toBeGreaterThan(0);
-  });
-
-  it("collects all required characters for Mini calendar per fontId", () => {
     const calendar = generateCalendarMonth(
       2027,
       5,
       new Map([
-        ["2027-04-30", { china: { type: "workday" } }], // adjacent previous
-        ["2027-05-01", { china: { type: "holiday", name: "劳动节" } }], // current
-        ["2027-05-03", { japan: { name: "憲法記念日" } }], // current
-        ["2027-06-05", { china: { type: "holiday", name: "芒种" } }], // adjacent next
+        [
+          "2027-05-01",
+          {
+            occurrences: [
+              {
+                layerId: cnLayer.id,
+                calendarId: cnLayer.calendarId,
+                type: "holiday",
+              },
+            ],
+          },
+        ],
+      ]),
+    );
+
+    const template: MainTemplate = DEFAULT_MAIN_TEMPLATE;
+
+    const reqs = collectMainFontText({
+      calendar,
+      template,
+      holidayLayers: [customCnLayer],
+    });
+    expect(reqs.size).toBeGreaterThan(0);
+  });
+
+  it("collects all required characters for Mini calendar per fontId", () => {
+    const [cnLayer] = createDefaultHolidayLayers();
+    const calendar = generateCalendarMonth(
+      2027,
+      5,
+      new Map([
+        [
+          "2027-04-30",
+          {
+            occurrences: [
+              {
+                layerId: cnLayer.id,
+                calendarId: cnLayer.calendarId,
+                type: "workday",
+              },
+            ],
+          },
+        ],
+        [
+          "2027-05-01",
+          {
+            occurrences: [
+              {
+                layerId: cnLayer.id,
+                calendarId: cnLayer.calendarId,
+                type: "holiday",
+                name: "劳动节",
+              },
+            ],
+          },
+        ],
       ]),
     );
 
@@ -185,7 +332,11 @@ describe("Font Text Requirements Collection", () => {
       },
     };
 
-    const reqs = collectMiniFontText({ calendar, template });
+    const reqs = collectMiniFontText({
+      calendar,
+      template,
+      holidayLayers: [cnLayer],
+    });
 
     // Month label font: "2027-5"
     const labelText = reqs.get("font-label") ?? "";
@@ -208,13 +359,11 @@ describe("Font Text Requirements Collection", () => {
     for (const char of ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]) {
       expect(dateText).toContain(char);
     }
-    // Should NOT contain Chinese or Japanese characters
+    // Should NOT contain Chinese characters
     expect(dateText).not.toContain("劳");
-    expect(dateText).not.toContain("憲");
 
-    // No holiday font should exist in mini requirements
+    // No holiday name font should exist in mini requirements
     expect(reqs.has("font-zh")).toBe(false);
-    expect(reqs.has("font-ja")).toBe(false);
   });
 
   it("merges multiple FontTextRequirements correctly", () => {

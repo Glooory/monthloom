@@ -11,7 +11,10 @@ describe("weekdayResize", () => {
 
   it("applies resize commit to main template height", () => {
     const doc = createDefaultEditorDocument();
-    const updated = applyWeekdayResizeCommit(doc, { deltaY: 15 });
+    const updated = applyWeekdayResizeCommit(doc, {
+      templateType: "main",
+      deltaY: 15,
+    });
     expect(updated.mainTemplate.weekdayRow.height).toBe(65);
   });
 });
