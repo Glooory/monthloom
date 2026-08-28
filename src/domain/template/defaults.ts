@@ -71,6 +71,7 @@ export const DEFAULT_MAIN_TEMPLATE: MainTemplate = {
     saturday: "#2563EB",
   },
 
+  showAdjacentDays: false,
   adjacentMonthOpacity: 0.4,
 };
 

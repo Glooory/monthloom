@@ -7,6 +7,8 @@ import {
   setGridBorder,
   getWeekdayRowSettings,
   setWeekdayRowSettings,
+  getAdjacentDaysSettings,
+  setAdjacentDaysSettings,
 } from "../model/templateBindings";
 import { DEFAULT_MAIN_TEMPLATE, DEFAULT_MINI_TEMPLATE } from "../../domain/template/defaults";
 import { useI18n } from "../../shared/i18n/i18nStore";
@@ -49,6 +51,7 @@ export const CanvasInspector: React.FC<CanvasInspectorProps> = ({
   const dimensions = getTemplateDimensions(document, activeTemplate);
   const weekdaySettings = getWeekdayRowSettings(document, activeTemplate);
   const gridBorder = activeTemplate === "main" ? getGridBorder(document) : null;
+  const adjacentDaysSettings = getAdjacentDaysSettings(document);
 
   const presets = activeTemplate === "main" ? MAIN_PRESETS : MINI_PRESETS;
   const defaultSize =
@@ -100,6 +103,14 @@ export const CanvasInspector: React.FC<CanvasInspectorProps> = ({
     borderColor?: string;
   }) => {
     const next = setWeekdayRowSettings(document, activeTemplate, updates);
+    onCommitDocument(next);
+  };
+
+  const handleAdjacentDaysChange = (updates: {
+    showAdjacentDays?: boolean;
+    adjacentMonthOpacity?: number;
+  }) => {
+    const next = setAdjacentDaysSettings(document, updates);
     onCommitDocument(next);
   };
 
@@ -315,6 +326,41 @@ export const CanvasInspector: React.FC<CanvasInspectorProps> = ({
           )}
         </div>
       </div>
+
+      {/* 3. Adjacent Month Dates Section (Main only) */}
+      {activeTemplate === "main" && (
+        <div className="inspector-section">
+          <div className="section-heading">{t.inspector.adjacentDaysHeading}</div>
+          <div className="field-group">
+            <div className="field-row">
+              <span className="field-label">{t.inspector.showAdjacentDaysLabel}</span>
+              <input
+                type="checkbox"
+                checked={adjacentDaysSettings.showAdjacentDays}
+                onChange={(e) => handleAdjacentDaysChange({ showAdjacentDays: e.target.checked })}
+                style={{ width: "16px", height: "16px", cursor: "pointer", accentColor: "var(--accent-primary)" }}
+              />
+            </div>
+
+            {adjacentDaysSettings.showAdjacentDays && (
+              <div className="weekday-border-options" style={{ marginTop: "6px" }}>
+                <div className="field-row">
+                  <span className="field-label">{t.inspector.adjacentDaysOpacityLabel}</span>
+                  <NumberInput
+                    min={0.05}
+                    max={1}
+                    step={0.05}
+                    value={adjacentDaysSettings.adjacentMonthOpacity}
+                    onChange={(adjacentMonthOpacity) =>
+                      handleAdjacentDaysChange({ adjacentMonthOpacity })
+                    }
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Helpful Hint */}
       <div

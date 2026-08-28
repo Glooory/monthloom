@@ -51,7 +51,7 @@ describe("Domain -> Layout Integration", () => {
 
     const scene = layoutMain({
       calendar,
-      template: DEFAULT_MAIN_TEMPLATE,
+      template: { ...DEFAULT_MAIN_TEMPLATE, showAdjacentDays: true },
       holidayLayers: layers,
       textMeasurer: fakeMeasurer,
     });
@@ -203,6 +203,7 @@ describe("Domain -> Layout Integration", () => {
   it("applies template configuration changes uniformly across all cells without date-specific overrides", () => {
     const customTemplate: MainTemplate = {
       ...DEFAULT_MAIN_TEMPLATE,
+      showAdjacentDays: true,
       date: {
         position: { anchor: "center", offsetX: 4, offsetY: -4 },
         typography: {

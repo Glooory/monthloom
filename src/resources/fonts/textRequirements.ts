@@ -38,9 +38,13 @@ export function collectMainFontText(args: {
     appendText(rawMap, template.weekdayRow.weekday.typography.fontId, w);
   }
 
-  // 2. All visible date cells (both current month and adjacent days)
+  // 2. All visible date cells (both current month and adjacent days if enabled)
   for (const week of calendar.weeks) {
     for (const cellData of week) {
+      if (!cellData.inCurrentMonth && !template.showAdjacentDays) {
+        continue;
+      }
+
       // Date number
       appendText(
         rawMap,

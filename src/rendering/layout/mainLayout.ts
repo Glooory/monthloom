@@ -139,6 +139,11 @@ export function layoutMain(args: {
       const cellRect = dateGrid.cells[cellIndex];
       cellIndex++;
 
+      // Skip adjacent month cells when showAdjacentDays is not enabled (default false)
+      if (!cellData.inCurrentMonth && !template.showAdjacentDays) {
+        continue;
+      }
+
       const opacityMultiplier = cellData.inCurrentMonth
         ? 1
         : template.adjacentMonthOpacity;

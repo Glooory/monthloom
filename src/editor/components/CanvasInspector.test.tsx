@@ -67,21 +67,29 @@ describe("CanvasInspector", () => {
     );
 
     const checkboxes = screen.getAllByRole("checkbox") as HTMLInputElement[];
-    // Date Grid border checkbox is checked by default
+    // 0: Date Grid border (checked by default)
     expect(checkboxes[0].checked).toBe(true);
-    // Weekday row border checkbox is unchecked by default
+    // 1: Weekday row border (unchecked by default)
     expect(checkboxes[1].checked).toBe(false);
+    // 2: Adjacent Days (unchecked by default, in Section 3)
+    expect(checkboxes[2].checked).toBe(false);
 
     // Toggle weekday border ON
     fireEvent.click(checkboxes[1]);
     expect(handleCommit).toHaveBeenCalledTimes(1);
-    const updatedDoc = handleCommit.mock.calls[0][0];
-    expect(updatedDoc.mainTemplate.weekdayRow.showBorder).toBe(true);
+    const weekdayBorderDoc = handleCommit.mock.calls[0][0];
+    expect(weekdayBorderDoc.mainTemplate.weekdayRow.showBorder).toBe(true);
+
+    // Toggle adjacent days ON
+    fireEvent.click(checkboxes[2]);
+    expect(handleCommit).toHaveBeenCalledTimes(2);
+    const adjacentDaysOnDoc = handleCommit.mock.calls[1][0];
+    expect(adjacentDaysOnDoc.mainTemplate.showAdjacentDays).toBe(true);
 
     // Toggle dateGrid border OFF
     fireEvent.click(checkboxes[0]);
-    expect(handleCommit).toHaveBeenCalledTimes(2);
-    const dateGridOffDoc = handleCommit.mock.calls[1][0];
+    expect(handleCommit).toHaveBeenCalledTimes(3);
+    const dateGridOffDoc = handleCommit.mock.calls[2][0];
     expect(dateGridOffDoc.mainTemplate.dateGrid.showBorder).toBe(false);
   });
 

@@ -104,6 +104,7 @@ const mainTemplateSchema = z.object({
     typography: typographySchema,
   }),
   colors: baseColorsSchema,
+  showAdjacentDays: z.boolean().optional(),
   adjacentMonthOpacity: z.number(),
 });
 

@@ -714,3 +714,34 @@ export function setTemplateDimensions(
     };
   }
 }
+
+export function getAdjacentDaysSettings(document: EditorDocument): {
+  showAdjacentDays: boolean;
+  adjacentMonthOpacity: number;
+} {
+  return {
+    showAdjacentDays: document.mainTemplate.showAdjacentDays ?? false,
+    adjacentMonthOpacity: document.mainTemplate.adjacentMonthOpacity,
+  };
+}
+
+export function setAdjacentDaysSettings(
+  document: EditorDocument,
+  settings: { showAdjacentDays?: boolean; adjacentMonthOpacity?: number },
+): EditorDocument {
+  return {
+    ...document,
+    mainTemplate: {
+      ...document.mainTemplate,
+      showAdjacentDays:
+        settings.showAdjacentDays !== undefined
+          ? settings.showAdjacentDays
+          : (document.mainTemplate.showAdjacentDays ?? false),
+      adjacentMonthOpacity:
+        settings.adjacentMonthOpacity !== undefined
+          ? Math.max(0, Math.min(1, settings.adjacentMonthOpacity))
+          : document.mainTemplate.adjacentMonthOpacity,
+    },
+  };
+}
+

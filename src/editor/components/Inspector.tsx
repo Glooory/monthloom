@@ -13,6 +13,7 @@ import {
   updateFontDescriptor,
   getWeekdayRowSettings,
   setWeekdayRowSettings,
+  setAdjacentDaysSettings,
 } from "../model/templateBindings";
 import { PositionInspector } from "./PositionInspector";
 import { TypographyInspector } from "./TypographyInspector";
@@ -21,6 +22,7 @@ import { BorderInspector } from "./BorderInspector";
 import { WeekdayInspector } from "./WeekdayInspector";
 import { CanvasInspector } from "./CanvasInspector";
 import { HolidayLayerInspector } from "./HolidayLayerInspector";
+import { NumberInput } from "./NumberInput";
 import { parseHolidaySemanticId } from "../model/holidaySemanticId";
 import { useI18n } from "../../shared/i18n/i18nStore";
 
@@ -205,6 +207,44 @@ export const Inspector: React.FC<InspectorProps> = ({
             onCommitDocument(setGridBorder(document, nextBorder))
           }
         />
+      )}
+
+      {/* 5. Adjacent Month Dates (Main Date only) */}
+      {semanticId === "main.date" && (
+        <div className="inspector-section">
+          <div className="section-heading">{t.inspector.adjacentDaysHeading}</div>
+          <div className="field-group">
+            <div className="field-row">
+              <span className="field-label">{t.inspector.showAdjacentDaysLabel}</span>
+              <input
+                type="checkbox"
+                checked={document.mainTemplate.showAdjacentDays ?? false}
+                onChange={(e) =>
+                  onCommitDocument(
+                    setAdjacentDaysSettings(document, { showAdjacentDays: e.target.checked }),
+                  )
+                }
+                style={{ width: "16px", height: "16px", cursor: "pointer", accentColor: "var(--accent-primary)" }}
+              />
+            </div>
+            {(document.mainTemplate.showAdjacentDays ?? false) && (
+              <div className="field-row" style={{ marginTop: "6px" }}>
+                <span className="field-label">{t.inspector.adjacentDaysOpacityLabel}</span>
+                <NumberInput
+                  min={0.05}
+                  max={1}
+                  step={0.05}
+                  value={document.mainTemplate.adjacentMonthOpacity ?? 0.4}
+                  onChange={(adjacentMonthOpacity) =>
+                    onCommitDocument(
+                      setAdjacentDaysSettings(document, { adjacentMonthOpacity }),
+                    )
+                  }
+                />
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

@@ -61,6 +61,9 @@ export interface TranslationDictionary {
     dateGridLinesLabel: string;
     showDateGridBorderLabel: string;
     weekdayBorderLabel: string;
+    adjacentDaysHeading: string;
+    showAdjacentDaysLabel: string;
+    adjacentDaysOpacityLabel: string;
     currentSelection: string;
     positionHeading: string;
     anchorLabel: string;

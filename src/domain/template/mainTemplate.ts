@@ -33,5 +33,6 @@ export type MainTemplate = Readonly<{
 
   date: TextElementTemplate;
   colors: CalendarBaseColors;
+  showAdjacentDays?: boolean;
   adjacentMonthOpacity: number;
 }>;

@@ -50,8 +50,18 @@ describe("Main Layout", () => {
     // 1 outer rect + 6 vertical + 4 horizontal = 11
     expect(gridNodes).toHaveLength(11);
 
-    // Date nodes (all 35 cells in a 5-week month)
-    const dateNodes = scene.nodes.filter((n) => n.semanticId === "main.date");
+    // Date nodes: default is showAdjacentDays=false -> 28 days for Feb 2027
+    const defaultScene = scene;
+    const defaultDateNodes = defaultScene.nodes.filter((n) => n.semanticId === "main.date");
+    expect(defaultDateNodes).toHaveLength(28);
+
+    // Date nodes when showAdjacentDays=true (all 35 cells in a 5-week month)
+    const sceneWithAdjacent = layoutMain({
+      calendar,
+      template: { ...DEFAULT_MAIN_TEMPLATE, showAdjacentDays: true },
+      textMeasurer: fakeMeasurer,
+    });
+    const dateNodes = sceneWithAdjacent.nodes.filter((n) => n.semanticId === "main.date");
     expect(dateNodes).toHaveLength(35);
     const firstDateNode = dateNodes[0];
     expect(firstDateNode?.kind).toBe("text");
@@ -132,6 +142,7 @@ describe("Main Layout", () => {
 
     const template: MainTemplate = {
       ...DEFAULT_MAIN_TEMPLATE,
+      showAdjacentDays: true,
       adjacentMonthOpacity: 0.5,
     };
 
@@ -456,17 +467,126 @@ describe("Main Layout", () => {
       const calendar = generateCalendarMonth(year, month);
       expect(calendar.weekCount).toBe(expectedWeeks);
 
-      const scene = layoutMain({
+      // Default (showAdjacentDays: false) renders only current month days
+      const defaultScene = layoutMain({
         calendar,
         template: DEFAULT_MAIN_TEMPLATE,
         textMeasurer: fakeMeasurer,
       });
+      const defaultDateNodes = defaultScene.nodes.filter((n) => n.semanticId === "main.date");
+      const expectedCurrentMonthDays = calendar.weeks.reduce(
+        (acc, week) => acc + week.filter((c) => c.inCurrentMonth).length,
+        0,
+      );
+      expect(defaultDateNodes).toHaveLength(expectedCurrentMonthDays);
 
-      expect(scene.width).toBe(DEFAULT_MAIN_TEMPLATE.width);
-      expect(scene.height).toBe(DEFAULT_MAIN_TEMPLATE.height);
-      const dateNodes = scene.nodes.filter((n) => n.semanticId === "main.date");
+      // With showAdjacentDays: true renders all grid cells (expectedWeeks * 7)
+      const sceneWithAdjacent = layoutMain({
+        calendar,
+        template: { ...DEFAULT_MAIN_TEMPLATE, showAdjacentDays: true },
+        textMeasurer: fakeMeasurer,
+      });
+
+      expect(sceneWithAdjacent.width).toBe(DEFAULT_MAIN_TEMPLATE.width);
+      expect(sceneWithAdjacent.height).toBe(DEFAULT_MAIN_TEMPLATE.height);
+      const dateNodes = sceneWithAdjacent.nodes.filter((n) => n.semanticId === "main.date");
       expect(dateNodes).toHaveLength(expectedWeeks * 7);
     }
+  });
+
+  it("omits adjacent month dates and holiday elements when showAdjacentDays is false", () => {
+    const layers = createDefaultHolidayLayers();
+    const cnLayer = layers[0];
+
+    const calendar = generateCalendarMonth(
+      2027,
+      5,
+      new Map([
+        [
+          "2027-04-30",
+          {
+            occurrences: [
+              {
+                layerId: cnLayer.id,
+                calendarId: cnLayer.calendarId,
+                type: "workday",
+              },
+            ],
+          },
+        ],
+        [
+          "2027-05-01",
+          {
+            occurrences: [
+              {
+                layerId: cnLayer.id,
+                calendarId: cnLayer.calendarId,
+                type: "holiday",
+                name: "劳动节",
+              },
+            ],
+          },
+        ],
+        [
+          "2027-06-01",
+          {
+            occurrences: [
+              {
+                layerId: cnLayer.id,
+                calendarId: cnLayer.calendarId,
+                type: "holiday",
+                name: "六一儿童节",
+              },
+            ],
+          },
+        ],
+      ]),
+    );
+
+    const scene = layoutMain({
+      calendar,
+      template: { ...DEFAULT_MAIN_TEMPLATE, showAdjacentDays: false },
+      holidayLayers: layers,
+      textMeasurer: fakeMeasurer,
+    });
+
+    // 2027-05 has 31 days in May
+    const dateNodes = scene.nodes.filter((n) => n.semanticId === "main.date");
+    expect(dateNodes).toHaveLength(31);
+
+    // Note: May 30 exists in May, but 04-30 / 04-25: let's check cell instance keys
+    const apr30Instance = scene.nodes.find(
+      (n) => "instanceKey" in n && n.instanceKey === "main.date:2027-04-30",
+    );
+    expect(apr30Instance).toBeUndefined();
+
+    const jun1Instance = scene.nodes.find(
+      (n) => "instanceKey" in n && n.instanceKey === "main.date:2027-06-01",
+    );
+    expect(jun1Instance).toBeUndefined();
+
+    // Adjacent holiday elements should not exist
+    const apr30Workday = scene.nodes.find(
+      (n) =>
+        "instanceKey" in n &&
+        n.instanceKey === `main.holiday.${cnLayer.id}.workdayMarker:2027-04-30`,
+    );
+    expect(apr30Workday).toBeUndefined();
+
+    const jun1Holiday = scene.nodes.find(
+      (n) =>
+        "instanceKey" in n &&
+        n.instanceKey === `main.holiday.${cnLayer.id}.name:2027-06-01`,
+    );
+    expect(jun1Holiday).toBeUndefined();
+
+    // Current month holiday elements DO exist
+    const may1Holiday = scene.nodes.find(
+      (n) =>
+        "instanceKey" in n &&
+        n.instanceKey === `main.holiday.${cnLayer.id}.name:2027-05-01`,
+    );
+    expect(may1Holiday).toBeDefined();
   });
 
   it("renders custom weekday labels specified in template", () => {

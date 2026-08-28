@@ -15,6 +15,8 @@ import {
   setWeekdayRowSettings,
   getTemplateDimensions,
   setTemplateDimensions,
+  getAdjacentDaysSettings,
+  setAdjacentDaysSettings,
 } from "./templateBindings";
 import type { PositionableSemanticId } from "./types";
 
@@ -199,5 +201,33 @@ describe("templateBindings", () => {
       offsetX: 2,
       offsetY: 2,
     });
+  });
+
+  it("handles adjacent days settings get and set (showAdjacentDays, adjacentMonthOpacity)", () => {
+    const doc = createDefaultEditorDocument();
+
+    const initialSettings = getAdjacentDaysSettings(doc);
+    expect(initialSettings.showAdjacentDays).toBe(false);
+    expect(initialSettings.adjacentMonthOpacity).toBe(0.4);
+
+    const updated = setAdjacentDaysSettings(doc, {
+      showAdjacentDays: true,
+      adjacentMonthOpacity: 0.7,
+    });
+
+    const updatedSettings = getAdjacentDaysSettings(updated);
+    expect(updatedSettings.showAdjacentDays).toBe(true);
+    expect(updatedSettings.adjacentMonthOpacity).toBe(0.7);
+
+    // Clamping of opacity
+    const clamped = setAdjacentDaysSettings(doc, {
+      adjacentMonthOpacity: 1.5,
+    });
+    expect(getAdjacentDaysSettings(clamped).adjacentMonthOpacity).toBe(1);
+
+    const clampedLow = setAdjacentDaysSettings(doc, {
+      adjacentMonthOpacity: -0.2,
+    });
+    expect(getAdjacentDaysSettings(clampedLow).adjacentMonthOpacity).toBe(0);
   });
 });

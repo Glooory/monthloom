@@ -154,6 +154,7 @@ describe("Font Text Requirements Collection", () => {
           fontId: "font-en",
         },
       },
+      showAdjacentDays: true,
     };
 
     const reqs = collectMainFontText({
