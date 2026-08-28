@@ -17,7 +17,7 @@ import { clientDeltaToSceneDelta } from "../interaction/pointerDelta";
 import { applyDragCommit } from "../interaction/drag";
 import { applyWeekdayResizeCommit } from "../interaction/weekdayResize";
 import { calculatePositionForAnchorChange } from "../interaction/anchorChange";
-import { matchUndoRedoShortcut } from "../interaction/keyboardShortcuts";
+import { matchUndoRedoShortcut, shouldIgnoreKeyboardShortcut } from "../interaction/keyboardShortcuts";
 import { setElementPosition } from "../model/templateBindings";
 import { buildEditorHitTargets } from "../selection/hitTargets";
 import { resolveSelectedTarget } from "../selection/selection";
@@ -62,6 +62,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     weekdayResize,
     setActiveTemplate,
     setSelection,
+    clearSelection,
     setDrag,
     setWeekdayResize,
   } = useUiStore();
@@ -223,6 +224,11 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     setWeekdayResize(null);
   };
 
+  const handleCancelWeekdayResize = () => {
+    resizeStartRef.current = null;
+    setWeekdayResize(null);
+  };
+
   // Anchor selection handler
   const handleSelectAnchor = (nextAnchor: Anchor) => {
     if (!scene || !selection) return;
@@ -263,7 +269,13 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         e.preventDefault();
         handleRedo();
       } else if (e.key === "Escape") {
-        handleCancelDrag();
+        if (dragStartRef.current || drag) {
+          handleCancelDrag();
+        } else if (resizeStartRef.current || weekdayResize) {
+          handleCancelWeekdayResize();
+        } else if (!shouldIgnoreKeyboardShortcut(e.target)) {
+          clearSelection();
+        }
       }
     };
 
@@ -271,7 +283,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [canUndo, canRedo]);
+  }, [canUndo, canRedo, drag, weekdayResize, clearSelection]);
 
   const [zoom, setZoom] = useState(1);
 
