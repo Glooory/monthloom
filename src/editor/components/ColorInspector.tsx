@@ -1,5 +1,6 @@
 import React from "react";
 import type { CalendarColors } from "../model/types";
+import { useI18n } from "../../shared/i18n/i18nStore";
 
 export interface ColorInspectorProps {
   isDateElement?: boolean;
@@ -16,13 +17,15 @@ export const ColorInspector: React.FC<ColorInspectorProps> = ({
   onChangeCalendarColors,
   onChangeColor,
 }) => {
+  const { t } = useI18n();
+
   if (isDateElement && calendarColors && onChangeCalendarColors) {
     return (
       <div className="inspector-section">
-        <div className="section-heading">日期颜色</div>
+        <div className="section-heading">{t.inspector.dateColorsHeading}</div>
         <div className="field-group">
           <div className="field-row">
-            <span className="field-label">工作日</span>
+            <span className="field-label">{t.inspector.weekdayColorLabel}</span>
             <div className="color-input-container">
               <input
                 type="color"
@@ -37,7 +40,7 @@ export const ColorInspector: React.FC<ColorInspectorProps> = ({
           </div>
 
           <div className="field-row">
-            <span className="field-label">周日</span>
+            <span className="field-label">{t.inspector.sundayColorLabel}</span>
             <div className="color-input-container">
               <input
                 type="color"
@@ -52,7 +55,7 @@ export const ColorInspector: React.FC<ColorInspectorProps> = ({
           </div>
 
           <div className="field-row">
-            <span className="field-label">周六</span>
+            <span className="field-label">{t.inspector.saturdayColorLabel}</span>
             <div className="color-input-container">
               <input
                 type="color"
@@ -67,7 +70,7 @@ export const ColorInspector: React.FC<ColorInspectorProps> = ({
           </div>
 
           <div className="field-row">
-            <span className="field-label">日本节假日</span>
+            <span className="field-label">{t.inspector.japanHolidayColorLabel}</span>
             <div className="color-input-container">
               <input
                 type="color"
@@ -88,9 +91,9 @@ export const ColorInspector: React.FC<ColorInspectorProps> = ({
   if (color && onChangeColor) {
     return (
       <div className="inspector-section">
-        <div className="section-heading">颜色</div>
+        <div className="section-heading">{t.inspector.colorHeading}</div>
         <div className="field-row">
-          <span className="field-label">文本颜色</span>
+          <span className="field-label">{t.inspector.textColorLabel}</span>
           <div className="color-input-container">
             <input
               type="color"

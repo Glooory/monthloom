@@ -14,8 +14,10 @@ import {
   getWorkspaceHolidayDiagnostics,
 } from "../workspace/holiday/holidayWorkspace";
 import { generateCalendarMonth } from "../domain/calendar/generateCalendarMonth";
+import { useI18n } from "../shared/i18n/i18nStore";
 
 export const App: React.FC = () => {
+  const { t, locale, toggleLocale } = useI18n();
   const {
     projectName,
     targetYear,
@@ -66,7 +68,7 @@ export const App: React.FC = () => {
             </svg>
           </div>
           <span className="monthloom-logo">Monthloom</span>
-          <span className="monthloom-brand-badge">Studio</span>
+          <span className="monthloom-brand-badge">{t.nav.brandSubtitle}</span>
         </div>
 
         <div className="monthloom-project-meta">
@@ -75,17 +77,17 @@ export const App: React.FC = () => {
             className="monthloom-project-name-input"
             value={projectName}
             onChange={(e) => setProjectInfo(currentProjectId, e.target.value)}
-            placeholder="未命名项目"
-            aria-label="项目名称"
+            placeholder={t.nav.projectPlaceholder}
+            aria-label={t.nav.projectNameAria}
           />
           <div className="monthloom-year-badge">
-            <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>目标年份：</span>
+            <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{t.nav.targetYearLabel}：</span>
             <input
               type="number"
               className="monthloom-year-input"
               value={targetYear}
               onChange={(e) => setTargetYear(Number(e.target.value) || 2027)}
-              aria-label="目标年份"
+              aria-label={t.nav.targetYearAria}
             />
           </div>
         </div>
@@ -102,7 +104,7 @@ export const App: React.FC = () => {
             <path d="M12 20h9" />
             <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
           </svg>
-          模板设计工坊
+          {t.nav.templateEditorTab}
         </button>
         <button
           type="button"
@@ -115,7 +117,7 @@ export const App: React.FC = () => {
             <rect x="14" y="14" width="7" height="7" />
             <rect x="3" y="14" width="7" height="7" />
           </svg>
-          全年 13 页总览
+          {t.nav.fullYearGalleryTab}
         </button>
         <button
           type="button"
@@ -126,7 +128,7 @@ export const App: React.FC = () => {
             <circle cx="12" cy="12" r="3" />
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
           </svg>
-          工作区与导出
+          {t.nav.workspaceTab}
         </button>
       </div>
 
@@ -134,7 +136,7 @@ export const App: React.FC = () => {
       <div className="monthloom-header-right">
         {activeView === "editor" && (
           <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "12px" }}>
-            <span style={{ color: "var(--text-secondary)" }}>预览月份：</span>
+            <span style={{ color: "var(--text-secondary)" }}>{t.nav.previewMonthLabel}：</span>
             <select
               className="field-input"
               style={{
@@ -149,41 +151,58 @@ export const App: React.FC = () => {
                 setEditingMonth({ year: y, month: m });
               }}
             >
-              <option value={`${targetYear}-1`}>{targetYear}年01月（主日历首月）</option>
-              <option value={`${targetYear}-5`}>{targetYear}年05月（主日历）</option>
-              <option value={`${targetYear}-12`}>{targetYear}年12月（主日历第12月）</option>
-              <option value={`${targetYear + 1}-1`}>{targetYear + 1}年01月（主日历第13月）</option>
-              <option value={`${targetYear - 1}-12`}>{targetYear - 1}年12月（附日历首月）</option>
-              <option value={`${targetYear + 1}-2`}>{targetYear + 1}年02月（附日历第15月）</option>
+              <option value={`${targetYear}-1`}>{t.nav.monthOptions.mainFirst(targetYear)}</option>
+              <option value={`${targetYear}-5`}>{t.nav.monthOptions.mainMonth(targetYear, 5)}</option>
+              <option value={`${targetYear}-12`}>{t.nav.monthOptions.mainLast(targetYear)}</option>
+              <option value={`${targetYear + 1}-1`}>{t.nav.monthOptions.mainNextYearFirst(targetYear)}</option>
+              <option value={`${targetYear - 1}-12`}>{t.nav.monthOptions.miniPrevYearLast(targetYear)}</option>
+              <option value={`${targetYear + 1}-2`}>{t.nav.monthOptions.miniNextYearSecond(targetYear)}</option>
             </select>
           </label>
         )}
+
+        {/* Language Switcher */}
+        <button
+          type="button"
+          className="studio-btn studio-btn-secondary"
+          onClick={toggleLocale}
+          title={locale === "zh" ? "Switch to English" : "切换为中文"}
+          style={{
+            minWidth: "48px",
+            justifyContent: "center",
+            fontWeight: 600,
+            fontSize: "12px",
+          }}
+          data-testid="language-toggle-btn"
+        >
+          {locale === "zh" ? "EN" : "中"}
+        </button>
 
         <button
           type="button"
           className="studio-btn studio-btn-secondary"
           onClick={() => setActiveView("workspace")}
-          title="管理项目快照与模板"
+          title={t.nav.quickManageProject}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
             <polyline points="17 21 17 13 7 13 7 21" />
           </svg>
-          项目与快照
+          {t.nav.quickManageProject}
         </button>
 
         <button
           type="button"
           className="studio-btn studio-btn-accent"
           onClick={() => setActiveView("workspace")}
-          title="前往批量导出 28 张矢量日历"
+          title={t.nav.quickExport}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <polyline points="8 17 12 21 16 17" />
             <line x1="12" y1="12" x2="12" y2="21" />
             <path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29" />
           </svg>
-          批量导出
+          {t.nav.quickExport}
         </button>
       </div>
     </>

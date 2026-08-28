@@ -1,5 +1,6 @@
 import { Component, ErrorInfo, ReactNode } from "react";
 import { getDisplayErrorMessage } from "../shared/runtime/errorMessage";
+import { getT } from "../shared/i18n/i18nStore";
 
 interface Props {
   children: ReactNode;
@@ -35,6 +36,8 @@ export class AppErrorBoundary extends Component<Props, State> {
         return this.props.fallback(this.state.error, this.resetError);
       }
 
+      const t = getT();
+
       return (
         <div
           role="alert"
@@ -61,9 +64,9 @@ export class AppErrorBoundary extends Component<Props, State> {
               boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)",
             }}
           >
-            <h2 style={{ color: "#EF4444", marginTop: 0, fontSize: "20px" }}>应用运行异常</h2>
+            <h2 style={{ color: "#EF4444", marginTop: 0, fontSize: "20px" }}>{t.errors.appErrorTitle}</h2>
             <p style={{ color: "#94A3B8", fontSize: "14px", lineHeight: 1.5, margin: "12px 0 20px" }}>
-              Monthloom 在渲染时遇到未预期的错误。您保存在本地数据库中的项目数据未受影响。
+              {t.errors.appErrorDesc}
             </p>
             <pre
               style={{
@@ -94,7 +97,7 @@ export class AppErrorBoundary extends Component<Props, State> {
                 cursor: "pointer",
               }}
             >
-              重新加载应用
+              {t.errors.reloadAppBtn}
             </button>
           </div>
         </div>

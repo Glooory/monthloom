@@ -3,8 +3,10 @@ import { useWorkspaceStore } from "../state/workspaceStore";
 import { getWorkspaceHolidayDiagnostics } from "../holiday/holidayWorkspace";
 import { HolidayImportControls } from "./HolidayImportControls";
 import { HolidayDiagnostics } from "./HolidayDiagnostics";
+import { useI18n } from "../../shared/i18n/i18nStore";
 
 export const WorkspaceControls: React.FC = () => {
+  const { t } = useI18n();
   const {
     projectName,
     targetYear,
@@ -40,18 +42,19 @@ export const WorkspaceControls: React.FC = () => {
           type="text"
           value={projectName}
           onChange={(e) => setProjectInfo(currentProjectId, e.target.value)}
+          placeholder={t.nav.projectPlaceholder}
           className="field-input"
           style={{
             fontSize: "15px",
             fontWeight: 600,
             width: "220px",
           }}
-          aria-label="项目名称"
+          aria-label={t.workspace.projectNameLabel}
         />
 
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <label htmlFor="target-year-input" style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
-            目标年份：
+            {t.workspace.targetYearLabel}
           </label>
           <input
             id="target-year-input"
@@ -60,7 +63,7 @@ export const WorkspaceControls: React.FC = () => {
             onChange={(e) => setTargetYear(Number(e.target.value) || 2027)}
             className="field-input field-input-number"
             style={{ width: "76px", textAlign: "center" }}
-            aria-label="目标年份"
+            aria-label={t.workspace.targetYearLabel}
           />
         </div>
       </div>

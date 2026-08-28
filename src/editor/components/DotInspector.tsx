@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import type { DotTemplate } from "../../domain/template/primitives";
+import { useI18n } from "../../shared/i18n/i18nStore";
 
 export interface DotInspectorProps {
   dot: DotTemplate;
@@ -7,6 +8,7 @@ export interface DotInspectorProps {
 }
 
 export const DotInspector: React.FC<DotInspectorProps> = ({ dot, onChangeDot }) => {
+  const { t } = useI18n();
   const [draftSize, setDraftSize] = useState(String(dot.size));
   const [draftOpacity, setDraftOpacity] = useState(String(dot.opacity));
 
@@ -17,11 +19,11 @@ export const DotInspector: React.FC<DotInspectorProps> = ({ dot, onChangeDot }) 
 
   return (
     <div className="inspector-section">
-      <div className="section-heading">圆点标记</div>
+      <div className="section-heading">{t.inspector.dotHeading}</div>
 
       <div className="field-group">
         <div className="field-row">
-          <span className="field-label">尺寸 (直径)</span>
+          <span className="field-label">{t.inspector.dotSizeLabel}</span>
           <input
             type="number"
             min="1"
@@ -38,7 +40,7 @@ export const DotInspector: React.FC<DotInspectorProps> = ({ dot, onChangeDot }) 
         </div>
 
         <div className="field-row">
-          <span className="field-label">圆点颜色</span>
+          <span className="field-label">{t.inspector.dotColorLabel}</span>
           <div className="color-input-container">
             <input
               type="color"
@@ -51,7 +53,7 @@ export const DotInspector: React.FC<DotInspectorProps> = ({ dot, onChangeDot }) 
         </div>
 
         <div className="field-row">
-          <span className="field-label">不透明度</span>
+          <span className="field-label">{t.inspector.opacityLabel}</span>
           <input
             type="number"
             step="0.05"

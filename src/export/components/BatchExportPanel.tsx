@@ -8,9 +8,11 @@ import { resolveFontEngine } from "../../resources/fonts/resolveFonts";
 import { renderFormalDocuments } from "../formal/renderFormalDocuments";
 import { createFormalExportZip, downloadExportZip } from "../formal/createExportZip";
 import { persistentAssetStore } from "../../editor/assets/persistentAssetStore";
+import { useI18n } from "../../shared/i18n/i18nStore";
 import type { ExportMode } from "../formal/types";
 
 export const BatchExportPanel: React.FC = () => {
+  const { t } = useI18n();
   const [exportMode, setExportMode] = useState<ExportMode>("outlined");
   const [isExporting, setIsExporting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -89,7 +91,7 @@ export const BatchExportPanel: React.FC = () => {
           <polyline points="7 10 12 15 17 10" />
           <line x1="12" y1="15" x2="12" y2="3" />
         </svg>
-        正式批量导出 SVG
+        {t.export.heading}
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
@@ -117,9 +119,9 @@ export const BatchExportPanel: React.FC = () => {
             style={{ marginTop: "2px" }}
           />
           <div>
-            <div style={{ fontWeight: 600 }}>转曲轮廓</div>
+            <div style={{ fontWeight: 600 }}>{t.export.outlinedTitle}</div>
             <div style={{ color: "var(--text-muted)", fontSize: "11px", marginTop: "2px" }}>
-              矢量路径，独立无外部字体依赖（推荐印刷）
+              {t.export.outlinedDesc}
             </div>
           </div>
         </label>
@@ -148,9 +150,9 @@ export const BatchExportPanel: React.FC = () => {
             style={{ marginTop: "2px" }}
           />
           <div>
-            <div style={{ fontWeight: 600 }}>可编辑文本</div>
+            <div style={{ fontWeight: 600 }}>{t.export.editableTitle}</div>
             <div style={{ color: "var(--text-muted)", fontSize: "11px", marginTop: "2px" }}>
-              保留 &lt;text&gt; 元素，方便二次排版
+              {t.export.editableDesc}
             </div>
           </div>
         </label>
@@ -167,7 +169,7 @@ export const BatchExportPanel: React.FC = () => {
             borderRadius: "var(--radius-sm)",
           }}
         >
-          导出失败：{errorMsg}
+          {t.export.exportFailed(errorMsg)}
         </div>
       )}
 
@@ -184,7 +186,7 @@ export const BatchExportPanel: React.FC = () => {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: "spin 1s linear infinite" }}>
                 <path d="M21 12a9 9 0 1 1-6.219-8.56" />
               </svg>
-              正在打包导出...
+              {t.export.exportBtnLoading}
             </>
           ) : (
             <>
@@ -193,13 +195,13 @@ export const BatchExportPanel: React.FC = () => {
                 <line x1="12" y1="12" x2="12" y2="21" />
                 <path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29" />
               </svg>
-              批量导出 28 张 SVG
+              {t.export.exportBtnNormal}
             </>
           )}
         </button>
 
         <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-          目标年份：{targetYear}（13 个主日历 + 15 个附日历）
+          {t.export.summaryNotice(targetYear)}
         </span>
       </div>
     </div>

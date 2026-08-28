@@ -6,6 +6,7 @@ import type {
   HolidayDiagnostic,
   HolidayIndex,
 } from "../../domain/holiday/types";
+import { getT } from "../../shared/i18n/i18nStore";
 
 export function computeWorkspaceHolidayIndex(args: {
   chinaHolidayDataset: HolidayDataset | null;
@@ -28,6 +29,7 @@ export function getWorkspaceHolidayDiagnostics(args: {
 }): readonly HolidayDiagnostic[] {
   const { targetYear, chinaHolidayDataset, japanHolidayDataset } = args;
   const diagnostics: HolidayDiagnostic[] = [];
+  const t = getT();
 
   const requiredRange = calculateRequiredHolidayRange(targetYear);
 
@@ -35,7 +37,7 @@ export function getWorkspaceHolidayDiagnostics(args: {
     diagnostics.push({
       level: "warning",
       code: "china-dataset-missing",
-      message: "未加载中国节假日数据。",
+      message: t.workspace.missingChinaDataset,
     });
   } else {
     diagnostics.push(
@@ -52,7 +54,7 @@ export function getWorkspaceHolidayDiagnostics(args: {
     diagnostics.push({
       level: "warning",
       code: "japan-dataset-missing",
-      message: "未加载日本节假日数据。",
+      message: t.workspace.missingJapanDataset,
     });
   } else {
     diagnostics.push(

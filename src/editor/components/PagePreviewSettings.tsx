@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import type { PageLayout, PagePreviewConfig } from "../../domain/pagePreview/types";
+import { useI18n } from "../../shared/i18n/i18nStore";
 
 export interface AssetStoreLike {
   addImage(file: File | Blob): Promise<string>;
@@ -74,6 +75,7 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
   onChange,
   assetStore,
 }) => {
+  const { t } = useI18n();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const layout = config.layout;
 
@@ -127,7 +129,7 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
             <line x1="3" y1="9" x2="21" y2="9" />
             <line x1="9" y1="21" x2="9" y2="9" />
           </svg>
-          页面版面与背景设置
+          {t.pagePreview.heading}
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -148,7 +150,7 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
               <polyline points="17 8 12 3 7 8" />
               <line x1="12" y1="3" x2="12" y2="15" />
             </svg>
-            {config.backgroundAssetId ? "替换背景图" : "上传背景图"}
+            {config.backgroundAssetId ? t.pagePreview.replaceBackground : t.pagePreview.uploadBackground}
           </button>
           {config.backgroundAssetId && (
             <button
@@ -161,7 +163,7 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
               }}
               onClick={handleClearBackground}
             >
-              清除背景图
+              {t.pagePreview.clearBackground}
             </button>
           )}
         </div>
@@ -169,28 +171,28 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))", gap: "10px 20px" }}>
         <NumberField
-          label="页面宽度"
+          label={t.pagePreview.widthLabel}
           value={layout.width}
           step={10}
           min={100}
           onChange={(width) => updateLayout({ width })}
         />
         <NumberField
-          label="页面高度"
+          label={t.pagePreview.heightLabel}
           value={layout.height}
           step={10}
           min={100}
           onChange={(height) => updateLayout({ height })}
         />
         <NumberField
-          label="页面边距"
+          label={t.pagePreview.paddingLabel}
           value={layout.padding}
           step={5}
           min={0}
           onChange={(padding) => updateLayout({ padding })}
         />
         <NumberField
-          label="主日历宽度比"
+          label={t.pagePreview.leftColumnRatioLabel}
           value={layout.leftColumnRatio}
           step={0.02}
           min={0.05}
@@ -198,14 +200,14 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
           onChange={(leftColumnRatio) => updateLayout({ leftColumnRatio })}
         />
         <NumberField
-          label="栏间距"
+          label={t.pagePreview.columnGapLabel}
           value={layout.columnGap}
           step={2}
           min={0}
           onChange={(columnGap) => updateLayout({ columnGap })}
         />
         <NumberField
-          label="附日历高度比"
+          label={t.pagePreview.miniHeightRatioLabel}
           value={layout.miniHeightRatio}
           step={0.02}
           min={0.05}
@@ -213,7 +215,7 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
           onChange={(miniHeightRatio) => updateLayout({ miniHeightRatio })}
         />
         <NumberField
-          label="附日历间距"
+          label={t.pagePreview.miniGapLabel}
           value={layout.miniGap}
           step={2}
           min={0}

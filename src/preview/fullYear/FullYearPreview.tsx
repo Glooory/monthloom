@@ -14,6 +14,7 @@ import {
   renderFullYearPreviewDocuments,
   type FullYearPreviewDocuments,
 } from "./renderDocuments";
+import { useI18n } from "../../shared/i18n/i18nStore";
 import "./full-year-preview.css";
 
 export interface FullYearPreviewProps {
@@ -48,6 +49,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
   assetResolver,
   fetchImpl,
 }) => {
+  const { t } = useI18n();
   // Subscribe only to canonical committed document
   const document = useDocumentStore((state) => state.document);
 
@@ -208,7 +210,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
     return (
       <div className="full-year-preview-container full-year-preview-studio">
         <div style={{ color: "var(--accent-rose)", padding: 24, textAlign: "center" }}>
-          全年预览渲染失败：{error.message}
+          {t.errors.previewRenderError(error.message)}
         </div>
       </div>
     );
@@ -228,7 +230,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
               <line x1="12" y1="2" x2="12" y2="22" />
               <polyline points="19 15 12 22 5 15" />
             </svg>
-            竖版长卷流
+            {t.gallery.viewModes.flow}
           </button>
           <button
             type="button"
@@ -241,7 +243,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
               <rect x="14" y="14" width="7" height="7" />
               <rect x="3" y="14" width="7" height="7" />
             </svg>
-            画廊网格 (13页)
+            {t.gallery.viewModes.grid}
           </button>
           <button
             type="button"
@@ -252,13 +254,13 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
               <rect x="4" y="2" width="16" height="20" rx="2" />
               <line x1="8" y1="6" x2="16" y2="6" />
             </svg>
-            单页专注
+            {t.gallery.viewModes.focus}
           </button>
         </div>
 
         <div className="gallery-actions">
           <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-            年份：<strong>{targetYear}</strong>（13页竖版全集）
+            {t.gallery.yearSummary(targetYear)}
           </span>
         </div>
       </div>
@@ -287,7 +289,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: "spin 1s linear infinite" }}>
               <path d="M21 12a9 9 0 1 1-6.219-8.56" />
             </svg>
-            <div>正在矢量化渲染 13 页挂历与 15 个附日历...</div>
+            <div>{t.gallery.loadingText}</div>
           </div>
         )}
 
@@ -316,9 +318,9 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
                 >
                   <div className="gallery-card-header">
                     <span className="gallery-card-title">
-                      第 {idx + 1} 页 • {pageDef.label}
+                      {t.gallery.pageLabel(idx, pageDef.label)}
                     </span>
-                    <span className="gallery-card-badge">点击专注检查</span>
+                    <span className="gallery-card-badge">{t.gallery.cardBadge}</span>
                   </div>
                   <PagePreview
                     definition={pageDef}
@@ -358,11 +360,11 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
                       disabled={focusPageIndex === 0}
                       onClick={() => setFocusPageIndex((p) => Math.max(0, p - 1))}
                     >
-                      ← 上一页
+                      {t.gallery.prevPage}
                     </button>
 
                     <div className="focus-nav-title">
-                      <span>第 {focusPageIndex + 1} / 13 页</span>
+                      <span>{t.gallery.pageIndicator(focusPageIndex + 1, 13)}</span>
                       <span style={{ color: "var(--accent-cyan)", fontSize: "16px" }}>{pageDef.label}</span>
                     </div>
 
@@ -372,7 +374,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
                       disabled={focusPageIndex === calendarSet.pages.length - 1}
                       onClick={() => setFocusPageIndex((p) => Math.min(calendarSet.pages.length - 1, p + 1))}
                     >
-                      下一页 →
+                      {t.gallery.nextPage}
                     </button>
                   </div>
 
@@ -396,7 +398,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
                         className={`filmstrip-item ${i === focusPageIndex ? "active" : ""}`}
                         onClick={() => setFocusPageIndex(i)}
                       >
-                        {i + 1}月 ({p.label})
+                        {t.gallery.filmstripMonth(i + 1, p.label)}
                       </button>
                     ))}
                   </div>

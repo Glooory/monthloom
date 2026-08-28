@@ -1,4 +1,5 @@
 import React from "react";
+import { useI18n } from "../../shared/i18n/i18nStore";
 
 export interface FullYearPreviewControlsProps {
   targetYear: number;
@@ -9,6 +10,8 @@ export const FullYearPreviewControls: React.FC<FullYearPreviewControlsProps> = (
   targetYear,
   onTargetYearChange,
 }) => {
+  const { t } = useI18n();
+
   return (
     <div
       style={{
@@ -22,10 +25,10 @@ export const FullYearPreviewControls: React.FC<FullYearPreviewControlsProps> = (
         fontSize: "13px",
       }}
     >
-      <strong style={{ color: "#38bdf8" }}>全年预览（13 页）</strong>
+      <strong style={{ color: "#38bdf8" }}>{t.nav.fullYearGalleryTab}</strong>
       <span style={{ color: "#475569" }}>|</span>
       <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <span>目标年份：</span>
+        <span>{t.nav.targetYearLabel}：</span>
         <input
           type="number"
           style={{

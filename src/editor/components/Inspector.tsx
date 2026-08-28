@@ -25,6 +25,7 @@ import { BorderInspector } from "./BorderInspector";
 import { MarkerInspector } from "./MarkerInspector";
 import { DotInspector } from "./DotInspector";
 import { WeekdayInspector } from "./WeekdayInspector";
+import { useI18n } from "../../shared/i18n/i18nStore";
 
 export interface InspectorProps {
   document: EditorDocument;
@@ -33,27 +34,14 @@ export interface InspectorProps {
   onAnchorChange?: (nextAnchor: Anchor) => void;
 }
 
-const SEMANTIC_TITLES: Record<string, string> = {
-  "main.date": "主日历日期",
-  "main.weekday": "星期标题行",
-  "main.chinaHolidayName": "中国节假日名称",
-  "main.japanHolidayName": "日本节假日名称",
-  "main.chinaHolidayMarker": "中国休假角标",
-  "main.chinaWorkdayMarker": "中国班/补班角标",
-  "main.grid": "日期网格",
-  "mini.monthLabel": "附日历月份标题",
-  "mini.weekday": "附日历星期行",
-  "mini.date": "附日历日期",
-  "mini.holidayDot": "附日历休假圆点",
-  "mini.workdayDot": "附日历班期圆点",
-};
-
 export const Inspector: React.FC<InspectorProps> = ({
   document,
   selection,
   onCommitDocument,
   onAnchorChange,
 }) => {
+  const { t } = useI18n();
+
   if (!selection) {
     return (
       <div className="editor-inspector">
@@ -63,9 +51,11 @@ export const Inspector: React.FC<InspectorProps> = ({
             <path d="M12 16v-4" />
             <path d="M12 8h.01" />
           </svg>
-          <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: "14px" }}>未选中任何元素</div>
+          <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: "14px" }}>
+            {t.inspector.emptySelectionTitle}
+          </div>
           <div style={{ lineHeight: 1.5, maxWidth: "220px" }}>
-            点击左侧图层列表或直接点击日历画布中的文字、角标进行编辑。
+            {t.inspector.emptySelectionHint}
           </div>
         </div>
       </div>
@@ -73,7 +63,7 @@ export const Inspector: React.FC<InspectorProps> = ({
   }
 
   const { semanticId, instanceKey } = selection;
-  const title = SEMANTIC_TITLES[semanticId] ?? semanticId;
+  const title = t.inspector.titles[semanticId] ?? semanticId;
 
   const isPositionable = semanticId !== "main.grid";
   const position = isPositionable
@@ -115,7 +105,7 @@ export const Inspector: React.FC<InspectorProps> = ({
     <div className="editor-inspector">
       <div className="inspector-header">
         <h3 className="inspector-title">{title}</h3>
-        <p className="inspector-subtitle">当前选中：{instanceKey}</p>
+        <p className="inspector-subtitle">{t.inspector.currentSelection}{instanceKey}</p>
       </div>
 
       {/* Weekday Custom Labels */}

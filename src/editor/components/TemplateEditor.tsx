@@ -24,6 +24,7 @@ import { resolveSelectedTarget } from "../selection/selection";
 import { EditorToolbar } from "./EditorToolbar";
 import { EditorCanvas } from "./EditorCanvas";
 import { Inspector } from "./Inspector";
+import { useI18n } from "../../shared/i18n/i18nStore";
 import "./editor.css";
 
 export interface TemplateEditorProps {
@@ -39,6 +40,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   fetchImpl,
   assetResolver = memoryAssetStore,
 }) => {
+  const { t } = useI18n();
   const document = useDocumentStore((s) => s.document);
   const commitDocument = useDocumentStore((s) => s.commitDocument);
 
@@ -288,21 +290,21 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const [zoom, setZoom] = useState(1);
 
   const mainLayers: Array<{ id: PositionableSemanticId | "main.grid"; label: string; key: string }> = [
-    { id: "main.date", label: "主日期文本", key: "main.date:default" },
-    { id: "main.weekday", label: "星期表头", key: "main.weekday:default" },
-    { id: "main.chinaHolidayName", label: "中国节假日名", key: "main.chinaHolidayName:default" },
-    { id: "main.japanHolidayName", label: "日本节假日名", key: "main.japanHolidayName:default" },
-    { id: "main.chinaHolidayMarker", label: "休假角标 (休)", key: "main.chinaHolidayMarker:default" },
-    { id: "main.chinaWorkdayMarker", label: "班期角标 (班)", key: "main.chinaWorkdayMarker:default" },
-    { id: "main.grid", label: "网格边框", key: "main.grid:default" },
+    { id: "main.date", label: t.layers.mainDate, key: "main.date:default" },
+    { id: "main.weekday", label: t.layers.mainWeekday, key: "main.weekday:default" },
+    { id: "main.chinaHolidayName", label: t.layers.mainChinaHolidayName, key: "main.chinaHolidayName:default" },
+    { id: "main.japanHolidayName", label: t.layers.mainJapanHolidayName, key: "main.japanHolidayName:default" },
+    { id: "main.chinaHolidayMarker", label: t.layers.mainChinaHolidayMarker, key: "main.chinaHolidayMarker:default" },
+    { id: "main.chinaWorkdayMarker", label: t.layers.mainChinaWorkdayMarker, key: "main.chinaWorkdayMarker:default" },
+    { id: "main.grid", label: t.layers.mainGrid, key: "main.grid:default" },
   ];
 
   const miniLayers: Array<{ id: PositionableSemanticId; label: string; key: string }> = [
-    { id: "mini.monthLabel", label: "月份标题", key: "mini.monthLabel:default" },
-    { id: "mini.weekday", label: "星期表头", key: "mini.weekday:default" },
-    { id: "mini.date", label: "附日历日期", key: "mini.date:default" },
-    { id: "mini.holidayDot", label: "休假圆点", key: "mini.holidayDot:default" },
-    { id: "mini.workdayDot", label: "班期圆点", key: "mini.workdayDot:default" },
+    { id: "mini.monthLabel", label: t.layers.miniMonthLabel, key: "mini.monthLabel:default" },
+    { id: "mini.weekday", label: t.layers.miniWeekday, key: "mini.weekday:default" },
+    { id: "mini.date", label: t.layers.miniDate, key: "mini.date:default" },
+    { id: "mini.holidayDot", label: t.layers.miniHolidayDot, key: "mini.holidayDot:default" },
+    { id: "mini.workdayDot", label: t.layers.miniWorkdayDot, key: "mini.workdayDot:default" },
   ];
 
   const currentLayers = activeTemplate === "main" ? mainLayers : miniLayers;
@@ -311,7 +313,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     <div className="monthloom-editor">
       {fontError && (
         <div className="font-error-banner">
-          <span>字体加载失败：{fontError.message}</span>
+          <span>{t.errors.fontLoadError(fontError.message)}</span>
         </div>
       )}
 
@@ -331,9 +333,9 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         {/* Left Layers / Elements Sidebar */}
         <div className="editor-layers-sidebar">
           <div className="layers-header">
-            <span>图层元素</span>
+            <span>{t.layers.title}</span>
             <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>
-              {activeTemplate === "main" ? "主模板" : "附模板"}
+              {activeTemplate === "main" ? t.layers.mainBadge : t.layers.miniBadge}
             </span>
           </div>
           <div className="layers-list">

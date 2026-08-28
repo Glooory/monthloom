@@ -4,6 +4,7 @@ import type { FontDescriptor } from "../../domain/template/font";
 import { TypographyInspector } from "./TypographyInspector";
 import { ColorInspector } from "./ColorInspector";
 import { memoryAssetStore } from "../assets/memoryAssetStore";
+import { useI18n } from "../../shared/i18n/i18nStore";
 
 export interface MarkerInspectorProps {
   marker: MarkerTemplate;
@@ -18,6 +19,7 @@ export const MarkerInspector: React.FC<MarkerInspectorProps> = ({
   onChangeMarker,
   onChangeFontDescriptor,
 }) => {
+  const { t } = useI18n();
   const [draftValue, setDraftValue] = useState(marker.type === "text" ? marker.value : "");
   const [draftWidth, setDraftWidth] = useState(
     marker.type === "image" ? String(marker.width) : "16",
@@ -85,24 +87,24 @@ export const MarkerInspector: React.FC<MarkerInspectorProps> = ({
 
   return (
     <div className="inspector-section">
-      <div className="section-heading">角标标记</div>
+      <div className="section-heading">{t.inspector.markerHeading}</div>
 
       <div className="field-row" style={{ marginBottom: 12 }}>
-        <span className="field-label">类型</span>
+        <span className="field-label">{t.inspector.markerTypeLabel}</span>
         <div style={{ display: "flex", gap: 6 }}>
           <button
             type="button"
             className={`toolbar-btn ${marker.type === "text" ? "active" : ""}`}
             onClick={() => toggleType("text")}
           >
-            文字
+            {t.inspector.markerTypeText}
           </button>
           <button
             type="button"
             className={`toolbar-btn ${marker.type === "image" ? "active" : ""}`}
             onClick={() => toggleType("image")}
           >
-            图片
+            {t.inspector.markerTypeImage}
           </button>
         </div>
       </div>
@@ -110,7 +112,7 @@ export const MarkerInspector: React.FC<MarkerInspectorProps> = ({
       {marker.type === "text" && (
         <>
           <div className="field-row" style={{ marginBottom: 12 }}>
-            <span className="field-label">文本内容</span>
+            <span className="field-label">{t.inspector.markerTextLabel}</span>
             <input
               type="text"
               className="field-input"
@@ -150,7 +152,7 @@ export const MarkerInspector: React.FC<MarkerInspectorProps> = ({
       {marker.type === "image" && (
         <div className="field-group">
           <div className="field-row">
-            <span className="field-label">图片文件</span>
+            <span className="field-label">{t.inspector.markerImageFileLabel}</span>
             <input
               type="file"
               accept="image/*"
@@ -160,7 +162,7 @@ export const MarkerInspector: React.FC<MarkerInspectorProps> = ({
           </div>
 
           <div className="field-row">
-            <span className="field-label">宽度</span>
+            <span className="field-label">{t.inspector.markerWidthLabel}</span>
             <input
               type="number"
               className="field-input field-input-number"
@@ -176,7 +178,7 @@ export const MarkerInspector: React.FC<MarkerInspectorProps> = ({
           </div>
 
           <div className="field-row">
-            <span className="field-label">高度</span>
+            <span className="field-label">{t.inspector.markerHeightLabel}</span>
             <input
               type="number"
               className="field-input field-input-number"
@@ -192,7 +194,7 @@ export const MarkerInspector: React.FC<MarkerInspectorProps> = ({
           </div>
 
           <div className="field-row">
-            <span className="field-label">不透明度</span>
+            <span className="field-label">{t.inspector.opacityLabel}</span>
             <input
               type="number"
               step="0.05"

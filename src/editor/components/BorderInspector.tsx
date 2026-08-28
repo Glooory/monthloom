@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useI18n } from "../../shared/i18n/i18nStore";
 
 export interface BorderInspectorProps {
   borderWidth: number;
@@ -11,6 +12,7 @@ export const BorderInspector: React.FC<BorderInspectorProps> = ({
   borderColor,
   onChangeBorder,
 }) => {
+  const { t } = useI18n();
   const [draftWidth, setDraftWidth] = useState(String(borderWidth));
 
   useEffect(() => {
@@ -28,10 +30,10 @@ export const BorderInspector: React.FC<BorderInspectorProps> = ({
 
   return (
     <div className="inspector-section">
-      <div className="section-heading">网格边框</div>
+      <div className="section-heading">{t.inspector.borderHeading}</div>
       <div className="field-group">
         <div className="field-row">
-          <span className="field-label">边框粗细</span>
+          <span className="field-label">{t.inspector.borderWidthLabel}</span>
           <input
             type="number"
             min="0"
@@ -47,7 +49,7 @@ export const BorderInspector: React.FC<BorderInspectorProps> = ({
         </div>
 
         <div className="field-row">
-          <span className="field-label">边框颜色</span>
+          <span className="field-label">{t.inspector.borderColorLabel}</span>
           <div className="color-input-container">
             <input
               type="color"

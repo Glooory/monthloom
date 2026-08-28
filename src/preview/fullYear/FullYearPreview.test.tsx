@@ -127,11 +127,11 @@ describe("FullYearPreview", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /竖版长卷流/i }).className).toContain("active");
+      expect(screen.getByRole("button", { name: /连续长卷/i }).className).toContain("active");
     });
 
     // Switch to grid mode
-    fireEvent.click(screen.getByRole("button", { name: /画廊网格/i }));
+    fireEvent.click(screen.getByRole("button", { name: /13页平铺/i }));
     expect(localStorage.getItem("monthloom_preview_mode")).toBe("grid");
 
     unmount();
@@ -145,7 +145,7 @@ describe("FullYearPreview", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /画廊网格/i }).className).toContain("active");
+      expect(screen.getByRole("button", { name: /13页平铺/i }).className).toContain("active");
     });
   });
 });

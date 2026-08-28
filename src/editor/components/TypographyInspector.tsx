@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import type { Typography } from "../../domain/template/primitives";
 import type { FontDescriptor } from "../../domain/template/font";
+import { useI18n } from "../../shared/i18n/i18nStore";
 
 export interface TypographyInspectorProps {
   typography: Typography;
@@ -15,6 +16,7 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
   onChangeTypography,
   onChangeFontDescriptor,
 }) => {
+  const { t } = useI18n();
   const currentFamily = fontDescriptor?.family ?? "Noto Sans";
   const [draftFamily, setDraftFamily] = useState(currentFamily);
   const [draftSize, setDraftSize] = useState(String(typography.fontSize));
@@ -73,11 +75,11 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
 
   return (
     <div className="inspector-section">
-      <div className="section-heading">文字排版</div>
+      <div className="section-heading">{t.inspector.typographyHeading}</div>
 
       <div className="field-group">
         <div className="field-row">
-          <span className="field-label">字体族</span>
+          <span className="field-label">{t.inspector.fontFamilyLabel}</span>
           <input
             type="text"
             className="field-input"
@@ -92,7 +94,7 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
         </div>
 
         <div className="field-row">
-          <span className="field-label">字重</span>
+          <span className="field-label">{t.inspector.fontWeightLabel}</span>
           <select
             className="field-input"
             value={typography.fontWeight}
@@ -104,17 +106,17 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
               }
             }}
           >
-            <option value={300}>300 - 细体 (Light)</option>
-            <option value={400}>400 - 常规 (Regular)</option>
-            <option value={500}>500 - 中粗 (Medium)</option>
-            <option value={600}>600 - 半粗 (SemiBold)</option>
-            <option value={700}>700 - 粗体 (Bold)</option>
-            <option value={900}>900 - 特粗 (Black)</option>
+            <option value={300}>{t.inspector.fontWeights.light}</option>
+            <option value={400}>{t.inspector.fontWeights.regular}</option>
+            <option value={500}>{t.inspector.fontWeights.medium}</option>
+            <option value={600}>{t.inspector.fontWeights.semiBold}</option>
+            <option value={700}>{t.inspector.fontWeights.bold}</option>
+            <option value={900}>{t.inspector.fontWeights.black}</option>
           </select>
         </div>
 
         <div className="field-row">
-          <span className="field-label">字形样式</span>
+          <span className="field-label">{t.inspector.fontStyleLabel}</span>
           <select
             className="field-input"
             value={typography.fontStyle}
@@ -126,13 +128,13 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
               }
             }}
           >
-            <option value="normal">常规 (Normal)</option>
-            <option value="italic">斜体 (Italic)</option>
+            <option value="normal">{t.inspector.fontStyles.normal}</option>
+            <option value="italic">{t.inspector.fontStyles.italic}</option>
           </select>
         </div>
 
         <div className="field-row">
-          <span className="field-label">字号大小</span>
+          <span className="field-label">{t.inspector.fontSizeLabel}</span>
           <input
             type="number"
             className="field-input field-input-number"
@@ -147,7 +149,7 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
         </div>
 
         <div className="field-row">
-          <span className="field-label">字间距</span>
+          <span className="field-label">{t.inspector.letterSpacingLabel}</span>
           <input
             type="number"
             className="field-input field-input-number"
@@ -162,7 +164,7 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
         </div>
 
         <div className="field-row">
-          <span className="field-label">不透明度</span>
+          <span className="field-label">{t.inspector.opacityLabel}</span>
           <input
             type="number"
             step="0.05"

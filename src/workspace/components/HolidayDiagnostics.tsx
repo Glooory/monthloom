@@ -1,5 +1,6 @@
 import React from "react";
 import type { HolidayDiagnostic } from "../../domain/holiday/types";
+import { useI18n } from "../../shared/i18n/i18nStore";
 
 export type HolidayDiagnosticsProps = {
   diagnostics: readonly HolidayDiagnostic[];
@@ -8,6 +9,8 @@ export type HolidayDiagnosticsProps = {
 export const HolidayDiagnostics: React.FC<HolidayDiagnosticsProps> = ({
   diagnostics,
 }) => {
+  const { t } = useI18n();
+
   if (diagnostics.length === 0) {
     return null;
   }
@@ -32,7 +35,7 @@ export const HolidayDiagnostics: React.FC<HolidayDiagnosticsProps> = ({
           <line x1="12" y1="9" x2="12" y2="13" />
           <line x1="12" y1="17" x2="12.01" y2="17" />
         </svg>
-        节假日覆盖诊断
+        {t.workspace.diagnosticsHeading}
       </div>
       <ul style={{ margin: 0, paddingLeft: "18px", lineHeight: 1.5 }}>
         {diagnostics.map((d, i) => (

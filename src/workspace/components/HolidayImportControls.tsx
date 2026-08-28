@@ -4,6 +4,7 @@ import {
   parseChinaHolidayJsonString,
   parseJapanHolidayJsonString,
 } from "../holiday/importHolidayJson";
+import { useI18n } from "../../shared/i18n/i18nStore";
 
 export type HolidayImportControlsProps = {
   chinaDataset: HolidayDataset | null;
@@ -18,6 +19,7 @@ export const HolidayImportControls: React.FC<HolidayImportControlsProps> = ({
   onImportChina,
   onImportJapan,
 }) => {
+  const { t } = useI18n();
   const chinaInputRef = useRef<HTMLInputElement>(null);
   const japanInputRef = useRef<HTMLInputElement>(null);
 
@@ -50,7 +52,7 @@ export const HolidayImportControls: React.FC<HolidayImportControlsProps> = ({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
       <div style={{ fontWeight: 600, fontSize: "13px", color: "var(--text-primary)" }}>
-        节假日数据
+        {t.workspace.holidaySectionTitle}
       </div>
 
       <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
@@ -68,7 +70,7 @@ export const HolidayImportControls: React.FC<HolidayImportControlsProps> = ({
           className="studio-btn studio-btn-secondary"
           style={{ fontSize: "12px", padding: "5px 10px" }}
         >
-          {chinaDataset ? "替换中国节假日 (JSON)" : "导入中国节假日 (JSON)"}
+          {chinaDataset ? t.workspace.replaceChinaBtn : t.workspace.importChinaBtn}
         </button>
         {chinaDataset && (
           <button
@@ -83,7 +85,7 @@ export const HolidayImportControls: React.FC<HolidayImportControlsProps> = ({
               borderColor: "rgba(244, 63, 94, 0.25)",
             }}
           >
-            清除 ({chinaDataset.entries.length} 天)
+            {t.workspace.clearChinaBtn(chinaDataset.entries.length)}
           </button>
         )}
       </div>
@@ -103,7 +105,7 @@ export const HolidayImportControls: React.FC<HolidayImportControlsProps> = ({
           className="studio-btn studio-btn-secondary"
           style={{ fontSize: "12px", padding: "5px 10px" }}
         >
-          {japanDataset ? "替换日本节假日 (JSON)" : "导入日本节假日 (JSON)"}
+          {japanDataset ? t.workspace.replaceJapanBtn : t.workspace.importJapanBtn}
         </button>
         {japanDataset && (
           <button
@@ -118,7 +120,7 @@ export const HolidayImportControls: React.FC<HolidayImportControlsProps> = ({
               borderColor: "rgba(244, 63, 94, 0.25)",
             }}
           >
-            清除 ({japanDataset.entries.length} 天)
+            {t.workspace.clearJapanBtn(japanDataset.entries.length)}
           </button>
         )}
       </div>

@@ -5,8 +5,10 @@ import { createMonthloomBundle } from "../bundle/exportBundle";
 import { importMonthloomBundle } from "../bundle/importBundle";
 import { ProjectRepository } from "../db/projectRepository";
 import { useWorkspaceStore } from "../../workspace/state/workspaceStore";
+import { useI18n } from "../../shared/i18n/i18nStore";
 
 export const PersistenceControls: React.FC = () => {
+  const { t } = useI18n();
   const [projectList, setProjectList] = useState<Array<{ id: string; name: string; targetYear: number; updatedAt: string }>>([]);
   const [templateList, setTemplateList] = useState<Array<{ id: string; name: string; updatedAt: string }>>([]);
   const [templateNameInput, setTemplateNameInput] = useState("");
@@ -40,9 +42,9 @@ export const PersistenceControls: React.FC = () => {
     try {
       await projectOperations.saveCurrentProject();
       await reloadLists();
-      showStatus("项目保存成功！");
+      showStatus(t.persistence.saveProjectSuccess);
     } catch (err) {
-      showStatus(`保存项目失败：${err instanceof Error ? err.message : String(err)}`);
+      showStatus(t.persistence.saveProjectError(err instanceof Error ? err.message : String(err)));
     }
   };
 
@@ -50,20 +52,20 @@ export const PersistenceControls: React.FC = () => {
     try {
       await projectOperations.loadProject(id);
       setShowProjectsModal(false);
-      showStatus("项目加载成功！");
+      showStatus(t.persistence.loadProjectSuccess);
     } catch (err) {
-      showStatus(`加载项目失败：${err instanceof Error ? err.message : String(err)}`);
+      showStatus(t.persistence.loadProjectError(err instanceof Error ? err.message : String(err)));
     }
   };
 
   const handleDeleteProject = async (id: string) => {
-    if (!confirm("确定要删除该项目吗？")) return;
+    if (!confirm(t.persistence.deleteProjectConfirm)) return;
     try {
       await projectOperations.deleteProject(id);
       await reloadLists();
-      showStatus("项目已删除。");
+      showStatus(t.persistence.deleteProjectSuccess);
     } catch (err) {
-      showStatus(`删除项目失败：${err instanceof Error ? err.message : String(err)}`);
+      showStatus(t.persistence.deleteProjectError(err instanceof Error ? err.message : String(err)));
     }
   };
 
@@ -73,9 +75,9 @@ export const PersistenceControls: React.FC = () => {
       await templateOperations.saveCurrentTemplate(templateNameInput.trim());
       setTemplateNameInput("");
       await reloadLists();
-      showStatus("模板保存成功！");
+      showStatus(t.persistence.saveTemplateSuccess);
     } catch (err) {
-      showStatus(`保存模板失败：${err instanceof Error ? err.message : String(err)}`);
+      showStatus(t.persistence.saveTemplateError(err instanceof Error ? err.message : String(err)));
     }
   };
 
@@ -83,20 +85,20 @@ export const PersistenceControls: React.FC = () => {
     try {
       await templateOperations.applyTemplate(id);
       setShowTemplatesModal(false);
-      showStatus("模板应用成功！");
+      showStatus(t.persistence.applyTemplateSuccess);
     } catch (err) {
-      showStatus(`应用模板失败：${err instanceof Error ? err.message : String(err)}`);
+      showStatus(t.persistence.applyTemplateError(err instanceof Error ? err.message : String(err)));
     }
   };
 
   const handleDeleteTemplate = async (id: string) => {
-    if (!confirm("确定要删除该模板吗？")) return;
+    if (!confirm(t.persistence.deleteTemplateConfirm)) return;
     try {
       await templateOperations.deleteTemplate(id);
       await reloadLists();
-      showStatus("模板已删除。");
+      showStatus(t.persistence.deleteTemplateSuccess);
     } catch (err) {
-      showStatus(`删除模板失败：${err instanceof Error ? err.message : String(err)}`);
+      showStatus(t.persistence.deleteTemplateError(err instanceof Error ? err.message : String(err)));
     }
   };
 
@@ -119,9 +121,9 @@ export const PersistenceControls: React.FC = () => {
       a.download = `${snapshot.name.toLowerCase().replace(/\s+/g, "-")}.monthloom`;
       a.click();
       URL.revokeObjectURL(url);
-      showStatus("已导出 .monthloom 项目包！");
+      showStatus(t.persistence.exportBundleSuccess);
     } catch (err) {
-      showStatus(`导出项目包失败：${err instanceof Error ? err.message : String(err)}`);
+      showStatus(t.persistence.exportBundleError(err instanceof Error ? err.message : String(err)));
     }
   };
 
@@ -133,12 +135,12 @@ export const PersistenceControls: React.FC = () => {
       await reloadLists();
       if (result.type === "project") {
         await projectOperations.loadProject(result.id);
-        showStatus(`已导入并加载项目：${result.name}`);
+        showStatus(t.persistence.importProjectSuccess(result.name));
       } else {
-        showStatus(`已导入模板：${result.name}`);
+        showStatus(t.persistence.importTemplateSuccess(result.name));
       }
     } catch (err) {
-      showStatus(`导入失败：${err instanceof Error ? err.message : String(err)}`);
+      showStatus(t.persistence.importBundleError(err instanceof Error ? err.message : String(err)));
     }
     e.target.value = "";
   };
@@ -162,7 +164,7 @@ export const PersistenceControls: React.FC = () => {
             <polyline points="17 21 17 13 7 13 7 21" />
             <polyline points="7 3 7 8 15 8" />
           </svg>
-          项目与模板
+          {t.persistence.heading}
         </div>
         {statusMessage && (
           <div style={{ fontSize: "12px", color: "var(--accent-emerald)", fontWeight: 500 }}>
@@ -178,7 +180,7 @@ export const PersistenceControls: React.FC = () => {
           onClick={handleSaveProject}
           className="studio-btn studio-btn-primary"
         >
-          保存项目
+          {t.persistence.saveProjectBtn}
         </button>
 
         <button
@@ -189,7 +191,7 @@ export const PersistenceControls: React.FC = () => {
           }}
           className="studio-btn studio-btn-secondary"
         >
-          打开项目 ({projectList.length})
+          {t.persistence.openProjectsBtn(projectList.length)}
         </button>
 
         <button
@@ -200,7 +202,7 @@ export const PersistenceControls: React.FC = () => {
           }}
           className="studio-btn studio-btn-secondary"
         >
-          模板库 ({templateList.length})
+          {t.persistence.templateLibraryBtn(templateList.length)}
         </button>
 
         <button
@@ -208,7 +210,7 @@ export const PersistenceControls: React.FC = () => {
           onClick={handleExportProjectBundle}
           className="studio-btn studio-btn-secondary"
         >
-          导出项目包 (.monthloom)
+          {t.persistence.exportBundleBtn}
         </button>
 
         <input
@@ -223,7 +225,7 @@ export const PersistenceControls: React.FC = () => {
           onClick={() => bundleInputRef.current?.click()}
           className="studio-btn studio-btn-secondary"
         >
-          导入项目包 (.monthloom)
+          {t.persistence.importBundleBtn}
         </button>
       </div>
 
@@ -231,7 +233,7 @@ export const PersistenceControls: React.FC = () => {
       <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "4px" }}>
         <input
           type="text"
-          placeholder="新模板名称..."
+          placeholder={t.persistence.templateNamePlaceholder}
           value={templateNameInput}
           onChange={(e) => setTemplateNameInput(e.target.value)}
           className="field-input"
@@ -242,7 +244,7 @@ export const PersistenceControls: React.FC = () => {
           onClick={handleSaveTemplate}
           className="studio-btn studio-btn-secondary"
         >
-          存为模板
+          {t.persistence.saveTemplateBtn}
         </button>
       </div>
 
@@ -262,7 +264,7 @@ export const PersistenceControls: React.FC = () => {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
                 </svg>
-                已保存的项目
+                {t.persistence.projectsModalTitle}
               </div>
               <button
                 type="button"
@@ -275,7 +277,7 @@ export const PersistenceControls: React.FC = () => {
             <div className="monthloom-modal-body">
               {projectList.length === 0 ? (
                 <div style={{ color: "var(--text-muted)", fontSize: "13px", textAlign: "center", padding: "20px" }}>
-                  暂无已保存的项目。
+                  {t.persistence.noProjectsText}
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -295,7 +297,7 @@ export const PersistenceControls: React.FC = () => {
                       <div>
                         <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-primary)" }}>{p.name}</div>
                         <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>
-                          年份：{p.targetYear} • {new Date(p.updatedAt).toLocaleDateString()}
+                          {t.persistence.projectYearAndDate(p.targetYear, new Date(p.updatedAt).toLocaleDateString())}
                         </div>
                       </div>
                       <div style={{ display: "flex", gap: "8px" }}>
@@ -305,7 +307,7 @@ export const PersistenceControls: React.FC = () => {
                           className="studio-btn studio-btn-primary"
                           style={{ padding: "4px 10px", fontSize: "12px" }}
                         >
-                          加载
+                          {t.persistence.loadBtn}
                         </button>
                         <button
                           type="button"
@@ -319,7 +321,7 @@ export const PersistenceControls: React.FC = () => {
                             borderColor: "rgba(244, 63, 94, 0.3)",
                           }}
                         >
-                          删除
+                          {t.persistence.deleteBtn}
                         </button>
                       </div>
                     </div>
@@ -349,7 +351,7 @@ export const PersistenceControls: React.FC = () => {
                   <line x1="3" y1="9" x2="21" y2="9" />
                   <line x1="9" y1="21" x2="9" y2="9" />
                 </svg>
-                模板库
+                {t.persistence.templatesModalTitle}
               </div>
               <button
                 type="button"
@@ -362,13 +364,13 @@ export const PersistenceControls: React.FC = () => {
             <div className="monthloom-modal-body">
               {templateList.length === 0 ? (
                 <div style={{ color: "var(--text-muted)", fontSize: "13px", textAlign: "center", padding: "20px" }}>
-                  暂无已保存的模板。
+                  {t.persistence.noTemplatesText}
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  {templateList.map((t) => (
+                  {templateList.map((tItem) => (
                     <div
-                      key={t.id}
+                      key={tItem.id}
                       style={{
                         display: "flex",
                         justifyContent: "space-between",
@@ -380,23 +382,23 @@ export const PersistenceControls: React.FC = () => {
                       }}
                     >
                       <div>
-                        <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-primary)" }}>{t.name}</div>
+                        <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-primary)" }}>{tItem.name}</div>
                         <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>
-                          保存于：{new Date(t.updatedAt).toLocaleDateString()}
+                          {t.persistence.templateSavedAt(new Date(tItem.updatedAt).toLocaleDateString())}
                         </div>
                       </div>
                       <div style={{ display: "flex", gap: "8px" }}>
                         <button
                           type="button"
-                          onClick={() => handleApplyTemplate(t.id)}
+                          onClick={() => handleApplyTemplate(tItem.id)}
                           className="studio-btn studio-btn-accent"
                           style={{ padding: "4px 10px", fontSize: "12px" }}
                         >
-                          应用
+                          {t.persistence.applyBtn}
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDeleteTemplate(t.id)}
+                          onClick={() => handleDeleteTemplate(tItem.id)}
                           className="studio-btn"
                           style={{
                             padding: "4px 8px",
@@ -406,7 +408,7 @@ export const PersistenceControls: React.FC = () => {
                             borderColor: "rgba(244, 63, 94, 0.3)",
                           }}
                         >
-                          删除
+                          {t.persistence.deleteBtn}
                         </button>
                       </div>
                     </div>

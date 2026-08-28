@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import type { Position, Anchor } from "../../domain/template/primitives";
+import { useI18n } from "../../shared/i18n/i18nStore";
 
 const ANCHOR_GRID: readonly Anchor[][] = [
   ["top-left", "top-center", "top-right"],
@@ -13,23 +14,12 @@ export interface PositionInspectorProps {
   onAnchorChange?: (nextAnchor: Anchor) => void;
 }
 
-const ANCHOR_NAMES: Record<Anchor, string> = {
-  "top-left": "左上",
-  "top-center": "中上",
-  "top-right": "右上",
-  "center-left": "左中",
-  "center": "居中",
-  "center-right": "右中",
-  "bottom-left": "左下",
-  "bottom-center": "中下",
-  "bottom-right": "右下",
-};
-
 export const PositionInspector: React.FC<PositionInspectorProps> = ({
   position,
   onChange,
   onAnchorChange,
 }) => {
+  const { t } = useI18n();
   const [draftX, setDraftX] = useState(String(position.offsetX));
   const [draftY, setDraftY] = useState(String(position.offsetY));
 
@@ -74,9 +64,9 @@ export const PositionInspector: React.FC<PositionInspectorProps> = ({
 
   return (
     <div className="inspector-section">
-      <div className="section-heading">位置对齐</div>
+      <div className="section-heading">{t.inspector.positionHeading}</div>
       <div className="field-row" style={{ marginBottom: 12 }}>
-        <span className="field-label">对齐锚点</span>
+        <span className="field-label">{t.inspector.anchorLabel}</span>
         <div className="anchor-grid">
           {ANCHOR_GRID.map((row) =>
             row.map((anchor) => (
@@ -84,7 +74,7 @@ export const PositionInspector: React.FC<PositionInspectorProps> = ({
                 key={anchor}
                 type="button"
                 className={`anchor-grid-btn ${position.anchor === anchor ? "active" : ""}`}
-                title={ANCHOR_NAMES[anchor]}
+                title={t.inspector.anchors[anchor] ?? anchor}
                 onClick={() => {
                   if (onAnchorChange) {
                     onAnchorChange(anchor);
@@ -99,7 +89,7 @@ export const PositionInspector: React.FC<PositionInspectorProps> = ({
       </div>
 
       <div className="field-row">
-        <span className="field-label">水平偏移 X</span>
+        <span className="field-label">{t.inspector.offsetXLabel}</span>
         <input
           type="number"
           className="field-input field-input-number"
@@ -111,7 +101,7 @@ export const PositionInspector: React.FC<PositionInspectorProps> = ({
       </div>
 
       <div className="field-row" style={{ marginTop: 8 }}>
-        <span className="field-label">垂直偏移 Y</span>
+        <span className="field-label">{t.inspector.offsetYLabel}</span>
         <input
           type="number"
           className="field-input field-input-number"

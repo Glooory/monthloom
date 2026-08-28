@@ -51,7 +51,8 @@ export const PagePreview: React.FC<PagePreviewProps> = ({
         {backgroundDataUri && (
           <img
             src={backgroundDataUri}
-            alt="页面背景图"
+            alt=""
+            aria-hidden="true"
             className="page-preview-bg"
           />
         )}
