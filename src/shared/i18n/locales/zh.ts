@@ -49,6 +49,7 @@ export const zh: TranslationDictionary = {
     miniDate: "日期数字",
     miniHolidayDot: "休假标记点",
     miniWorkdayDot: "补班标记点",
+    canvasRoot: "画布尺寸",
   },
   inspector: {
     titles: {
@@ -67,6 +68,14 @@ export const zh: TranslationDictionary = {
     },
     emptySelectionTitle: "未选中元素",
     emptySelectionHint: "点击左侧图层或直接在画布中选择元素进行调整。",
+    canvasBadge: "全局画布",
+    canvasHeading: "画布尺寸设置",
+    canvasWidthLabel: "画布宽度 (px)",
+    canvasHeightLabel: "画布高度 (px)",
+    aspectRatioLabel: "宽高比",
+    resetDefaultSize: "恢复默认尺寸",
+    presetsLabel: "常用比例预设",
+    canvasHelpHint: "修改画布尺寸后，日期网格与星期行将自动按比例自适应排版。点击画布中具体图元可单独编辑排版属性。",
     currentSelection: "当前选中：",
     positionHeading: "位置与对齐",
     anchorLabel: "对齐锚点",

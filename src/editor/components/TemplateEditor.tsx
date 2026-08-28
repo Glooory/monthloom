@@ -309,6 +309,25 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
               }
             }}
           >
+            {/* Canvas Root Item */}
+            <button
+              type="button"
+              className={`layer-item ${selection === null ? "active" : ""}`}
+              onClick={() => setSelection(null)}
+            >
+              <svg
+                className="layer-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M3 9h18M9 21V9" />
+              </svg>
+              <span>{t.layers.canvasRoot}</span>
+            </button>
+
             {currentLayers.map((layer) => {
               const isSelected = selection?.semanticId === layer.id;
               return (
@@ -359,6 +378,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         <Inspector
           document={document}
           selection={selection}
+          activeTemplate={activeTemplate}
           onCommitDocument={commitDocument}
           onAnchorChange={handleSelectAnchor}
         />

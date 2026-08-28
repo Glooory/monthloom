@@ -49,11 +49,20 @@ export interface TranslationDictionary {
     miniDate: string;
     miniHolidayDot: string;
     miniWorkdayDot: string;
+    canvasRoot: string;
   };
   inspector: {
     titles: Record<string, string>;
     emptySelectionTitle: string;
     emptySelectionHint: string;
+    canvasBadge: string;
+    canvasHeading: string;
+    canvasWidthLabel: string;
+    canvasHeightLabel: string;
+    aspectRatioLabel: string;
+    resetDefaultSize: string;
+    presetsLabel: string;
+    canvasHelpHint: string;
     currentSelection: string;
     positionHeading: string;
     anchorLabel: string;

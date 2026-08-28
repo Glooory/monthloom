@@ -25,11 +25,13 @@ import { BorderInspector } from "./BorderInspector";
 import { MarkerInspector } from "./MarkerInspector";
 import { DotInspector } from "./DotInspector";
 import { WeekdayInspector } from "./WeekdayInspector";
+import { CanvasInspector } from "./CanvasInspector";
 import { useI18n } from "../../shared/i18n/i18nStore";
 
 export interface InspectorProps {
   document: EditorDocument;
   selection: EditorSelection | null;
+  activeTemplate?: "main" | "mini";
   onCommitDocument: (next: EditorDocument) => void;
   onAnchorChange?: (nextAnchor: Anchor) => void;
 }
@@ -37,6 +39,7 @@ export interface InspectorProps {
 export const Inspector: React.FC<InspectorProps> = ({
   document,
   selection,
+  activeTemplate = "main",
   onCommitDocument,
   onAnchorChange,
 }) => {
@@ -45,19 +48,11 @@ export const Inspector: React.FC<InspectorProps> = ({
   if (!selection) {
     return (
       <div className="editor-inspector">
-        <div className="inspector-empty">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ opacity: 0.4 }}>
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 16v-4" />
-            <path d="M12 8h.01" />
-          </svg>
-          <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: "14px" }}>
-            {t.inspector.emptySelectionTitle}
-          </div>
-          <div style={{ lineHeight: 1.5, maxWidth: "220px" }}>
-            {t.inspector.emptySelectionHint}
-          </div>
-        </div>
+        <CanvasInspector
+          document={document}
+          activeTemplate={activeTemplate}
+          onCommitDocument={onCommitDocument}
+        />
       </div>
     );
   }

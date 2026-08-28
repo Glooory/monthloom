@@ -17,6 +17,8 @@ import {
   setWeekdayLabels,
   getWeekdayRowSettings,
   setWeekdayRowSettings,
+  getTemplateDimensions,
+  setTemplateDimensions,
 } from "./templateBindings";
 import type { PositionableSemanticId } from "./types";
 
@@ -185,4 +187,27 @@ describe("templateBindings", () => {
     expect(updatedSettings.colors.sunday).toBe("#E11D48");
     expect(updatedSettings.colors.saturday).toBe("#2563EB");
   });
+
+  it("handles template dimensions get and set for main and mini", () => {
+    const doc = createDefaultEditorDocument();
+
+    const mainDims = getTemplateDimensions(doc, "main");
+    expect(mainDims).toEqual({ width: 700, height: 500 });
+
+    const miniDims = getTemplateDimensions(doc, "mini");
+    expect(miniDims).toEqual({ width: 280, height: 210 });
+
+    const updatedMain = setTemplateDimensions(doc, "main", { width: 800, height: 600 });
+    expect(getTemplateDimensions(updatedMain, "main")).toEqual({ width: 800, height: 600 });
+    expect(getTemplateDimensions(updatedMain, "mini")).toEqual({ width: 280, height: 210 });
+
+    const updatedMini = setTemplateDimensions(updatedMain, "mini", { width: 320 });
+    expect(getTemplateDimensions(updatedMini, "mini")).toEqual({ width: 320, height: 210 });
+    expect(getTemplateDimensions(updatedMini, "main")).toEqual({ width: 800, height: 600 });
+
+    // Range clamping
+    const clamped = setTemplateDimensions(doc, "main", { width: 10, height: 20000 });
+    expect(getTemplateDimensions(clamped, "main")).toEqual({ width: 50, height: 10000 });
+  });
 });
+

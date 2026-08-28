@@ -585,4 +585,65 @@ export function setWeekdayLabels(
   return setWeekdayRowSettings(document, templateType, { labels });
 }
 
+export function getTemplateDimensions(
+  document: EditorDocument,
+  templateType: "main" | "mini",
+): { width: number; height: number } {
+  if (templateType === "main") {
+    return {
+      width: document.mainTemplate.width,
+      height: document.mainTemplate.height,
+    };
+  } else {
+    return {
+      width: document.miniTemplate.width,
+      height: document.miniTemplate.height,
+    };
+  }
+}
+
+export function setTemplateDimensions(
+  document: EditorDocument,
+  templateType: "main" | "mini",
+  dimensions: { width?: number; height?: number },
+): EditorDocument {
+  if (templateType === "main") {
+    const current = document.mainTemplate;
+    const width =
+      dimensions.width !== undefined
+        ? Math.max(50, Math.min(10000, Math.round(dimensions.width)))
+        : current.width;
+    const height =
+      dimensions.height !== undefined
+        ? Math.max(50, Math.min(10000, Math.round(dimensions.height)))
+        : current.height;
+    return {
+      ...document,
+      mainTemplate: {
+        ...current,
+        width,
+        height,
+      },
+    };
+  } else {
+    const current = document.miniTemplate;
+    const width =
+      dimensions.width !== undefined
+        ? Math.max(50, Math.min(10000, Math.round(dimensions.width)))
+        : current.width;
+    const height =
+      dimensions.height !== undefined
+        ? Math.max(50, Math.min(10000, Math.round(dimensions.height)))
+        : current.height;
+    return {
+      ...document,
+      miniTemplate: {
+        ...current,
+        width,
+        height,
+      },
+    };
+  }
+}
+
 

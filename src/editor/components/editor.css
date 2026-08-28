@@ -634,5 +634,40 @@
   margin-top: 4px;
 }
 
+/* Canvas Inspector */
+.canvas-inspector {
+  display: flex;
+  flex-direction: column;
+}
+
+.canvas-preset-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-surface-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.canvas-preset-btn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+  border-color: var(--border-highlight);
+}
+
+.canvas-preset-btn.active {
+  background: var(--accent-primary-light);
+  border-color: var(--accent-cyan);
+  color: #ffffff;
+  font-weight: 600;
+}
+
 
 
