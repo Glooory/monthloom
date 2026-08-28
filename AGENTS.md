@@ -54,6 +54,8 @@ src/
 
 ## Workflow & Coding Standards
 
-- **TDD First**: Write or update tests before fixing bugs or adding new features.
+- **Targeted Unit Testing**: Write unit tests only for core domain logic, layout calculations, and shared utility functions. Do not write unit tests for pure UI modifications.
 - **Minimal Diffs**: Make targeted, minimal edits. Avoid broad refactoring or reformatting unrelated code.
+- **Direct Execution for Simple Edits**: For straightforward, low-impact changes, do not write an implementation plan first—apply the edits directly.
+- **No Unsolicited Browser Validation**: Do not launch the browser to verify changes unless explicitly requested by the user.
 - **No Mock Fallbacks in Production**: If font resolution, asset resolution, or snapshot validation fails, throw clear descriptive errors rather than silently rendering broken fallbacks.
