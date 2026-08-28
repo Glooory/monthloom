@@ -395,8 +395,21 @@
 }
 
 .field-input-number {
-  width: 70px;
-  text-align: right;
+  width: 76px;
+  text-align: left;
+  padding: 5px 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hide native stepper spin buttons so they don't obstruct clicking digits */
+.field-input-number::-webkit-outer-spin-button,
+.field-input-number::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.field-input-number[type="number"] {
+  -moz-appearance: textfield;
 }
 
 .color-input-container {

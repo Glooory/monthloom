@@ -73,4 +73,26 @@ describe("NumberInput", () => {
     fireEvent.keyDown(input, { key: "Escape" });
     expect(input.value).toBe("50");
   });
+
+  it("increments and decrements with ArrowUp and ArrowDown keys (including Shift 10x multiplier)", () => {
+    const handleChange = vi.fn();
+    render(<NumberInput value={50} step={1} onChange={handleChange} />);
+
+    const input = screen.getByRole("spinbutton") as HTMLInputElement;
+    
+    // ArrowUp increments by 1
+    fireEvent.keyDown(input, { key: "ArrowUp" });
+    expect(handleChange).toHaveBeenCalledWith(51);
+    expect(input.value).toBe("51");
+
+    // ArrowDown decrements by 1
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    expect(handleChange).toHaveBeenCalledWith(50);
+    expect(input.value).toBe("50");
+
+    // Shift + ArrowUp increments by 10
+    fireEvent.keyDown(input, { key: "ArrowUp", shiftKey: true });
+    expect(handleChange).toHaveBeenCalledWith(60);
+    expect(input.value).toBe("60");
+  });
 });

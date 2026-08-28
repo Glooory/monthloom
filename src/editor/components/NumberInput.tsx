@@ -81,6 +81,28 @@ export const NumberInput: React.FC<NumberInputProps> = ({
     } else if (e.key === "Escape") {
       setDraft(String(value));
       (e.target as HTMLInputElement).blur();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      const current = parseFloat(draft);
+      const base = Number.isNaN(current) ? value : current;
+      const delta = e.shiftKey ? step * 10 : step;
+      let next = base + delta;
+      if (max !== undefined && next > max) next = max;
+      if (isInteger) next = Math.round(next);
+      const rounded = Number(next.toFixed(4));
+      setDraft(String(rounded));
+      onChange(rounded);
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      const current = parseFloat(draft);
+      const base = Number.isNaN(current) ? value : current;
+      const delta = e.shiftKey ? step * 10 : step;
+      let next = base - delta;
+      if (min !== undefined && next < min) next = min;
+      if (isInteger) next = Math.round(next);
+      const rounded = Number(next.toFixed(4));
+      setDraft(String(rounded));
+      onChange(rounded);
     }
   };
 
