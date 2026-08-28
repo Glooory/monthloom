@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { FullYearPreview } from "./FullYearPreview";
 import { useDocumentStore, createDefaultEditorDocument } from "../../editor/state/documentStore";
 import { MemoryAssetStore } from "../../editor/assets/memoryAssetStore";
@@ -115,4 +115,39 @@ describe("FullYearPreview", () => {
 
     expect(screen.getAllByText(/main-height-overflow/).length).toBeGreaterThan(0);
   });
+
+  it("defaults to flow mode and persists mode changes in localStorage", async () => {
+    localStorage.clear();
+
+    const { unmount } = render(
+      <FullYearPreview
+        targetYear={2027}
+        assetResolver={assetStore}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /竖版长卷流/i }).className).toContain("active");
+    });
+
+    // Switch to grid mode
+    fireEvent.click(screen.getByRole("button", { name: /画廊网格/i }));
+    expect(localStorage.getItem("monthloom_preview_mode")).toBe("grid");
+
+    unmount();
+
+    // Re-mount and verify it reads grid mode
+    render(
+      <FullYearPreview
+        targetYear={2027}
+        assetResolver={assetStore}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /画廊网格/i }).className).toContain("active");
+    });
+  });
 });
+
+

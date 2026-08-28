@@ -175,7 +175,33 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
     document.miniTemplate.height,
   ]);
 
-  const [viewMode, setViewMode] = useState<"grid" | "focus" | "flow">("grid");
+  const STORAGE_KEY = "monthloom_preview_mode";
+
+  const [viewMode, setViewModeState] = useState<"grid" | "focus" | "flow">(() => {
+    try {
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved === "grid" || saved === "focus" || saved === "flow") {
+          return saved;
+        }
+      }
+    } catch {
+      // ignore storage access errors
+    }
+    return "flow";
+  });
+
+  const setViewMode = (mode: "grid" | "focus" | "flow") => {
+    setViewModeState(mode);
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem(STORAGE_KEY, mode);
+      }
+    } catch {
+      // ignore storage access errors
+    }
+  };
+
   const [focusPageIndex, setFocusPageIndex] = useState(0);
 
   if (error) {
@@ -193,6 +219,17 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
       {/* Top View Mode Control Bar */}
       <div className="gallery-control-bar">
         <div className="gallery-mode-switch">
+          <button
+            type="button"
+            className={`gallery-tab-btn ${viewMode === "flow" ? "active" : ""}`}
+            onClick={() => setViewMode("flow")}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="12" y1="2" x2="12" y2="22" />
+              <polyline points="19 15 12 22 5 15" />
+            </svg>
+            竖版长卷流
+          </button>
           <button
             type="button"
             className={`gallery-tab-btn ${viewMode === "grid" ? "active" : ""}`}
@@ -216,17 +253,6 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
               <line x1="8" y1="6" x2="16" y2="6" />
             </svg>
             单页专注
-          </button>
-          <button
-            type="button"
-            className={`gallery-tab-btn ${viewMode === "flow" ? "active" : ""}`}
-            onClick={() => setViewMode("flow")}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="12" y1="2" x2="12" y2="22" />
-              <polyline points="19 15 12 22 5 15" />
-            </svg>
-            竖版长卷流
           </button>
         </div>
 
@@ -395,19 +421,15 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
               if (!mainDoc || !prevDoc || !nextDoc) return null;
 
               return (
-                <div key={pageDef.label} className="full-year-page-wrapper">
-                  <div className="full-year-page-label">
-                    <span>{pageDef.label}</span>
-                  </div>
-                  <PagePreview
-                    definition={pageDef}
-                    geometry={geometry}
-                    mainDocument={mainDoc}
-                    previousMiniDocument={prevDoc}
-                    nextMiniDocument={nextDoc}
-                    backgroundDataUri={backgroundDataUri}
-                  />
-                </div>
+                <PagePreview
+                  key={pageDef.label}
+                  definition={pageDef}
+                  geometry={geometry}
+                  mainDocument={mainDoc}
+                  previousMiniDocument={prevDoc}
+                  nextMiniDocument={nextDoc}
+                  backgroundDataUri={backgroundDataUri}
+                />
               );
             })}
           </div>
