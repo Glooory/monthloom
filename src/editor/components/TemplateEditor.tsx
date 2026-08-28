@@ -287,14 +287,28 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
       <div className="editor-body">
         {/* Left Layers / Elements Sidebar */}
-        <div className="editor-layers-sidebar">
+        <div
+          className="editor-layers-sidebar"
+          onPointerDown={(e) => {
+            if (e.target === e.currentTarget) {
+              setSelection(null);
+            }
+          }}
+        >
           <div className="layers-header">
             <span>{t.layers.title}</span>
             <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>
               {activeTemplate === "main" ? t.layers.mainBadge : t.layers.miniBadge}
             </span>
           </div>
-          <div className="layers-list">
+          <div
+            className="layers-list"
+            onPointerDown={(e) => {
+              if (e.target === e.currentTarget) {
+                setSelection(null);
+              }
+            }}
+          >
             {currentLayers.map((layer) => {
               const isSelected = selection?.semanticId === layer.id;
               return (

@@ -53,12 +53,24 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   }
 
   return (
-    <div className="editor-canvas-container">
+    <div
+      className="editor-canvas-container"
+      onPointerDown={(e) => {
+        if (e.target === e.currentTarget) {
+          onSelect(null);
+        }
+      }}
+    >
       <div
         className="canvas-viewport-wrapper"
         style={{
           transform: `scale(${zoom})`,
           transformOrigin: "center center",
+        }}
+        onPointerDown={(e) => {
+          if (e.target === e.currentTarget) {
+            onSelect(null);
+          }
         }}
       >
         <div
