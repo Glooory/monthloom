@@ -1,6 +1,7 @@
 import type { EditorDocument, EditableSemanticId, PositionableSemanticId, CalendarColors } from "./types";
 import type { Position, Typography, MarkerTemplate, DotTemplate } from "../../domain/template/primitives";
 import type { FontDescriptor } from "../../domain/template/font";
+import { DEFAULT_MAIN_WEEKDAYS, DEFAULT_MINI_WEEKDAYS } from "../../domain/template/defaults";
 
 export function getElementPosition(
   document: EditorDocument,
@@ -469,3 +470,45 @@ export function updateFontDescriptor(
     },
   };
 }
+
+export function getWeekdayLabels(
+  document: EditorDocument,
+  templateType: "main" | "mini",
+): readonly string[] {
+  if (templateType === "main") {
+    return document.mainTemplate.weekdayRow.labels ?? DEFAULT_MAIN_WEEKDAYS;
+  } else {
+    return document.miniTemplate.weekdayRow.labels ?? DEFAULT_MINI_WEEKDAYS;
+  }
+}
+
+export function setWeekdayLabels(
+  document: EditorDocument,
+  templateType: "main" | "mini",
+  labels: readonly string[],
+): EditorDocument {
+  if (templateType === "main") {
+    return {
+      ...document,
+      mainTemplate: {
+        ...document.mainTemplate,
+        weekdayRow: {
+          ...document.mainTemplate.weekdayRow,
+          labels,
+        },
+      },
+    };
+  } else {
+    return {
+      ...document,
+      miniTemplate: {
+        ...document.miniTemplate,
+        weekdayRow: {
+          ...document.miniTemplate.weekdayRow,
+          labels,
+        },
+      },
+    };
+  }
+}
+

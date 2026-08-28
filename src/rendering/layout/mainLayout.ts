@@ -2,20 +2,11 @@ import type { CalendarMonth } from "../../domain/calendar/types";
 import type { MainTemplate } from "../../domain/template/mainTemplate";
 import type { ImageMarkerTemplate } from "../../domain/template/primitives";
 import type { Rect, RenderNode, RenderScene } from "../scene/types";
+import { DEFAULT_MAIN_WEEKDAYS } from "../../domain/template/defaults";
 import { applyOffset, getAnchorPoint } from "./anchors";
 import { resolveDateColor } from "./colorRules";
 import { buildGridBorderNodes, createGridGeometry } from "./geometry";
 import { positionText, type TextMeasurer } from "./textMetrics";
-
-const DEFAULT_MAIN_WEEKDAYS: readonly string[] = [
-  "Sun",
-  "Mon",
-  "Tue",
-  "Wed",
-  "Thu",
-  "Fri",
-  "Sat",
-];
 
 function calculateImageMarkerBounds(
   cell: Rect,
@@ -50,7 +41,8 @@ export function layoutMain(args: {
   textMeasurer: TextMeasurer;
   weekdays?: readonly string[];
 }): RenderScene {
-  const { calendar, template, textMeasurer, weekdays = DEFAULT_MAIN_WEEKDAYS } = args;
+  const { calendar, template, textMeasurer } = args;
+  const weekdays = args.weekdays ?? template.weekdayRow.labels ?? DEFAULT_MAIN_WEEKDAYS;
 
   const width = template.width;
   const height = template.height;

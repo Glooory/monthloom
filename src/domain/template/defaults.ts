@@ -1,12 +1,33 @@
 import type { MainTemplate } from "./mainTemplate";
 import type { MiniTemplate } from "./miniTemplate";
 
+export const DEFAULT_MAIN_WEEKDAYS: readonly string[] = [
+  "Sun",
+  "Mon",
+  "Tue",
+  "Wed",
+  "Thu",
+  "Fri",
+  "Sat",
+];
+
+export const DEFAULT_MINI_WEEKDAYS: readonly string[] = [
+  "S",
+  "M",
+  "T",
+  "W",
+  "T",
+  "F",
+  "S",
+];
+
 export const DEFAULT_MAIN_TEMPLATE: MainTemplate = {
   width: 700,
   height: 500,
 
   weekdayRow: {
     height: 50,
+    labels: DEFAULT_MAIN_WEEKDAYS,
     weekday: {
       position: { anchor: "center", offsetX: 0, offsetY: 0 },
       typography: {
@@ -128,6 +149,7 @@ export const DEFAULT_MINI_TEMPLATE: MiniTemplate = {
 
   weekdayRow: {
     height: 30,
+    labels: DEFAULT_MINI_WEEKDAYS,
     weekday: {
       position: { anchor: "center", offsetX: 0, offsetY: 0 },
       typography: {

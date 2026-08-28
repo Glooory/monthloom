@@ -15,6 +15,8 @@ import {
   getDotDetails,
   setDotDetails,
   updateFontDescriptor,
+  getWeekdayLabels,
+  setWeekdayLabels,
 } from "../model/templateBindings";
 import { PositionInspector } from "./PositionInspector";
 import { TypographyInspector } from "./TypographyInspector";
@@ -22,6 +24,7 @@ import { ColorInspector } from "./ColorInspector";
 import { BorderInspector } from "./BorderInspector";
 import { MarkerInspector } from "./MarkerInspector";
 import { DotInspector } from "./DotInspector";
+import { WeekdayInspector } from "./WeekdayInspector";
 
 export interface InspectorProps {
   document: EditorDocument;
@@ -99,6 +102,12 @@ export const Inspector: React.FC<InspectorProps> = ({
     semanticId === "mini.holidayDot" || semanticId === "mini.workdayDot";
   const dot = isDot ? getDotDetails(document, semanticId) : null;
 
+  const isWeekday = semanticId === "main.weekday" || semanticId === "mini.weekday";
+  const weekdayType = semanticId.startsWith("main") ? "main" : "mini";
+  const weekdayLabels = isWeekday ? getWeekdayLabels(document, weekdayType) : undefined;
+  const parsedIndex = isWeekday && instanceKey.includes(":") ? parseInt(instanceKey.split(":")[1], 10) : NaN;
+  const selectedWeekdayIndex = Number.isNaN(parsedIndex) ? undefined : parsedIndex;
+
   const isGrid = semanticId === "main.grid";
   const gridBorder = isGrid ? getGridBorder(document) : null;
 
@@ -108,6 +117,17 @@ export const Inspector: React.FC<InspectorProps> = ({
         <h3 className="inspector-title">{title}</h3>
         <p className="inspector-subtitle">当前选中：{instanceKey}</p>
       </div>
+
+      {/* Weekday Custom Labels */}
+      {isWeekday && weekdayLabels && (
+        <WeekdayInspector
+          labels={weekdayLabels}
+          selectedIndex={selectedWeekdayIndex}
+          onChangeLabels={(nextLabels) =>
+            onCommitDocument(setWeekdayLabels(document, weekdayType, nextLabels))
+          }
+        />
+      )}
 
       {/* 1. Position */}
       {position && (

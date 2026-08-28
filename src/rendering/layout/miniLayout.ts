@@ -1,12 +1,11 @@
 import type { CalendarMonth } from "../../domain/calendar/types";
 import type { MiniTemplate } from "../../domain/template/miniTemplate";
 import type { Rect, RenderNode, RenderScene } from "../scene/types";
+import { DEFAULT_MINI_WEEKDAYS } from "../../domain/template/defaults";
 import { applyOffset, getAnchorPoint } from "./anchors";
 import { resolveDateColor } from "./colorRules";
 import { createGridGeometry } from "./geometry";
 import { positionText, type TextMeasurer } from "./textMetrics";
-
-const DEFAULT_MINI_WEEKDAYS: readonly string[] = ["S", "M", "T", "W", "T", "F", "S"];
 
 export function layoutMini(args: {
   calendar: CalendarMonth;
@@ -14,7 +13,8 @@ export function layoutMini(args: {
   textMeasurer: TextMeasurer;
   weekdays?: readonly string[];
 }): RenderScene {
-  const { calendar, template, textMeasurer, weekdays = DEFAULT_MINI_WEEKDAYS } = args;
+  const { calendar, template, textMeasurer } = args;
+  const weekdays = args.weekdays ?? template.weekdayRow.labels ?? DEFAULT_MINI_WEEKDAYS;
 
   const width = template.width;
   const height = template.height;

@@ -232,4 +232,28 @@ describe("Font Text Requirements Collection", () => {
     expect(merged.get("font-2")).toBe("123");
     expect(merged.get("font-3")).toBe("xyz");
   });
+
+  it("collects custom weekday labels defined on template", () => {
+    const calendar = generateCalendarMonth(2027, 5);
+    const template: MainTemplate = {
+      ...DEFAULT_MAIN_TEMPLATE,
+      weekdayRow: {
+        ...DEFAULT_MAIN_TEMPLATE.weekdayRow,
+        labels: ["日", "月", "火", "水", "木", "金", "土"],
+        weekday: {
+          ...DEFAULT_MAIN_TEMPLATE.weekdayRow.weekday,
+          typography: {
+            ...DEFAULT_MAIN_TEMPLATE.weekdayRow.weekday.typography,
+            fontId: "font-weekday-jp",
+          },
+        },
+      },
+    };
+
+    const reqs = collectMainFontText({ calendar, template });
+    const weekdayChars = reqs.get("font-weekday-jp") ?? "";
+    for (const char of ["日", "月", "火", "水", "木", "金", "土"]) {
+      expect(weekdayChars).toContain(char);
+    }
+  });
 });

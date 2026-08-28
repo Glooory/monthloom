@@ -11,6 +11,7 @@ export type MiniTemplate = Readonly<{
 
   weekdayRow: Readonly<{
     height: number;
+    labels?: readonly string[];
     weekday: TextElementTemplate;
   }>;
 

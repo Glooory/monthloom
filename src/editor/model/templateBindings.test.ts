@@ -13,6 +13,8 @@ import {
   setMarkerDetails,
   getDotDetails,
   setDotDetails,
+  getWeekdayLabels,
+  setWeekdayLabels,
 } from "./templateBindings";
 import type { PositionableSemanticId } from "./types";
 
@@ -130,5 +132,22 @@ describe("templateBindings", () => {
       size: 6,
       color: "#00FF00",
     });
+  });
+
+  it("handles weekday labels get and set for main and mini templates", () => {
+    const doc = createDefaultEditorDocument();
+
+    const mainLabels = getWeekdayLabels(doc, "main");
+    expect(mainLabels).toEqual(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
+
+    const customMain = ["日", "一", "二", "三", "四", "五", "六"];
+    const updatedMain = setWeekdayLabels(doc, "main", customMain);
+    expect(getWeekdayLabels(updatedMain, "main")).toEqual(customMain);
+    expect(getWeekdayLabels(updatedMain, "mini")).toEqual(["S", "M", "T", "W", "T", "F", "S"]);
+
+    const customMini = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+    const updatedMini = setWeekdayLabels(updatedMain, "mini", customMini);
+    expect(getWeekdayLabels(updatedMini, "mini")).toEqual(customMini);
+    expect(getWeekdayLabels(updatedMini, "main")).toEqual(customMain);
   });
 });

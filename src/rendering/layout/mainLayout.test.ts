@@ -297,5 +297,33 @@ describe("Main Layout", () => {
       expect(dateNodes).toHaveLength(expectedWeeks * 7);
     }
   });
+
+  it("renders custom weekday labels specified in template", () => {
+    const calendar = generateCalendarMonth(2027, 1);
+    const customTemplate: MainTemplate = {
+      ...DEFAULT_MAIN_TEMPLATE,
+      weekdayRow: {
+        ...DEFAULT_MAIN_TEMPLATE.weekdayRow,
+        labels: ["日", "一", "二", "三", "四", "五", "六"],
+      },
+    };
+
+    const scene = layoutMain({
+      calendar,
+      template: customTemplate,
+      textMeasurer: fakeMeasurer,
+    });
+
+    const weekdays = scene.nodes.filter((n) => n.semanticId === "main.weekday");
+    expect(weekdays.map((w) => (w.kind === "text" ? w.text : ""))).toEqual([
+      "日",
+      "一",
+      "二",
+      "三",
+      "四",
+      "五",
+      "六",
+    ]);
+  });
 });
 

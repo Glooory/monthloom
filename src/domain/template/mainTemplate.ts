@@ -6,6 +6,7 @@ export type MainTemplate = Readonly<{
 
   weekdayRow: Readonly<{
     height: number;
+    labels?: readonly string[];
     weekday: TextElementTemplate;
   }>;
 

@@ -209,4 +209,32 @@ describe("Mini Layout", () => {
       expect(scene.height).toBe(DEFAULT_MINI_TEMPLATE.height);
     }
   });
+
+  it("renders custom weekday labels specified in template", () => {
+    const calendar = generateCalendarMonth(2027, 1);
+    const customTemplate = {
+      ...DEFAULT_MINI_TEMPLATE,
+      weekdayRow: {
+        ...DEFAULT_MINI_TEMPLATE.weekdayRow,
+        labels: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
+      },
+    };
+
+    const scene = layoutMini({
+      calendar,
+      template: customTemplate,
+      textMeasurer: fakeMeasurer,
+    });
+
+    const weekdays = scene.nodes.filter((n) => n.semanticId === "mini.weekday");
+    expect(weekdays.map((w) => (w.kind === "text" ? w.text : ""))).toEqual([
+      "Su",
+      "Mo",
+      "Tu",
+      "We",
+      "Th",
+      "Fr",
+      "Sa",
+    ]);
+  });
 });

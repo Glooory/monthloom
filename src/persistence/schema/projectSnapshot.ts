@@ -108,6 +108,7 @@ const mainTemplateSchema = z.object({
   height: z.number(),
   weekdayRow: z.object({
     height: z.number(),
+    labels: z.array(z.string()).optional(),
     weekday: z.object({
       position: positionOffsetSchema,
       typography: typographySchema,
@@ -154,6 +155,7 @@ const miniTemplateSchema = z.object({
   }),
   weekdayRow: z.object({
     height: z.number(),
+    labels: z.array(z.string()).optional(),
     weekday: z.object({
       position: positionOffsetSchema,
       typography: typographySchema,

@@ -54,4 +54,57 @@ describe("Snapshot validation", () => {
     const validated = validateTemplateSnapshot(snapshot);
     expect(validated.id).toBe("template-1");
   });
+
+  it("validates ProjectSnapshot with custom weekday labels", () => {
+    const docWithCustomWeekdays = {
+      ...defaultDoc,
+      mainTemplate: {
+        ...defaultDoc.mainTemplate,
+        weekdayRow: {
+          ...defaultDoc.mainTemplate.weekdayRow,
+          labels: ["日", "一", "二", "三", "四", "五", "六"],
+        },
+      },
+      miniTemplate: {
+        ...defaultDoc.miniTemplate,
+        weekdayRow: {
+          ...defaultDoc.miniTemplate.weekdayRow,
+          labels: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
+        },
+      },
+    };
+
+    const snapshot: ProjectSnapshotV1 = {
+      version: 1,
+      type: "project",
+      id: "project-custom",
+      name: "Custom Weekday Calendar",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      targetYear: 2027,
+      chinaHolidayDataset: null,
+      japanHolidayDataset: null,
+      document: docWithCustomWeekdays,
+    };
+
+    const validated = validateProjectSnapshot(snapshot);
+    expect(validated.document.mainTemplate.weekdayRow.labels).toEqual([
+      "日",
+      "一",
+      "二",
+      "三",
+      "四",
+      "五",
+      "六",
+    ]);
+    expect(validated.document.miniTemplate.weekdayRow.labels).toEqual([
+      "Su",
+      "Mo",
+      "Tu",
+      "We",
+      "Th",
+      "Fr",
+      "Sa",
+    ]);
+  });
 });

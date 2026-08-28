@@ -487,3 +487,97 @@
   justify-content: space-between;
 }
 
+/* Weekday Inspector */
+.weekday-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.weekday-presets-container,
+.weekday-inputs-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.weekday-presets-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+
+.weekday-preset-btn {
+  background: var(--bg-surface-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.weekday-preset-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-medium);
+}
+
+.weekday-preset-btn.active {
+  background: var(--accent-primary-light);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 1px var(--accent-primary);
+}
+
+.weekday-preset-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.weekday-preset-example {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-family: monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.weekday-inputs-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.weekday-input-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.weekday-col-header {
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.weekday-col-input {
+  width: 100%;
+  padding: 5px 2px;
+  font-size: 11px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.weekday-input-col.highlighted .weekday-col-input {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px var(--accent-primary-light);
+}
+
+

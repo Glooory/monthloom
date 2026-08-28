@@ -1,19 +1,11 @@
 import type { CalendarMonth } from "../../domain/calendar/types";
 import type { MainTemplate } from "../../domain/template/mainTemplate";
 import type { MiniTemplate } from "../../domain/template/miniTemplate";
+import {
+  DEFAULT_MAIN_WEEKDAYS,
+  DEFAULT_MINI_WEEKDAYS,
+} from "../../domain/template/defaults";
 import type { FontTextRequirements } from "./types";
-
-const DEFAULT_MAIN_WEEKDAYS: readonly string[] = [
-  "Sun",
-  "Mon",
-  "Tue",
-  "Wed",
-  "Thu",
-  "Fri",
-  "Sat",
-];
-
-const DEFAULT_MINI_WEEKDAYS: readonly string[] = ["S", "M", "T", "W", "T", "F", "S"];
 
 function uniqueCharacters(text: string): string {
   return [...new Set(Array.from(text))].join("");
@@ -30,7 +22,8 @@ export function collectMainFontText(args: {
   template: MainTemplate;
   weekdays?: readonly string[];
 }): FontTextRequirements {
-  const { calendar, template, weekdays = DEFAULT_MAIN_WEEKDAYS } = args;
+  const { calendar, template } = args;
+  const weekdays = args.weekdays ?? template.weekdayRow.labels ?? DEFAULT_MAIN_WEEKDAYS;
   const rawMap = new Map<string, string>();
 
   // 1. Weekday row
@@ -88,7 +81,8 @@ export function collectMiniFontText(args: {
   template: MiniTemplate;
   weekdays?: readonly string[];
 }): FontTextRequirements {
-  const { calendar, template, weekdays = DEFAULT_MINI_WEEKDAYS } = args;
+  const { calendar, template } = args;
+  const weekdays = args.weekdays ?? template.weekdayRow.labels ?? DEFAULT_MINI_WEEKDAYS;
   const rawMap = new Map<string, string>();
 
   // 1. Month label: YYYY-M
