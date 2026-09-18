@@ -6,6 +6,7 @@ import { getWorkspaceHolidayDiagnostics } from "../holiday/holidayWorkspace";
 import { HolidayDiagnostics } from "./HolidayDiagnostics";
 import { HolidayLibraryPanel } from "./HolidayLibraryPanel";
 import { useI18n } from "../../shared/i18n/i18nStore";
+import { projectOperations } from "../../persistence/operations/projectOperations";
 
 export const WorkspaceControls: React.FC = () => {
   const { t } = useI18n();
@@ -49,7 +50,13 @@ export const WorkspaceControls: React.FC = () => {
         <input
           type="text"
           value={projectName}
-          onChange={(e) => setProjectInfo(currentProjectId, e.target.value)}
+          onChange={(e) => {
+            setProjectInfo(currentProjectId, e.target.value);
+            projectOperations.scheduleAutoSave();
+          }}
+          onBlur={() => {
+            projectOperations.flushAutoSave();
+          }}
           placeholder={t.nav.projectPlaceholder}
           className="field-input"
           style={{
@@ -71,7 +78,13 @@ export const WorkspaceControls: React.FC = () => {
             id="target-year-input"
             type="number"
             value={targetYear}
-            onChange={(e) => setTargetYear(Number(e.target.value) || 2027)}
+            onChange={(e) => {
+              setTargetYear(Number(e.target.value) || 2027);
+              projectOperations.scheduleAutoSave();
+            }}
+            onBlur={() => {
+              projectOperations.flushAutoSave();
+            }}
             className="field-input field-input-number"
             style={{ width: "76px", textAlign: "center" }}
             aria-label={t.workspace.targetYearLabel}

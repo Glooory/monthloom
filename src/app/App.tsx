@@ -8,6 +8,7 @@ import { useUiStore } from "../editor/state/uiStore";
 import { useWorkspaceStore } from "../workspace/state/workspaceStore";
 import { useHolidayLibraryStore } from "../workspace/state/holidayLibraryStore";
 import { persistentAssetStore } from "../editor/assets/persistentAssetStore";
+import { projectOperations } from "../persistence/operations/projectOperations";
 import { WorkspaceControls } from "../workspace/components/WorkspaceControls";
 import { PersistenceControls } from "../persistence/components/PersistenceControls";
 import { BatchExportPanel } from "../export/components/BatchExportPanel";
@@ -24,6 +25,7 @@ export const App: React.FC = () => {
   const [activeView, setActiveView] = useState<"editor" | "gallery" | "workspace">(
     "editor",
   );
+  const [isReady, setIsReady] = useState(false);
 
   const [editingMonth, setEditingMonth] = useState<{
     year: number;
@@ -38,7 +40,37 @@ export const App: React.FC = () => {
   const holidayLibrary = useHolidayLibraryStore((s) => s.snapshot);
 
   useEffect(() => {
-    useHolidayLibraryStore.getState().hydrate();
+    let isMounted = true;
+    const init = async () => {
+      try {
+        await useHolidayLibraryStore.getState().hydrate();
+        await projectOperations.hydrateActiveProject();
+      } catch (err) {
+        console.error("Failed to hydrate project session:", err);
+      } finally {
+        if (isMounted) {
+          setIsReady(true);
+        }
+      }
+    };
+    init();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    setEditingMonth((prev) => ({ ...prev, year: targetYear }));
+  }, [targetYear]);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      projectOperations.flushAutoSave();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
   }, []);
 
   const holidayIndex = useMemo(
@@ -104,7 +136,13 @@ export const App: React.FC = () => {
             type="text"
             className="monthloom-project-name-input"
             value={projectName}
-            onChange={(e) => setProjectInfo(currentProjectId, e.target.value)}
+            onChange={(e) => {
+              setProjectInfo(currentProjectId, e.target.value);
+              projectOperations.scheduleAutoSave();
+            }}
+            onBlur={() => {
+              projectOperations.flushAutoSave();
+            }}
             placeholder={t.nav.projectPlaceholder}
             aria-label={t.nav.projectNameAria}
           />
@@ -116,7 +154,13 @@ export const App: React.FC = () => {
               type="number"
               className="monthloom-year-input"
               value={targetYear}
-              onChange={(e) => setTargetYear(Number(e.target.value) || 2027)}
+              onChange={(e) => {
+                setTargetYear(Number(e.target.value) || 2027);
+                projectOperations.scheduleAutoSave();
+              }}
+              onBlur={() => {
+                projectOperations.flushAutoSave();
+              }}
               aria-label={t.nav.targetYearAria}
             />
           </div>
@@ -327,6 +371,39 @@ export const App: React.FC = () => {
       assetResolver={persistentAssetStore}
     />
   );
+
+  if (!isReady) {
+    return (
+      <div className="monthloom-app-loading" role="status" aria-label="loading-app">
+        <div className="monthloom-loading-brand">
+          <div className="monthloom-brand-icon">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+            >
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+          </div>
+          <span className="monthloom-logo">Monthloom</span>
+        </div>
+        <div className="monthloom-loading-indicator">
+          <div className="monthloom-loading-spinner" />
+          <span>
+            {locale === "zh"
+              ? "正在准备工作室与项目数据..."
+              : "Loading studio & project..."}
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AppShell

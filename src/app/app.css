@@ -448,13 +448,57 @@ body {
   to { opacity: 1; }
 }
 
-@keyframes scaleUp {
+@keyframes spin {
   from {
-    opacity: 0;
-    transform: scale(0.96);
+    transform: rotate(0deg);
   }
   to {
-    opacity: 1;
-    transform: scale(1);
+    transform: rotate(360deg);
   }
+}
+
+/* App Loading Screen */
+.monthloom-app-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  gap: 16px;
+  animation: fadeIn 0.2s ease;
+}
+
+.monthloom-loading-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.monthloom-loading-brand .monthloom-brand-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.monthloom-loading-brand .monthloom-logo {
+  font-size: 20px;
+}
+
+.monthloom-loading-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.monthloom-loading-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border-medium);
+  border-top-color: var(--accent-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
