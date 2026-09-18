@@ -1,162 +1,149 @@
 ---
 
 name: dev-loop
-description: Orchestrate a clean-context implementation, independent review, fix, and re-review workflow using subagents. Use only when the user explicitly asks to use dev-loop or explicitly requests this isolated subagent workflow. Do not invoke automatically for ordinary coding tasks.
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+description: Implement a coding task in the main agent, then use a fresh independent subagent to review it. Fix findings in the main agent and re-review only when risk justifies the additional cost. Use only when the user explicitly requests dev-loop or this workflow.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # Dev Loop
 
-Use this skill to coordinate an implementation through isolated subagents.
+Use this skill for a lightweight implementation → independent review → fix workflow.
 
-The main agent acts as the **Coordinator**.
+The main agent acts as both:
 
-The normal flow is:
+* **Coordinator**
+* **Implementer / Fixer**
+
+A fresh subagent acts as the **Reviewer**.
+
+Default flow:
 
 ```text
-Coordinator
-    ↓
-Fresh Implementer
-    ↓
-Fresh Reviewer
-    ↓
-Implementer/Fixer
-    ↓
-Fresh Reviewer
-    ↓
-Coordinator reports result
+User ↔ Main Agent
+          ↓
+     clarify task
+          ↓
+     write task.md
+          ↓
+   implement directly
+          ↓
+   Fresh Reviewer
+          ↓
+     ┌────┴────┐
+   CLEAN     FINDINGS
+     │           ↓
+     │      Main Agent fixes
+     │           ↓
+     │       risk gate
+     │       ┌───┴───┐
+     │      low      high
+     │       │         ↓
+     │       │   Fresh Re-review
+     │       │
+     └───────┴────────────→ report
 ```
 
-The purpose of this workflow is:
+The goals are:
 
-* keep the main conversation focused on requirements and decisions;
-* isolate implementation from review;
-* give every review pass a fresh context;
-* avoid manual prompt copying between conversations;
-* keep runtime coordination lightweight;
-* avoid unnecessary agent and token overhead.
+* preserve the main agent's existing understanding of the task;
+* avoid repeating repository exploration in a fresh implementation agent;
+* obtain an independent review from a clean context;
+* use additional review rounds only when they are worth the time and tokens;
+* avoid manual prompt copying between conversations.
 
-This is intentionally a small workflow. Do not expand it into a larger development methodology unless the user explicitly asks for that.
+This is intentionally a small workflow.
 
-# Core principles
+Do not expand it into a general development methodology.
 
-## Coordinator owns orchestration
+# Core rule
 
-The main agent is the Coordinator.
+The main agent implements the task itself.
 
-The Coordinator should normally:
+Do **not** delegate normal implementation to a fresh subagent.
 
-* clarify requirements with the user;
-* define the task contract;
-* create and manage runtime handoff files;
-* launch subagents;
-* decide whether another fix/review cycle is needed;
-* stop when escalation is required;
-* report the final result to the user.
+The main agent already participated in requirement clarification and therefore usually has the cheapest and most accurate implementation context.
 
-The Coordinator should normally **not implement production code itself**.
-
-The only files the Coordinator should directly modify as part of this workflow are runtime coordination files under `.agent-work/`.
-
-If subagents are unavailable, do not silently perform all roles in the Coordinator context. Tell the user that isolated execution is unavailable.
-
-## Use fresh context where independence matters
-
-The initial Implementer must be a fresh subagent.
-
-Every Reviewer must be a **new fresh subagent**.
-
-A Reviewer must not inherit the Implementer's conversation or reasoning.
-
-A Fixer does not need fresh context by default.
-
-Prefer resuming the original Implementer when the host supports resuming a subagent. This preserves implementation context and reduces repeated repository exploration.
-
-If resuming is unavailable, launch a fresh Fixer.
-
-## Run agents serially
-
-Do not run the Implementer, Fixer, and Reviewer concurrently.
-
-They operate on the same effective working tree and must run in this order:
+Use fresh context where independence provides clear value:
 
 ```text
-implement → review → fix → review
+implementation → main agent
+review         → fresh subagent
+fix            → main agent
+re-review      → fresh subagent only when justified
 ```
 
-A later stage starts only after the previous stage has fully completed.
+# Runtime workspace
 
-Prefer having all agents operate on the same project working tree.
-
-Do not intentionally create separate branches or worktrees for this workflow unless the host requires them and can reliably integrate the result back into the Coordinator's working tree before the next stage.
-
-The Reviewer must always inspect the same final implementation that the Coordinator sees.
-
-# Runtime files
-
-Use:
+Each dev-loop run has its own directory:
 
 ```text
+.agent-work/<RUN_ID>/
+└── task.md
+```
+
+Use a human-readable unique run ID:
+
+```text
+YYYYMMDD-HHmmss-<short-task-slug>
+```
+
+Example:
+
+```text
+.agent-work/20260918-154532-project-search/
+└── task.md
+```
+
+Always pass the exact task path to a Reviewer.
+
+Never ask a subagent to discover "the current task.md".
+
+`.agent-work/` is runtime-only state and should be excluded by `.gitignore`:
+
+```gitignore
 .agent-work/
-├── task.md
-└── review.md
 ```
-
-`.agent-work/` is runtime-only local state and must be excluded by the repository's `.gitignore`.
 
 Never stage or commit files under `.agent-work/`.
 
-Do not create additional workflow files unless they are genuinely required.
+Runtime files are **not automatically deleted**.
 
-In particular, do not create files such as:
-
-```text
-implementation.md
-fix-plan.md
-verification.md
-state.json
-final-report.md
-review-round-1.md
-review-round-2.md
-```
-
-The repository itself is the source of truth for the implementation.
-
-`task.md` is the source of truth for the requested task.
-
-`review.md` is the source of truth for the latest actionable review findings.
+The user decides when to remove them.
 
 # Starting a run
 
-Before launching an Implementer:
+Before implementation:
 
-1. Make sure the user's requirements are sufficiently clear.
-2. Resolve material ambiguity with the user before implementation.
-3. Confirm the project is inside a Git repository.
-4. Check that the repository is not in an unresolved merge, rebase, cherry-pick, or similar conflicted state.
-5. Create `.agent-work/` if necessary.
-6. Remove a stale `.agent-work/review.md` from a previous run.
-7. Create a fresh `.agent-work/task.md`.
+1. Make sure the task is sufficiently clear.
+2. Resolve material ambiguity with the user.
+3. Generate a unique `RUN_ID`.
+4. Create `.agent-work/<RUN_ID>/task.md`.
+5. Record the current Git baseline.
+6. Implement the task directly in the main agent.
 
 Do not automatically:
 
 * commit;
 * stash;
 * reset;
-* checkout files;
-* clean the working tree;
+* clean;
+* checkout user changes;
 * rewrite Git history.
 
-Preserve all pre-existing user changes.
+Preserve unrelated pre-existing work.
 
 # Task contract
 
-The Coordinator writes `.agent-work/task.md`.
+Write:
 
-Keep it concise.
+```text
+.agent-work/<RUN_ID>/task.md
+```
 
-It represents the final agreed task, not the full conversation history.
+This file is the stable contract shared with independent Reviewers.
 
-Use this structure:
+It should contain the **final agreed task**, not the conversation history.
+
+Use:
 
 ````markdown
 # Task
@@ -180,7 +167,7 @@ Use this structure:
 
 ## Out of Scope
 
-- <Anything explicitly excluded, when applicable>
+- <Explicit exclusion, when useful>
 
 ## Baseline
 
@@ -189,121 +176,140 @@ HEAD: <git commit SHA>
 Pre-existing working tree:
 
 ```text
-<output equivalent to git status --short, or "clean">
+<git status --short output, or "clean">
 ````
 
 ````
 
-Only include confirmed decisions.
+Keep it concise.
 
-Do not copy exploratory discussion, rejected alternatives, implementation speculation, or unnecessary chat history into `task.md`.
+Include only information needed to implement and review the task correctly.
 
-Record the current `HEAD` before implementation starts.
+Do not include:
 
-Record pre-existing working-tree changes so later agents know that unrelated changes may already exist.
+- rejected alternatives;
+- exploratory conversation;
+- implementation speculation;
+- chain-of-thought or reasoning transcripts;
+- unnecessary historical context.
 
-Pre-existing changes belong to the user and must be preserved.
+# Implementation
 
-# Implementer
+After writing `task.md`, implement the task directly in the main agent.
 
-Launch a fresh implementation subagent using the host's native subagent mechanism.
+Follow the repository's own instructions and conventions.
 
-Give it a short instruction equivalent to:
+During implementation:
+
+- inspect only the repository areas needed for the task;
+- preserve unrelated user changes;
+- keep changes scoped to the agreed task;
+- run relevant tests or checks when practical;
+- do not commit unless the user explicitly requests it.
+
+Do not create additional handoff documents.
+
+The working tree is the implementation artifact.
+
+# First independent review
+
+After implementation and relevant checks complete, launch **one fresh Reviewer subagent** using the host's native subagent mechanism.
+
+The Reviewer must start from clean conversational context.
+
+Do not pass:
+
+- the main agent's implementation reasoning;
+- implementation summaries unless strictly necessary;
+- speculative concerns from the main agent;
+- previous review findings.
+
+Give the Reviewer an instruction equivalent to:
 
 ```text
-Read .agent-work/task.md and the repository's own instructions.
+Read:
 
-Inspect the repository and implement the task.
+.agent-work/<RUN_ID>/task.md
 
-Preserve unrelated pre-existing changes.
-Keep the implementation scoped to the task.
-Do not commit, stash, reset, or rewrite existing user changes.
+and the repository's own instructions.
 
-Run the relevant tests or checks when practical.
+Independently review the current implementation against the task contract.
 
-When finished, return a concise summary of:
-- what changed;
-- tests/checks run and their results;
-- any blockers or unresolved concerns.
+Inspect the relevant diff, surrounding code, and tests as needed.
+
+Focus on concrete defects, regressions, missing requirements, and meaningful risks.
+
+Do not modify production files.
+
+Do not produce preference-only style comments.
+
+Return:
+
+RESULT: CLEAN
+
+if there are no actionable findings.
+
+Otherwise return structured actionable findings.
 ````
 
-Do not provide the Implementer with a long restatement of the conversation when `task.md` already contains the required information.
+# Reviewer isolation
 
-Let the Implementer inspect the repository itself.
+Every Reviewer must be fresh.
 
-Do not require an `implementation.md` handoff file.
+Never reuse the main agent as the independent Reviewer.
 
-The implementation itself lives in the working tree.
+Never resume a previous Reviewer for a later independent review.
 
-# After implementation
+Use read-only permissions or a read-only sandbox when supported.
 
-When the Implementer finishes:
+If enforced read-only mode is unavailable, explicitly instruct the Reviewer not to modify files.
 
-1. Confirm the working tree is accessible to the Coordinator.
-2. Confirm `HEAD` has not unexpectedly changed because the subagent committed.
-3. Preserve the Implementer's handle/session if the host supports later resumption.
-4. Remove `.agent-work/review.md` if it exists.
-5. Launch a fresh Reviewer.
+The Reviewer should receive the smallest sufficient context:
 
-If the Implementer unexpectedly committed, rewrote history, destroyed pre-existing changes, or otherwise changed repository state in a way that cannot be safely interpreted, stop the automatic loop and report the problem to the user.
+```text
+task contract
++
+repository instructions
++
+current implementation
++
+relevant diff
+```
 
-Do not automatically rewrite history to repair it.
+It does not need the full user conversation.
 
-# Reviewer
+# Review scope
 
-Every review pass must use a **new fresh Reviewer**.
+The Reviewer independently answers:
 
-Never resume a previous Reviewer.
+> Does the current implementation satisfy the task contract without introducing actionable defects?
 
-Use read-only permissions or a read-only sandbox when the host supports them.
+Review for:
 
-If the host does not support enforced read-only subagents, explicitly instruct the Reviewer not to modify files.
-
-The Reviewer must read:
-
-* `.agent-work/task.md`;
-* repository-level instructions and conventions;
-* the current implementation;
-* the relevant diff and surrounding code;
-* relevant tests when useful.
-
-The Reviewer must **not read `.agent-work/review.md` from an earlier review pass**.
-
-Delete the previous `review.md` before launching a new Reviewer.
-
-This prevents anchoring the next Reviewer on earlier findings.
-
-The Reviewer must independently answer:
-
-> Does the current implementation correctly satisfy the task contract without introducing actionable defects?
-
-The review should consider:
-
-* acceptance criteria;
-* functional correctness;
+* unmet acceptance criteria;
+* functional bugs;
 * regressions;
 * edge cases;
-* error handling;
-* relevant test coverage;
-* security implications when relevant;
-* performance implications when relevant;
+* incorrect error handling;
+* meaningful missing test coverage;
+* security risks when relevant;
+* concurrency or data-integrity risks when relevant;
+* performance problems when relevant;
 * accidental scope expansion;
-* violations of established repository conventions that materially affect correctness or maintainability.
+* repository convention violations that materially affect correctness or maintainability.
 
-Do not report preference-only style comments.
+Do not report findings merely to produce feedback.
 
-Do not create findings merely to produce feedback.
+Do not report preference-only style differences.
 
-Do not report unrelated pre-existing problems unless:
+Do not perform an unrelated repository-wide audit.
 
-* the current implementation changed or worsened them; or
-* they directly prevent the task from satisfying its acceptance criteria.
+Do not report unrelated pre-existing defects unless:
 
-The Reviewer must not fix the code.
+* this implementation changed or worsened them; or
+* they directly prevent the task from working correctly.
 
-# Reviewer output contract
-
-The Reviewer should return one of two outcomes.
+# Reviewer output
 
 For a clean review:
 
@@ -313,8 +319,6 @@ RESULT: CLEAN
 No actionable findings.
 ```
 
-Optional concise verification notes may follow.
-
 For findings:
 
 ```markdown
@@ -323,20 +327,18 @@ RESULT: FINDINGS
 ## Finding 1
 
 Severity: <critical | high | medium | low>
-Location: <file and line/range when practical>
+
+Location:
+<file and line/range when practical>
 
 Issue:
 <Concrete defect.>
 
 Evidence:
-<Why this is a real problem based on the task and code.>
+<Why this is a real problem based on the task and implementation.>
 
 Suggested direction:
-<Concise direction for addressing it, without prescribing unnecessary implementation details.>
-
-## Finding 2
-
-...
+<Concise direction for addressing it.>
 ```
 
 Findings must be:
@@ -344,187 +346,232 @@ Findings must be:
 * concrete;
 * actionable;
 * evidence-based;
-* relevant to the task or regression risk.
+* relevant.
 
-`low` severity should still represent a real defect, not a stylistic preference.
+`low` still means a real defect, not a stylistic preference.
 
-# Review handoff
+# Handling findings
 
-The Reviewer itself should not write `.agent-work/review.md`.
+The main agent receives the Reviewer findings directly.
 
-After the Reviewer returns, the Coordinator writes the result to:
+Do not create a `review.md` handoff file by default.
 
-```text
-.agent-work/review.md
-```
+For every finding:
 
-This allows the Reviewer to remain truly read-only.
+1. validate it against the actual code;
+2. accept it only if it is correct;
+3. fix valid findings directly;
+4. leave correct code unchanged when a finding is invalid;
+5. run relevant tests/checks after fixing.
 
-If the review is clean, the implementation passes the review stage.
+Do not blindly follow Reviewer suggestions.
 
-If actionable findings exist, proceed to fixing.
+The Reviewer identifies problems.
 
-# Fixer
+The main agent retains responsibility for choosing the appropriate fix.
 
-Prefer resuming the original Implementer if the host supports it.
+# Re-review risk gate
 
-This is the normal path because the Implementer already understands the implementation context.
+A second fresh review is **not automatic**.
 
-Give it an instruction equivalent to:
+After fixing findings, decide whether another independent review is worth its cost.
+
+Perform a fresh re-review when one or more of these conditions apply:
+
+* a `critical` or `high` severity finding was fixed;
+* the fix materially changed the original implementation approach;
+* the fix spans multiple components or introduces substantial new logic;
+* the finding involves security, authentication, authorization, concurrency, transactions, persistence, data integrity, or similarly high-risk behavior;
+* the main agent rejected or substantially disagreed with a Reviewer finding and independent verification would resolve the uncertainty;
+* the fix caused additional failures or unexpected behavior;
+* meaningful verification cannot be achieved through available tests/checks;
+* the user explicitly requested strict or repeated independent review.
+
+A fresh re-review is normally unnecessary when all findings are:
+
+* localized;
+* well understood;
+* low or ordinary medium risk;
+* fixed with small scoped changes;
+* directly verified by relevant tests/checks.
+
+Examples that normally do **not** justify another fresh Reviewer:
+
+* adding a missing null guard;
+* fixing an obvious conditional;
+* correcting a localized mapping error;
+* adding a missing test case;
+* fixing a small validation mistake whose behavior is directly testable.
+
+The goal is not to maximize the number of reviews.
+
+The goal is to spend independent-review cost where it materially improves confidence.
+
+# Re-review
+
+When the risk gate requires re-review, launch a **brand-new fresh Reviewer**.
+
+Do not resume the previous Reviewer.
+
+Do not pass the previous review findings.
+
+Do not ask only:
+
+> Were the previous findings fixed?
+
+Instead ask the new Reviewer to independently evaluate the **current implementation against `task.md` from scratch**.
+
+Use an instruction equivalent to:
 
 ```text
 Read:
 
-- .agent-work/task.md
-- .agent-work/review.md
+.agent-work/<RUN_ID>/task.md
 
-Validate every review finding against the actual code.
+and the repository's own instructions.
 
-Do not blindly accept reviewer suggestions.
+Independently review the current implementation against the task contract.
 
-Fix findings that are valid.
-If a finding is invalid, explain why instead of changing correct code.
+This is a fresh review.
 
-Keep changes scoped to the original task and the validated findings.
-Preserve unrelated user changes.
-Do not commit, stash, reset, or rewrite Git history.
+Do not rely on previous review findings or implementation reasoning.
 
-Run relevant tests/checks after fixing.
+Inspect the relevant diff, surrounding code, and tests as needed.
 
-Return a concise summary of:
-- findings fixed;
-- findings rejected and why;
-- tests/checks run and their results;
-- remaining blockers.
+Do not modify production files.
+
+Return RESULT: CLEAN or structured actionable findings.
 ```
 
-If the original Implementer cannot be resumed, start a fresh Fixer with the same instructions.
+This allows re-review to detect:
 
-A fresh Fixer may read both `task.md` and `review.md`.
+* unresolved defects;
+* incorrectly rejected findings;
+* regressions introduced by fixes;
+* defects missed in the previous review.
 
-# When to use a new Fixer
+# Loop limit
 
-Normally reuse the Implementer.
+Default dev-loop is **not** an open-ended review loop.
 
-Prefer a fresh Fixer when the review shows that the original implementation approach itself is fundamentally flawed rather than requiring localized corrections.
-
-Examples include:
-
-* the chosen architecture cannot satisfy the requirement;
-* the implementation misunderstood a core requirement;
-* fixing the implementation would effectively require rebuilding it;
-* the Implementer is stuck repeating the same invalid approach.
-
-The Coordinator should not replace the Implementer merely because a normal bug was found.
-
-# Re-review
-
-After fixing:
-
-1. Remove `.agent-work/review.md`.
-2. Launch a brand-new fresh Reviewer.
-3. Perform a complete independent review of the current implementation.
-
-The new Reviewer must not be told to merely verify previous findings.
-
-It should review the current implementation against `task.md` from scratch.
-
-This allows it to detect both:
-
-* unresolved previous issues;
-* new regressions introduced by the fix.
-
-# Iteration limit
-
-Do not create an unlimited review/fix loop.
-
-Allow at most:
+The normal maximum is:
 
 ```text
-initial implementation
-→ review
-→ fix #1
+implementation
 → fresh review
-→ fix #2
-→ fresh review
+→ fix
+→ optional fresh re-review
 ```
 
-That means at most **two fix cycles** after the initial implementation.
+If the optional fresh re-review still produces actionable findings:
 
-If actionable findings still remain after the final allowed review, stop.
+1. validate and fix what is clearly safe to fix;
+2. run relevant tests/checks;
+3. stop automatic fresh-review cycling;
+4. report the remaining state to the user.
 
-Do not continue automatically.
+Do not automatically launch Reviewer after Reviewer.
 
-The Coordinator should report the remaining findings to the user.
+The user can explicitly request another review if additional assurance is desired.
 
-# Escalation conditions
+# Strict mode
 
-Stop the automatic workflow and return control to the user when:
+If the user explicitly requests:
+
+* `dev-loop strict`;
+* strict review;
+* repeated independent verification;
+* or equivalent wording;
+
+use the same architecture but require a fresh re-review after every fix round.
+
+Even in strict mode:
+
+* implementation stays in the main agent;
+* fixing stays in the main agent;
+* Reviewers remain fresh;
+* automatic execution stops after at most two fix/review cycles.
+
+Strict mode should be exceptional rather than the default.
+
+# Escalation
+
+Stop automatic execution and return control to the user when:
 
 * requirements become materially ambiguous;
-* a product or architecture decision is required that was not previously agreed;
-* the implementation direction needs substantial redesign outside the existing task contract;
-* the allowed fix cycles are exhausted;
-* the repository enters an unsafe or conflicted Git state;
-* a subagent cannot access the required working tree;
-* isolated subagents are unavailable;
-* a Reviewer unexpectedly modifies production files;
-* tests expose a significant unrelated failure that prevents safe verification;
-* continuing would require destructive Git operations.
+* a new product decision is required;
+* a significant unagreed architecture decision is required;
+* the repository enters an unsafe or conflicted state;
+* continuing safely requires destructive Git operations;
+* the Reviewer unexpectedly modifies production code;
+* tests expose a significant unrelated failure that prevents meaningful verification;
+* isolated Reviewer subagents are unavailable.
 
-Do not guess through these situations merely to complete the loop.
+Do not invent decisions merely to finish the workflow.
 
-# Reviewer write protection
+# Concurrency
 
-When read-only enforcement is unavailable, the Coordinator should compare repository state before and after review.
+Separate run directories prevent coordination-file collisions.
 
-If the Reviewer unexpectedly changed tracked or untracked project files, stop and report it.
+They do **not** make simultaneous writes to one working tree safe.
 
-Do not silently keep Reviewer-authored production changes.
+If multiple dev-loop runs operate against the same checkout:
 
-Do not automatically reset those changes if doing so could destroy user work.
+* do not allow their implementation/fix phases to write concurrently.
 
-# Token and context discipline
+True concurrent implementation requires isolated worktrees or equivalent isolated workspaces.
 
-Keep this workflow lightweight.
+# Token and time discipline
 
-Do not pass full conversation history to every subagent.
+Efficiency is a primary design goal.
 
-Use:
+Do not:
+
+* delegate implementation just to create role separation;
+* pass full conversation history to Reviewers;
+* create redundant planning or review documents;
+* launch specialist agents without a concrete need;
+* automatically re-review every small fix;
+* recursively invoke `dev-loop` from a subagent;
+* perform broad repository exploration unrelated to the task.
+
+Prefer:
 
 ```text
-requirements → .agent-work/task.md
-implementation → working tree / git diff
-review findings → .agent-work/review.md
+main conversation
+→ requirements + implementation + fixes
+
+task.md
+→ stable reviewer contract
+
+fresh subagent
+→ independent review only
 ```
 
-Do not ask subagents to generate redundant summaries or planning documents.
+One fresh Reviewer is the normal case.
 
-Do not recursively invoke `dev-loop` inside a subagent.
-
-Do not create additional specialist agents unless the task genuinely requires one and the user has agreed to the additional complexity.
-
-Reviewer agents should inspect the parts of the repository necessary to establish correctness, not perform unrelated repository-wide audits.
+Additional fresh Reviewers require a reason.
 
 # Completion
 
-The workflow succeeds when a fresh Reviewer returns:
+The workflow is complete when either:
 
-```text
-RESULT: CLEAN
-```
+1. the first Reviewer returns `RESULT: CLEAN`; or
+2. valid findings were fixed, relevant checks pass, and the risk gate does not require re-review; or
+3. a required fresh re-review returns `RESULT: CLEAN`.
 
-After success, the Coordinator reports to the user:
+After completion, report concisely:
 
 * what was implemented;
-* how many review/fix cycles occurred;
+* the independent review result;
+* what findings were fixed, if any;
+* whether a re-review was performed and why;
 * relevant tests/checks and their results;
-* any verification limitations or residual risks.
+* any verification limitations or residual risks;
+* the run directory.
 
-Keep the final report concise.
+Do not automatically commit.
 
-Do not automatically commit the implementation.
+Do not automatically delete `.agent-work/<RUN_ID>/`.
 
-Leave the resulting working tree for the user to inspect and commit.
-
-The runtime files under `.agent-work/` may remain until the next run. They are overwritten or cleaned when the next `dev-loop` starts.
+Leave both code and runtime task file available for human inspection.
