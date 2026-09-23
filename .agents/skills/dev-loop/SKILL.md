@@ -1,8 +1,7 @@
 ---
-
 name: dev-loop
 description: Implement a coding task in the main agent, then use a fresh independent subagent to review it. Fix findings in the main agent and re-review only when risk justifies the additional cost. Use only when the user explicitly requests dev-loop or this workflow.
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---
 
 # Dev Loop
 
@@ -10,8 +9,8 @@ Use this skill for a lightweight implementation → independent review → fix w
 
 The main agent acts as both:
 
-* **Coordinator**
-* **Implementer / Fixer**
+- **Coordinator**
+- **Implementer / Fixer**
 
 A fresh subagent acts as the **Reviewer**.
 
@@ -44,11 +43,11 @@ User ↔ Main Agent
 
 The goals are:
 
-* preserve the main agent's existing understanding of the task;
-* avoid repeating repository exploration in a fresh implementation agent;
-* obtain an independent review from a clean context;
-* use additional review rounds only when they are worth the time and tokens;
-* avoid manual prompt copying between conversations.
+- preserve the main agent's existing understanding of the task;
+- avoid repeating repository exploration in a fresh implementation agent;
+- obtain an independent review from a clean context;
+- use additional review rounds only when they are worth the time and tokens;
+- avoid manual prompt copying between conversations.
 
 This is intentionally a small workflow.
 
@@ -122,12 +121,12 @@ Before implementation:
 
 Do not automatically:
 
-* commit;
-* stash;
-* reset;
-* clean;
-* checkout user changes;
-* rewrite Git history.
+- commit;
+- stash;
+- reset;
+- clean;
+- checkout user changes;
+- rewrite Git history.
 
 Preserve unrelated pre-existing work.
 
@@ -145,7 +144,7 @@ It should contain the **final agreed task**, not the conversation history.
 
 Use:
 
-````markdown
+```markdown
 # Task
 
 ## Goal
@@ -177,9 +176,8 @@ Pre-existing working tree:
 
 ```text
 <git status --short output, or "clean">
-````
-
-````
+```
+```
 
 Keep it concise.
 
@@ -250,7 +248,7 @@ RESULT: CLEAN
 if there are no actionable findings.
 
 Otherwise return structured actionable findings.
-````
+```
 
 # Reviewer isolation
 
@@ -286,17 +284,17 @@ The Reviewer independently answers:
 
 Review for:
 
-* unmet acceptance criteria;
-* functional bugs;
-* regressions;
-* edge cases;
-* incorrect error handling;
-* meaningful missing test coverage;
-* security risks when relevant;
-* concurrency or data-integrity risks when relevant;
-* performance problems when relevant;
-* accidental scope expansion;
-* repository convention violations that materially affect correctness or maintainability.
+- unmet acceptance criteria;
+- functional bugs;
+- regressions;
+- edge cases;
+- incorrect error handling;
+- meaningful missing test coverage;
+- security risks when relevant;
+- concurrency or data-integrity risks when relevant;
+- performance problems when relevant;
+- accidental scope expansion;
+- repository convention violations that materially affect correctness or maintainability.
 
 Do not report findings merely to produce feedback.
 
@@ -306,8 +304,8 @@ Do not perform an unrelated repository-wide audit.
 
 Do not report unrelated pre-existing defects unless:
 
-* this implementation changed or worsened them; or
-* they directly prevent the task from working correctly.
+- this implementation changed or worsened them; or
+- they directly prevent the task from working correctly.
 
 # Reviewer output
 
@@ -343,10 +341,10 @@ Suggested direction:
 
 Findings must be:
 
-* concrete;
-* actionable;
-* evidence-based;
-* relevant.
+- concrete;
+- actionable;
+- evidence-based;
+- relevant.
 
 `low` still means a real defect, not a stylistic preference.
 
@@ -378,30 +376,30 @@ After fixing findings, decide whether another independent review is worth its co
 
 Perform a fresh re-review when one or more of these conditions apply:
 
-* a `critical` or `high` severity finding was fixed;
-* the fix materially changed the original implementation approach;
-* the fix spans multiple components or introduces substantial new logic;
-* the finding involves security, authentication, authorization, concurrency, transactions, persistence, data integrity, or similarly high-risk behavior;
-* the main agent rejected or substantially disagreed with a Reviewer finding and independent verification would resolve the uncertainty;
-* the fix caused additional failures or unexpected behavior;
-* meaningful verification cannot be achieved through available tests/checks;
-* the user explicitly requested strict or repeated independent review.
+- a `critical` or `high` severity finding was fixed;
+- the fix materially changed the original implementation approach;
+- the fix spans multiple components or introduces substantial new logic;
+- the finding involves security, authentication, authorization, concurrency, transactions, persistence, data integrity, or similarly high-risk behavior;
+- the main agent rejected or substantially disagreed with a Reviewer finding and independent verification would resolve the uncertainty;
+- the fix caused additional failures or unexpected behavior;
+- meaningful verification cannot be achieved through available tests/checks;
+- the user explicitly requested strict or repeated independent review.
 
 A fresh re-review is normally unnecessary when all findings are:
 
-* localized;
-* well understood;
-* low or ordinary medium risk;
-* fixed with small scoped changes;
-* directly verified by relevant tests/checks.
+- localized;
+- well understood;
+- low or ordinary medium risk;
+- fixed with small scoped changes;
+- directly verified by relevant tests/checks.
 
 Examples that normally do **not** justify another fresh Reviewer:
 
-* adding a missing null guard;
-* fixing an obvious conditional;
-* correcting a localized mapping error;
-* adding a missing test case;
-* fixing a small validation mistake whose behavior is directly testable.
+- adding a missing null guard;
+- fixing an obvious conditional;
+- correcting a localized mapping error;
+- adding a missing test case;
+- fixing a small validation mistake whose behavior is directly testable.
 
 The goal is not to maximize the number of reviews.
 
@@ -445,10 +443,10 @@ Return RESULT: CLEAN or structured actionable findings.
 
 This allows re-review to detect:
 
-* unresolved defects;
-* incorrectly rejected findings;
-* regressions introduced by fixes;
-* defects missed in the previous review.
+- unresolved defects;
+- incorrectly rejected findings;
+- regressions introduced by fixes;
+- defects missed in the previous review.
 
 # Loop limit
 
@@ -478,19 +476,19 @@ The user can explicitly request another review if additional assurance is desire
 
 If the user explicitly requests:
 
-* `dev-loop strict`;
-* strict review;
-* repeated independent verification;
-* or equivalent wording;
+- `dev-loop strict`;
+- strict review;
+- repeated independent verification;
+- or equivalent wording;
 
 use the same architecture but require a fresh re-review after every fix round.
 
 Even in strict mode:
 
-* implementation stays in the main agent;
-* fixing stays in the main agent;
-* Reviewers remain fresh;
-* automatic execution stops after at most two fix/review cycles.
+- implementation stays in the main agent;
+- fixing stays in the main agent;
+- Reviewers remain fresh;
+- automatic execution stops after at most two fix/review cycles.
 
 Strict mode should be exceptional rather than the default.
 
@@ -498,14 +496,14 @@ Strict mode should be exceptional rather than the default.
 
 Stop automatic execution and return control to the user when:
 
-* requirements become materially ambiguous;
-* a new product decision is required;
-* a significant unagreed architecture decision is required;
-* the repository enters an unsafe or conflicted state;
-* continuing safely requires destructive Git operations;
-* the Reviewer unexpectedly modifies production code;
-* tests expose a significant unrelated failure that prevents meaningful verification;
-* isolated Reviewer subagents are unavailable.
+- requirements become materially ambiguous;
+- a new product decision is required;
+- a significant unagreed architecture decision is required;
+- the repository enters an unsafe or conflicted state;
+- continuing safely requires destructive Git operations;
+- the Reviewer unexpectedly modifies production code;
+- tests expose a significant unrelated failure that prevents meaningful verification;
+- isolated Reviewer subagents are unavailable.
 
 Do not invent decisions merely to finish the workflow.
 
@@ -517,7 +515,7 @@ They do **not** make simultaneous writes to one working tree safe.
 
 If multiple dev-loop runs operate against the same checkout:
 
-* do not allow their implementation/fix phases to write concurrently.
+- do not allow their implementation/fix phases to write concurrently.
 
 True concurrent implementation requires isolated worktrees or equivalent isolated workspaces.
 
@@ -527,13 +525,13 @@ Efficiency is a primary design goal.
 
 Do not:
 
-* delegate implementation just to create role separation;
-* pass full conversation history to Reviewers;
-* create redundant planning or review documents;
-* launch specialist agents without a concrete need;
-* automatically re-review every small fix;
-* recursively invoke `dev-loop` from a subagent;
-* perform broad repository exploration unrelated to the task.
+- delegate implementation just to create role separation;
+- pass full conversation history to Reviewers;
+- create redundant planning or review documents;
+- launch specialist agents without a concrete need;
+- automatically re-review every small fix;
+- recursively invoke `dev-loop` from a subagent;
+- perform broad repository exploration unrelated to the task.
 
 Prefer:
 
@@ -562,13 +560,13 @@ The workflow is complete when either:
 
 After completion, report concisely:
 
-* what was implemented;
-* the independent review result;
-* what findings were fixed, if any;
-* whether a re-review was performed and why;
-* relevant tests/checks and their results;
-* any verification limitations or residual risks;
-* the run directory.
+- what was implemented;
+- the independent review result;
+- what findings were fixed, if any;
+- whether a re-review was performed and why;
+- relevant tests/checks and their results;
+- any verification limitations or residual risks;
+- the run directory.
 
 Do not automatically commit.
 
