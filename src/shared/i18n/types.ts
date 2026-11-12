@@ -158,9 +158,10 @@ export interface TranslationDictionary {
     widthLabel: string;
     heightLabel: string;
     paddingLabel: string;
-    leftColumnRatioLabel: string;
-    columnGapLabel: string;
-    miniHeightRatioLabel: string;
+    mainWidthLabel: string;
+    mainHeightLabel: string;
+    miniWidthLabel: string;
+    miniHeightLabel: string;
     miniGapLabel: string;
     mainVerticalAlignmentLabel: string;
     miniVerticalAlignmentLabel: string;

@@ -11,6 +11,20 @@ import type { TemplateSnapshotV1 } from "./templateSnapshot";
 describe("Snapshot validation", () => {
   const defaultDoc = createDefaultEditorDocument();
 
+  it("preserves explicit preview dimensions and rejects invalid sizes", () => {
+    const layout = { ...defaultDoc.pagePreview.layout,
+      mainWidth: 900, mainHeight: 820, miniWidth: 300, miniHeight: 220 };
+    const doc = { ...defaultDoc, pagePreview: { ...defaultDoc.pagePreview, layout } };
+    expect(editorDocumentSchema.parse(doc).pagePreview.layout).toEqual(layout);
+    for (const field of ["mainWidth", "mainHeight", "miniWidth", "miniHeight"]) {
+      for (const value of [0, -1, Infinity, NaN]) {
+        expect(editorDocumentSchema.safeParse({ ...doc,
+          pagePreview: { layout: { ...layout, [field]: value } },
+        }).success).toBe(false);
+      }
+    }
+  });
+
   it("preserves preview alignment and accepts older layouts", () => {
     const doc: typeof defaultDoc = { ...defaultDoc, pagePreview: { ...defaultDoc.pagePreview, layout: {
       ...defaultDoc.pagePreview.layout, mainVerticalAlignment: "bottom", miniVerticalAlignment: "center",

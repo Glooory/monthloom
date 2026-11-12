@@ -11,7 +11,12 @@ export type PageLayout = Readonly<{
   width: number;
   height: number;
   padding: number;
+  // Legacy ratios are used only when explicit dimensions are absent.
   leftColumnRatio: number;
+  mainWidth?: number;
+  mainHeight?: number;
+  miniWidth?: number;
+  miniHeight?: number;
   columnGap: number;
   miniHeightRatio: number;
   miniGap: number;
@@ -35,6 +40,7 @@ export type Placement = Readonly<{
 export type PageLayoutWarning = Readonly<{
   code:
     | "invalid-content-area"
+    | "calendar-width-overflow"
     | "main-height-overflow"
     | "mini-stack-overflow";
   message: string;

@@ -1,6 +1,7 @@
-import React, { useRef } from "react";
+import React, { useRef, useId } from "react";
 import type { PageLayout, PagePreviewConfig, VerticalAlignment } from "../../domain/pagePreview/types";
 import { useI18n } from "../../shared/i18n/i18nStore";
+import { calculatePageGeometry } from "../../domain/pagePreview/pageLayout";
 import { NumberInput } from "./NumberInput";
 
 export interface AssetStoreLike {
@@ -9,6 +10,8 @@ export interface AssetStoreLike {
 
 export interface PagePreviewSettingsProps {
   config: PagePreviewConfig;
+  mainSize: Readonly<{ width: number; height: number }>;
+  miniSize: Readonly<{ width: number; height: number }>;
   onChange: (next: PagePreviewConfig) => void;
   assetStore?: AssetStoreLike;
 }
@@ -20,28 +23,41 @@ const NumberField: React.FC<{
   min?: number;
   max?: number;
   onChange: (val: number) => void;
-}> = ({ label, value, step, min, max, onChange }) => (
-  <div className="field-row" style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-    <span className="field-label" style={{ fontSize: "12px", color: "var(--text-secondary)", minWidth: 0, whiteSpace: "nowrap" }}>{label}</span>
-    <NumberInput
-      value={value}
-      style={{ width: 76, flex: "none" }}
-      step={step}
-      min={min}
-      max={max}
-      onChange={onChange}
-    />
-  </div>
-);
+}> = ({ label, value, step, min, max, onChange }) => {
+  const id = useId();
+  return (
+    <div className="field-row" style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+      <label htmlFor={id} className="field-label" style={{ fontSize: "12px", color: "var(--text-secondary)", minWidth: 0, whiteSpace: "nowrap" }}>{label}</label>
+      <NumberInput
+        id={id}
+        value={value}
+        style={{ width: 76, flex: "none" }}
+        step={step}
+        min={min}
+        max={max}
+        onChange={onChange}
+      />
+    </div>
+  );
+};
 
 export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
   config,
+  mainSize,
+  miniSize,
   onChange,
   assetStore,
 }) => {
   const { t } = useI18n();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const layout = config.layout;
+  const geometry = calculatePageGeometry({ layout, mainSize, miniSize });
+  const dimensions = {
+    mainWidth: geometry.main.width,
+    mainHeight: geometry.main.height,
+    miniWidth: geometry.previousMini.width,
+    miniHeight: geometry.previousMini.height,
+  };
 
   const updateLayout = (updates: Partial<PageLayout>) => {
     onChange({
@@ -155,29 +171,16 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
           min={0}
           onChange={(padding) => updateLayout({ padding })}
         />
-        <NumberField
-          label={t.pagePreview.leftColumnRatioLabel}
-          value={layout.leftColumnRatio}
-          step={0.02}
-          min={0.05}
-          max={0.95}
-          onChange={(leftColumnRatio) => updateLayout({ leftColumnRatio })}
-        />
-        <NumberField
-          label={t.pagePreview.columnGapLabel}
-          value={layout.columnGap}
-          step={2}
-          min={0}
-          onChange={(columnGap) => updateLayout({ columnGap })}
-        />
-        <NumberField
-          label={t.pagePreview.miniHeightRatioLabel}
-          value={layout.miniHeightRatio}
-          step={0.02}
-          min={0.05}
-          max={0.95}
-          onChange={(miniHeightRatio) => updateLayout({ miniHeightRatio })}
-        />
+        {(["mainWidth", "mainHeight", "miniWidth", "miniHeight"] as const).map((key) => (
+          <NumberField
+            key={key}
+            label={t.pagePreview[`${key}Label`]}
+            value={Number(dimensions[key].toFixed(2))}
+            step={10}
+            min={1}
+            onChange={(value) => updateLayout({ ...dimensions, [key]: value })}
+          />
+        ))}
         {(["mainVerticalAlignment", "miniVerticalAlignment"] as const).map((key) => (
           <label key={key} className="field-row" style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
             <span className="field-label" style={{ fontSize: "12px", color: "var(--text-secondary)", minWidth: 0, whiteSpace: "nowrap" }}>

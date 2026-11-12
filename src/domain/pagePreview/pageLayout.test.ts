@@ -26,6 +26,56 @@ describe("calculatePageGeometry", () => {
   const mainSize = { width: 1000, height: 700 } as const;
   const miniSize = { width: 300, height: 200 } as const;
 
+  it("uses explicit dimensions to fill the main calendar height without a top gap", () => {
+    const layout = { ...DEFAULT_PAGE_LAYOUT, mainWidth: 894, mainHeight: 820,
+      miniWidth: 300, miniHeight: 220, mainVerticalAlignment: "bottom" as const,
+      miniVerticalAlignment: "bottom" as const };
+    const geometry = calculatePageGeometry({ layout, mainSize, miniSize });
+    expect(geometry.main).toMatchObject({ x: 466, y: 40, width: 894, height: 820 });
+    expect(geometry.previousMini).toMatchObject({ x: 40, width: 300, height: 220 });
+    expect(geometry.nextMini.y + geometry.nextMini.height).toBe(860);
+    expect(geometry.nextMini.y - geometry.previousMini.y).toBe(244);
+    expect(geometry.warnings).toEqual([]);
+    const largerPage = calculatePageGeometry({ layout: { ...layout, width: 1800, height: 1200 }, mainSize, miniSize });
+    expect(largerPage.main.width).toBe(894);
+    expect(largerPage.main.height).toBe(820);
+    expect(largerPage.previousMini.width).toBe(300);
+    expect(largerPage.previousMini.height).toBe(220);
+  });
+
+  it.each([
+    { width: 1400, padding: 40, mainWidth: 894, miniWidth: 300, columnGap: 0 },
+    { width: 1800, padding: 60, mainWidth: 1000, miniWidth: 200, columnGap: 500 },
+    { width: 1400, padding: 40, mainWidth: 1500, miniWidth: 300, columnGap: 30 },
+  ])("keeps the main calendar right margin equal to page padding: %j", (settings) => {
+    const geometry = calculatePageGeometry({
+      layout: { ...DEFAULT_PAGE_LAYOUT, ...settings }, mainSize, miniSize,
+    });
+    expect(geometry.page.width - geometry.main.x - geometry.main.width).toBe(settings.padding);
+  });
+
+  it("ignores the legacy column gap when dimensions are explicit", () => {
+    const layout = { ...DEFAULT_PAGE_LAYOUT, mainWidth: 1000, mainHeight: 820,
+      miniWidth: 300, miniHeight: 220 };
+    const geometry = calculatePageGeometry({ layout, mainSize, miniSize });
+    expect(geometry.warnings).toEqual([]);
+    expect(calculatePageGeometry({ layout: { ...layout, columnGap: 2000 }, mainSize, miniSize }))
+      .toEqual(geometry);
+  });
+
+  it("reports overflow for explicit dimensions without shrinking them", () => {
+    const geometry = calculatePageGeometry({
+      layout: { ...DEFAULT_PAGE_LAYOUT, mainWidth: 1100, mainHeight: 1000,
+        miniWidth: 400, miniHeight: 500 }, mainSize, miniSize,
+    });
+    expect(geometry.main.width).toBe(1100);
+    expect(geometry.main.height).toBe(1000);
+    expect(geometry.previousMini.height).toBe(500);
+    expect(geometry.warnings.map((warning) => warning.code)).toEqual([
+      "calendar-width-overflow", "main-height-overflow", "mini-stack-overflow",
+    ]);
+  });
+
   it.each([0.28, 0.45])("bottom-aligns rendered calendars with mini height ratio %s", (miniHeightRatio) => {
     const geometry = calculatePageGeometry({
       layout: { ...DEFAULT_PAGE_LAYOUT, miniHeightRatio, mainVerticalAlignment: "bottom", miniVerticalAlignment: "bottom" },

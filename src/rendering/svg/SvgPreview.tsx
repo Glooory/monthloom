@@ -94,6 +94,7 @@ function renderNode(node: SvgNode, key: number | string): React.ReactNode {
 export function SvgPreview(props: {
   document: SvgDocument;
   className?: string;
+  preserveAspectRatio?: string;
 }): JSX.Element {
   const { document: doc, className } = props;
 
@@ -103,6 +104,7 @@ export function SvgPreview(props: {
       width={doc.width}
       height={doc.height}
       viewBox={doc.viewBox}
+      preserveAspectRatio={props.preserveAspectRatio}
       className={className}
     >
       {doc.children.map((node, idx) => renderNode(node, idx))}

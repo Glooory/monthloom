@@ -355,6 +355,8 @@ export const App: React.FC = () => {
   const pageSettings = (
     <PagePreviewSettings
       config={document.pagePreview}
+      mainSize={document.mainTemplate}
+      miniSize={document.miniTemplate}
       onChange={(next) => commitDocument({ ...document, pagePreview: next })}
       assetStore={persistentAssetStore}
     />

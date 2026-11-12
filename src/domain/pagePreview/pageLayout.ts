@@ -31,7 +31,7 @@ export function calculatePageGeometry(args: {
     height: Math.max(0, contentHeight),
   };
 
-  const leftColumnWidth = Math.max(0, contentWidth * layout.leftColumnRatio);
+  const leftColumnWidth = Math.max(0, layout.miniWidth ?? contentWidth * layout.leftColumnRatio);
   const leftColumn: Rect = {
     x: content.x,
     y: content.y,
@@ -39,6 +39,7 @@ export function calculatePageGeometry(args: {
     height: content.height,
   };
 
+  // Preserve sizing for saved layouts that predate explicit dimensions.
   const availableMainWidth = Math.max(
     0,
     contentWidth - leftColumnWidth - layout.columnGap,
@@ -47,7 +48,7 @@ export function calculatePageGeometry(args: {
   if (
     contentWidth <= 0 ||
     contentHeight <= 0 ||
-    availableMainWidth <= 0 ||
+    (layout.mainWidth ?? availableMainWidth) <= 0 ||
     leftColumnWidth <= 0
   ) {
     warnings.push({
@@ -56,20 +57,27 @@ export function calculatePageGeometry(args: {
     });
   }
 
-  // Main placement: uniform width-derived scaling
+  // Explicit dimensions override legacy width-derived sizing.
   const safeMainWidth = mainSize.width > 0 ? mainSize.width : 1;
-  const mainScale = availableMainWidth / safeMainWidth;
-  const renderedMainWidth = availableMainWidth;
-  const renderedMainHeight = mainSize.height * mainScale;
+  const renderedMainWidth = layout.mainWidth ?? availableMainWidth;
+  const mainScale = renderedMainWidth / safeMainWidth;
+  const renderedMainHeight = layout.mainHeight ?? mainSize.height * mainScale;
 
   const main: Placement = {
-    x: content.x + leftColumnWidth + layout.columnGap,
+    x: layout.width - layout.padding - renderedMainWidth,
     y: content.y + Math.max(0, content.height - renderedMainHeight) *
       (layout.mainVerticalAlignment === "bottom" ? 1 : layout.mainVerticalAlignment === "center" ? 0.5 : 0),
     width: renderedMainWidth,
     height: renderedMainHeight,
     scale: mainScale,
   };
+
+  if (renderedMainWidth + leftColumnWidth > content.width + 1e-6) {
+    warnings.push({
+      code: "calendar-width-overflow",
+      message: "Calendar widths exceed available content width.",
+    });
+  }
 
   if (contentHeight > 0 && renderedMainHeight > contentHeight) {
     warnings.push({
@@ -80,7 +88,7 @@ export function calculatePageGeometry(args: {
 
   // Mini slots
   const miniSlotWidth = leftColumnWidth;
-  const miniSlotHeight = Math.max(0, contentHeight * layout.miniHeightRatio);
+  const miniSlotHeight = Math.max(0, layout.miniHeight ?? contentHeight * layout.miniHeightRatio);
 
   const previousMiniSlot: Rect = {
     x: content.x,
@@ -106,7 +114,7 @@ export function calculatePageGeometry(args: {
     });
   }
 
-  // Mini placement: uniform contain scaling centered in each slot
+  // Legacy mini calendars retain contain scaling; explicit sizes fill the slot.
   const safeMiniWidth = miniSize.width > 0 ? miniSize.width : 1;
   const safeMiniHeight = miniSize.height > 0 ? miniSize.height : 1;
 
@@ -118,11 +126,11 @@ export function calculatePageGeometry(args: {
       slot.width / safeMiniWidth,
       slot.height / safeMiniHeight,
     );
-    const width = miniSize.width * scale;
-    const height = miniSize.height * scale;
+    const width = layout.miniWidth ?? miniSize.width * scale;
+    const height = layout.miniHeight ?? miniSize.height * scale;
     const x = slot.x + (slot.width - width) / 2;
     const y = slot.y + (slot.height - height) / 2;
-    return { x, y, width, height, scale };
+    return { x, y, width, height, scale: width / safeMiniWidth };
   };
 
   const previousMini = computeMiniPlacement(previousMiniSlot);

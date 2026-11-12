@@ -62,7 +62,7 @@ export const PagePreview: React.FC<PagePreviewProps> = ({
           data-slot="main"
           style={placementToStyle(main, page)}
         >
-          <SvgPreview document={mainDocument} className="page-preview-svg" />
+          <SvgPreview document={mainDocument} className="page-preview-svg" preserveAspectRatio="none" />
         </div>
 
         <div
@@ -70,7 +70,7 @@ export const PagePreview: React.FC<PagePreviewProps> = ({
           data-slot="previous-mini"
           style={placementToStyle(previousMini, page)}
         >
-          <SvgPreview document={previousMiniDocument} className="page-preview-svg" />
+          <SvgPreview document={previousMiniDocument} className="page-preview-svg" preserveAspectRatio="none" />
         </div>
 
         <div
@@ -78,7 +78,7 @@ export const PagePreview: React.FC<PagePreviewProps> = ({
           data-slot="next-mini"
           style={placementToStyle(nextMini, page)}
         >
-          <SvgPreview document={nextMiniDocument} className="page-preview-svg" />
+          <SvgPreview document={nextMiniDocument} className="page-preview-svg" preserveAspectRatio="none" />
         </div>
       </div>
     </div>
