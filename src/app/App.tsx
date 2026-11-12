@@ -15,6 +15,7 @@ import { BatchExportPanel } from "../export/components/BatchExportPanel";
 import { getWorkspaceHolidayDiagnostics } from "../workspace/holiday/holidayWorkspace";
 import { resolveHolidayIndex } from "../domain/holiday/resolveHolidayIndex";
 import { generateCalendarMonth } from "../domain/calendar/generateCalendarMonth";
+import { getMiniMonths } from "../domain/calendar/monthSequence";
 import { useI18n } from "../shared/i18n/i18nStore";
 
 export const App: React.FC = () => {
@@ -263,24 +264,11 @@ export const App: React.FC = () => {
                 setEditingMonth({ year: y, month: m });
               }}
             >
-              <option value={`${targetYear}-1`}>
-                {t.nav.monthOptions.mainFirst(targetYear)}
-              </option>
-              <option value={`${targetYear}-5`}>
-                {t.nav.monthOptions.mainMonth(targetYear, 5)}
-              </option>
-              <option value={`${targetYear}-12`}>
-                {t.nav.monthOptions.mainLast(targetYear)}
-              </option>
-              <option value={`${targetYear + 1}-1`}>
-                {t.nav.monthOptions.mainNextYearFirst(targetYear)}
-              </option>
-              <option value={`${targetYear - 1}-12`}>
-                {t.nav.monthOptions.miniPrevYearLast(targetYear)}
-              </option>
-              <option value={`${targetYear + 1}-2`}>
-                {t.nav.monthOptions.miniNextYearSecond(targetYear)}
-              </option>
+              {getMiniMonths(targetYear).map(({ year, month }) => (
+                <option key={`${year}-${month}`} value={`${year}-${month}`}>
+                  {t.nav.previewMonth(year, month)}
+                </option>
+              ))}
             </select>
           </label>
         )}

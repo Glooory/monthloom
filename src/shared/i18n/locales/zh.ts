@@ -13,14 +13,7 @@ export const zh: TranslationDictionary = {
     previewMonthLabel: "预览月份",
     quickManageProject: "项目管理",
     quickExport: "导出 SVG",
-    monthOptions: {
-      mainFirst: (y) => `${y}年 01月（主日历）`,
-      mainMonth: (y, m) => `${y}年 ${String(m).padStart(2, "0")}月（主日历）`,
-      mainLast: (y) => `${y}年 12月（年末）`,
-      mainNextYearFirst: (y) => `${y + 1}年 01月（次年首月）`,
-      miniPrevYearLast: (y) => `${y - 1}年 12月（附日历首月）`,
-      miniNextYearSecond: (y) => `${y + 1}年 02月（附日历末月）`,
-    },
+    previewMonth: (y, m) => `${y}年 ${String(m).padStart(2, "0")}月`,
   },
   toolbar: {
     mainTemplate: "主日历",

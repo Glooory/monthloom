@@ -13,14 +13,7 @@ export interface TranslationDictionary {
     previewMonthLabel: string;
     quickManageProject: string;
     quickExport: string;
-    monthOptions: {
-      mainFirst: (year: number) => string;
-      mainMonth: (year: number, month: number) => string;
-      mainLast: (year: number) => string;
-      mainNextYearFirst: (year: number) => string;
-      miniPrevYearLast: (year: number) => string;
-      miniNextYearSecond: (year: number) => string;
-    };
+    previewMonth: (year: number, month: number) => string;
   };
   toolbar: {
     mainTemplate: string;

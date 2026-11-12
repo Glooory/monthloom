@@ -13,14 +13,7 @@ export const en: TranslationDictionary = {
     previewMonthLabel: "Preview Month",
     quickManageProject: "Projects",
     quickExport: "Export SVG",
-    monthOptions: {
-      mainFirst: (y) => `${y}-01 (Main 1st Month)`,
-      mainMonth: (y, m) => `${y}-${String(m).padStart(2, "0")} (Main Month)`,
-      mainLast: (y) => `${y}-12 (Main 12th Month)`,
-      mainNextYearFirst: (y) => `${y + 1}-01 (Next Year 13th Month)`,
-      miniPrevYearLast: (y) => `${y - 1}-12 (Mini 1st Month)`,
-      miniNextYearSecond: (y) => `${y + 1}-02 (Mini 15th Month)`,
-    },
+    previewMonth: (y, m) => `${y}-${String(m).padStart(2, "0")}`,
   },
   toolbar: {
     mainTemplate: "Main Calendar",
