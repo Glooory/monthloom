@@ -1,3 +1,4 @@
+import { formatHolidayDiagnostic } from "../../shared/i18n/holidayDiagnostic";
 import React from "react";
 import type { HolidayDiagnostic } from "../../domain/holiday/types";
 import { useI18n } from "../../shared/i18n/i18nStore";
@@ -40,7 +41,7 @@ export const HolidayDiagnostics: React.FC<HolidayDiagnosticsProps> = ({
       <ul style={{ margin: 0, paddingLeft: "18px", lineHeight: 1.5 }}>
         {diagnostics.map((d, i) => (
           <li key={i} style={{ color: d.level === "error" ? "var(--accent-rose)" : "#fde68a" }}>
-            {d.message}
+            {formatHolidayDiagnostic(d, t)}
           </li>
         ))}
       </ul>

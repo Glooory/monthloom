@@ -214,6 +214,9 @@ export const en: TranslationDictionary = {
     holidaySectionTitle: "Holiday Datasets",
     holidayLibraryBtn: (count) => `Holiday Library (${count} calendars)`,
     diagnosticsHeading: "Holiday Diagnostics",
+    holidayCoverageGap: (name, start, end) => `${name} holiday data does not cover ${start} through ${end}.`,
+    chinaPublicHolidays: "China Public Holidays",
+    japanPublicHolidays: "Japan Public Holidays",
   },
   persistence: {
     heading: "Projects & Templates",

@@ -214,6 +214,9 @@ export const zh: TranslationDictionary = {
     holidaySectionTitle: "法定节假日数据",
     holidayLibraryBtn: (count) => `节假日资料库 (${count} 个日历)`,
     diagnosticsHeading: "节假日配置提示",
+    holidayCoverageGap: (name, start, end) => `${name}数据未覆盖 ${start} 至 ${end}。`,
+    chinaPublicHolidays: "中国公众假期",
+    japanPublicHolidays: "日本公众假期",
   },
   persistence: {
     heading: "项目与模板",

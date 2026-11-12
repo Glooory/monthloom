@@ -76,6 +76,12 @@ export function createCalendarCoverageDiagnostics(args: {
   return gaps.map((gap) => ({
     level: "warning",
     code: "holiday-coverage-gap",
+    coverageGap: {
+      calendarId: args.calendar.id,
+      calendarName: args.calendar.name,
+      start: toISODate(gap.start),
+      end: toISODate(gap.end),
+    },
     message: `${args.calendar.name} holiday data does not cover ${toISODate(gap.start)} through ${toISODate(gap.end)}.`,
   }));
 }

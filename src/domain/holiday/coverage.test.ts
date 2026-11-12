@@ -103,11 +103,13 @@ describe("coverage", () => {
         level: "warning",
         code: "holiday-coverage-gap",
         message: "中国公众假期 holiday data does not cover 2026-12-01 through 2026-12-31.",
+        coverageGap: { calendarId: "cn", calendarName: "中国公众假期", start: "2026-12-01", end: "2026-12-31" },
       },
       {
         level: "warning",
         code: "holiday-coverage-gap",
         message: "中国公众假期 holiday data does not cover 2028-01-01 through 2028-02-29.",
+        coverageGap: { calendarId: "cn", calendarName: "中国公众假期", start: "2028-01-01", end: "2028-02-29" },
       },
     ]);
   });

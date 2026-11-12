@@ -189,6 +189,9 @@ export interface TranslationDictionary {
     holidaySectionTitle: string;
     holidayLibraryBtn: (count: number) => string;
     diagnosticsHeading: string;
+    holidayCoverageGap: (name: string, start: string, end: string) => string;
+    chinaPublicHolidays: string;
+    japanPublicHolidays: string;
   };
   persistence: {
     heading: string;

@@ -114,7 +114,7 @@ describe("FullYearPreview", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getAllByText(/holiday-coverage-gap/).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/Missing holiday coverage for 2028/).length).toBeGreaterThan(0);
     });
 
     expect(screen.getAllByText(/main-height-overflow/).length).toBeGreaterThan(0);

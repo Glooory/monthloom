@@ -1,3 +1,4 @@
+import { formatHolidayDiagnostic } from "../../shared/i18n/holidayDiagnostic";
 import React, { useState, useMemo, useRef } from "react";
 import type { HolidayDiagnostic, HolidayIndex } from "../../domain/holiday/types";
 import { calculatePageGeometry } from "../../domain/pagePreview/pageLayout";
@@ -212,7 +213,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
               ))}
               {coverageDiagnostics.map((d, idx) => (
                 <div key={`cov-${idx}`}>
-                  <strong>[{d.code}]</strong> {d.message}
+                  {formatHolidayDiagnostic(d, t)}
                 </div>
               ))}
             </div>

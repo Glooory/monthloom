@@ -103,6 +103,12 @@ export type HolidayDiagnostic = Readonly<{
   level: "warning" | "error";
   code: string;
   message: string;
+  coverageGap?: Readonly<{
+    calendarId: string;
+    calendarName: string;
+    start: string;
+    end: string;
+  }>;
 }>;
 
 export function holidayRecordId(calendarId: string, date: LocalDate): string {
