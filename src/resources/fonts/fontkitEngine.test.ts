@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { FontDescriptor } from "../../domain/template/font";
 import type { Typography } from "../../domain/template/primitives";
+import { generateCalendarMonth } from "../../domain/calendar/generateCalendarMonth";
+import { createDefaultEditorDocument } from "../../editor/state/documentStore";
+import { createDefaultCustomHolidayLayer, ensureLayerFontDescriptors } from "../../domain/template/holidayLayer";
+import { layoutMini } from "../../rendering/layout/miniLayout";
 import {
   ResolvedFontEngine,
   type ResolvedFontFace,
@@ -71,6 +75,30 @@ function createMockFontFace(args: {
 }
 
 describe("ResolvedFontEngine", () => {
+  it.each(["builtin", "custom"])("lays out %s Mini holiday and workday markers with matching font weights", (kind) => {
+    const document = createDefaultEditorDocument();
+    const layer = kind === "builtin"
+      ? document.holidayLayers![0]
+      : createDefaultCustomHolidayLayer("custom-calendar", "custom-layer");
+    const calendar = generateCalendarMonth(2027, 5, new Map([
+      ["2027-05-01", { occurrences: [{ layerId: layer.id, calendarId: layer.calendarId, type: "holiday" }] }],
+      ["2027-05-08", { occurrences: [{ layerId: layer.id, calendarId: layer.calendarId, type: "workday" }] }],
+    ]));
+    const catalog = ensureLayerFontDescriptors(document.fontCatalog, layer);
+    const faces = new Map(Object.entries(catalog).map(([fontId, descriptor]) => [
+      fontId,
+      createMockFontFace({ fontId, weight: descriptor.weight, style: descriptor.style }),
+    ]));
+    const scene = layoutMini({
+      calendar,
+      template: document.miniTemplate,
+      holidayLayers: [layer],
+      textMeasurer: new ResolvedFontEngine(faces),
+    });
+    expect(scene.nodes.filter((node) => node.semanticId === `mini.holiday.${layer.id}.holidayMarker`)).toHaveLength(1);
+    expect(scene.nodes.filter((node) => node.semanticId === `mini.holiday.${layer.id}.workdayMarker`)).toHaveLength(1);
+  });
+
   const baseTypography: Typography = {
     fontId: "font-1",
     fontSize: 20,

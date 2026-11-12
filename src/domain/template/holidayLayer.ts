@@ -104,7 +104,7 @@ export function createDefaultHolidayLayers(): readonly HolidayLayer[] {
             typography: {
               fontId: "default-sans",
               fontSize: 10,
-              fontWeight: 700,
+              fontWeight: 400,
               fontStyle: "normal",
               letterSpacing: 0,
               color: "#DC2626",
@@ -121,7 +121,7 @@ export function createDefaultHolidayLayers(): readonly HolidayLayer[] {
             typography: {
               fontId: "default-sans",
               fontSize: 10,
-              fontWeight: 700,
+              fontWeight: 400,
               fontStyle: "normal",
               letterSpacing: 0,
               color: "#6B7280",
@@ -204,7 +204,7 @@ export function createDefaultHolidayLayers(): readonly HolidayLayer[] {
             typography: {
               fontId: "default-sans",
               fontSize: 10,
-              fontWeight: 700,
+              fontWeight: 400,
               fontStyle: "normal",
               letterSpacing: 0,
               color: "#DC2626",
@@ -221,7 +221,7 @@ export function createDefaultHolidayLayers(): readonly HolidayLayer[] {
             typography: {
               fontId: "default-sans",
               fontSize: 10,
-              fontWeight: 700,
+              fontWeight: 400,
               fontStyle: "normal",
               letterSpacing: 0,
               color: "#6B7280",
@@ -311,7 +311,7 @@ export function createDefaultCustomHolidayLayer(
           typography: {
             fontId: "default-sans",
             fontSize: 10,
-            fontWeight: 700,
+            fontWeight: 400,
             fontStyle: "normal",
             letterSpacing: 0,
             color: "#DC2626",
@@ -328,7 +328,7 @@ export function createDefaultCustomHolidayLayer(
           typography: {
             fontId: "default-sans",
             fontSize: 10,
-            fontWeight: 700,
+            fontWeight: 400,
             fontStyle: "normal",
             letterSpacing: 0,
             color: "#6B7280",

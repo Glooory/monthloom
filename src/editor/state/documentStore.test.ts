@@ -9,6 +9,40 @@ describe("documentStore", () => {
     useDocumentStore.getState().replaceDocument(createDefaultEditorDocument());
   });
 
+  it("repairs legacy Mini dots on restore without changing customized markers or the input", () => {
+    const document = createDefaultEditorDocument();
+    const legacy = {
+      ...document,
+      holidayLayers: document.holidayLayers!.map((layer) => ({
+        ...layer,
+        mini: {
+          ...layer.mini,
+          holidayMarker: layer.mini.holidayMarker.marker.type === "text" ? {
+            ...layer.mini.holidayMarker,
+            marker: {
+              ...layer.mini.holidayMarker.marker,
+              typography: { ...layer.mini.holidayMarker.marker.typography, fontWeight: 700 },
+            },
+          } : layer.mini.holidayMarker,
+          workdayMarker: layer.mini.workdayMarker.marker.type === "text" ? {
+            ...layer.mini.workdayMarker,
+            marker: { ...layer.mini.workdayMarker.marker, value: "custom" },
+          } : layer.mini.workdayMarker,
+        },
+      })),
+    };
+    useDocumentStore.getState().replaceDocument(legacy);
+    const restored = useDocumentStore.getState().document;
+    for (const [index, layer] of restored.holidayLayers!.entries()) {
+      const marker = layer.mini.holidayMarker.marker;
+      expect(marker.type === "text" && marker.typography.fontWeight).toBe(400);
+      expect(layer.mini.workdayMarker).toBe(legacy.holidayLayers[index].mini.workdayMarker);
+      const original = legacy.holidayLayers[index].mini.holidayMarker.marker;
+      expect(original.type === "text" && original.typography.fontWeight).toBe(700);
+    }
+    expect(useDocumentStore.temporal.getState().pastStates).toHaveLength(0);
+  });
+
   it("initializes with default templates, font catalog, and page preview config", () => {
     const doc = useDocumentStore.getState().document;
     expect(doc.mainTemplate).toBeDefined();

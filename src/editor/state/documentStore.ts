@@ -5,6 +5,7 @@ import { DEFAULT_MAIN_TEMPLATE, DEFAULT_MINI_TEMPLATE } from "../../domain/templ
 import { createDefaultHolidayLayers } from "../../domain/template/holidayLayer";
 import type { EditorDocument } from "../model/types";
 import type { FontCatalog } from "../../resources/fonts/types";
+import type { EnabledMarkerStyle } from "../../domain/template/holidayLayer";
 
 export const DEFAULT_FONT_CATALOG: FontCatalog = {
   "default-sans": {
@@ -137,6 +138,28 @@ export type DocumentStore = {
   replaceDocument: (next: EditorDocument) => void;
 };
 
+// Older projects stored bold Mini dots against the regular default font face.
+function repairLegacyMiniDots(document: EditorDocument): EditorDocument {
+  if (document.fontCatalog["default-sans"]?.weight !== 400) return document;
+  const repairMarker = (style: EnabledMarkerStyle): EnabledMarkerStyle => {
+    const marker = style.marker;
+    if (marker.type !== "text" || marker.value !== "•" ||
+      marker.typography.fontId !== "default-sans" || marker.typography.fontWeight !== 700) {
+      return style;
+    }
+    return { ...style, marker: { ...marker, typography: { ...marker.typography, fontWeight: 400 } } };
+  };
+  let changed = false;
+  const holidayLayers = document.holidayLayers?.map((layer) => {
+    const holidayMarker = repairMarker(layer.mini.holidayMarker);
+    const workdayMarker = repairMarker(layer.mini.workdayMarker);
+    if (holidayMarker === layer.mini.holidayMarker && workdayMarker === layer.mini.workdayMarker) return layer;
+    changed = true;
+    return { ...layer, mini: { ...layer.mini, holidayMarker, workdayMarker } };
+  });
+  return changed ? { ...document, holidayLayers } : document;
+}
+
 export const useDocumentStore = create<DocumentStore>()(
   temporal(
     (set) => ({
@@ -145,7 +168,7 @@ export const useDocumentStore = create<DocumentStore>()(
         set({ document: next });
       },
       replaceDocument: (next: EditorDocument) => {
-        set({ document: next });
+        set({ document: repairLegacyMiniDots(next) });
         useDocumentStore.temporal.getState().clear();
       },
     }),
