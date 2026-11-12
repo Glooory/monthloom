@@ -11,6 +11,8 @@ import {
 } from "./resolveFonts";
 import { resolvePreviewFontEngine } from "./previewFonts";
 import { FontCoverageError } from "./fontErrors";
+import { createDefaultEditorDocument } from "../../editor/state/documentStore";
+import { editorDocumentSchema } from "../../persistence/schema/projectSnapshot";
 
 vi.mock("./googleFonts", () => ({ fetchGoogleFontBinary: vi.fn() }));
 const bytes = Uint8Array.from(
@@ -44,6 +46,40 @@ beforeEach(() => {
 });
 
 describe("shared font recovery", () => {
+  it.each([
+    ["main", "holidayMarker"],
+    ["main", "workdayMarker"],
+    ["mini", "holidayMarker"],
+    ["mini", "workdayMarker"],
+  ] as const)("renders a saved %s %s with the legacy font reference", async (target, element) => {
+    const document = createDefaultEditorDocument();
+    const layer = document.holidayLayers[0];
+    const marker = layer[target][element].marker;
+    if (marker.type !== "text") throw new Error("Expected text marker");
+    const saved = {
+      ...document,
+      holidayLayers: [{
+        ...layer,
+        [target]: {
+          ...layer[target],
+          [element]: {
+            ...layer[target][element],
+            marker: { ...marker, typography: { ...marker.typography, fontId: "main.marker" } },
+          },
+        },
+      }],
+    };
+    const loaded = editorDocumentSchema.parse(saved);
+    const result = await resolvePreviewFontEngine({
+      catalog: loaded.fontCatalog,
+      requirements: new Map([["main.marker", "休"]]),
+      fontCache: cache,
+    });
+    expect(result.fontEngine.getResolvedFace("main.marker")).toBeDefined();
+    expect(result.issues).toEqual([]);
+    expect(saved.fontCatalog["main.marker"]).toBeUndefined();
+  });
+
   it("shares in-flight requests and reuses a prepared character superset", async () => {
     const options = { fontCache: cache };
     const [a, b] = await Promise.all([

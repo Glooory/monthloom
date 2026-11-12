@@ -5,11 +5,60 @@ import {
   validateProjectSnapshot,
   validateTemplateSnapshot,
 } from "./validation";
-import type { ProjectSnapshotV1 } from "./projectSnapshot";
+import { editorDocumentSchema, type ProjectSnapshotV1 } from "./projectSnapshot";
 import type { TemplateSnapshotV1 } from "./templateSnapshot";
 
 describe("Snapshot validation", () => {
   const defaultDoc = createDefaultEditorDocument();
+
+  it.each([
+    ["main", "holidayMarker"], ["main", "workdayMarker"],
+    ["mini", "holidayMarker"], ["mini", "workdayMarker"],
+  ] as const)("repairs saved marker switch errors for %s %s", (target, element) => {
+    const doc = structuredClone(defaultDoc);
+    const layer = doc.holidayLayers[0];
+    const config = layer[target][element];
+    const nameTypography = layer.main.name.typography;
+    const descriptor = doc.fontCatalog[nameTypography.fontId];
+    const brokenText = {
+      type: "text" as const, value: "休", position: config.marker.position,
+      typography: { ...nameTypography, fontWeight: 500 },
+    };
+    const raw = {
+      ...doc,
+      holidayLayers: [{ ...layer, [target]: {
+        ...layer[target], [element]: { ...config, marker: brokenText },
+      } }],
+    };
+    const fixedText = editorDocumentSchema.parse(raw).holidayLayers[0][target][element].marker;
+    expect(fixedText.type).toBe("text");
+    if (fixedText.type !== "text") throw new Error("Expected text marker");
+    expect(fixedText.typography.fontWeight).toBe(descriptor.weight);
+    expect(fixedText.value).toBe("休");
+    const brokenImage = {
+      type: "image", assetId: "default-marker", position: config.marker.position,
+      width: 16, height: 16, opacity: 1,
+    };
+    const rawImage = { ...raw, holidayLayers: [{ ...layer, [target]: {
+      ...layer[target], [element]: { ...config, marker: brokenImage },
+    } }] };
+    const fixedImage = editorDocumentSchema.parse(rawImage).holidayLayers[0][target][element].marker;
+    expect(fixedImage.type).toBe("text");
+    expect(fixedImage.position).toEqual(config.marker.position);
+    expect(doc).toEqual(defaultDoc);
+  });
+
+  it("keeps existing font selections and leaves unrelated missing fonts unrepaired", () => {
+    const catalog = {
+      ...defaultDoc.fontCatalog,
+      "main.marker": defaultDoc.fontCatalog["main.date"],
+    };
+    expect(editorDocumentSchema.parse({ ...defaultDoc, fontCatalog: catalog }).fontCatalog)
+      .toEqual(catalog);
+    expect(editorDocumentSchema.parse({ ...defaultDoc, fontCatalog: {} }).fontCatalog)
+      .toEqual({});
+    expect(editorDocumentSchema.parse(defaultDoc).fontCatalog).toEqual(defaultDoc.fontCatalog);
+  });
 
   it("validates a valid ProjectSnapshotV1 with holidayLayers", () => {
     const snapshot: ProjectSnapshotV1 = {

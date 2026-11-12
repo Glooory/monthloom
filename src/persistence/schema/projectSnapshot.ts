@@ -220,6 +220,55 @@ export const editorDocumentSchema = z
       }
       calendarIds.add(layer.calendarId);
     }
+  })
+  .transform((doc) => {
+    // Older image-to-text marker switches wrote this ID without registering a font.
+    // Repair only that known reference; preserve explicitly selected fonts.
+    const hasLegacyMarker = doc.holidayLayers.some((layer) =>
+      [layer.main, layer.mini].some((style) =>
+        [style.holidayMarker, style.workdayMarker].some(({ marker }) =>
+          marker.type === "text" && marker.typography.fontId === "main.marker",
+        ),
+      ),
+    );
+    if (!doc.fontCatalog["main.marker"] && hasLegacyMarker) {
+      doc.fontCatalog["main.marker"] = {
+        family: "Noto Sans SC",
+        weight: 500,
+        style: "normal",
+        source: { type: "google", family: "Noto Sans SC" },
+      };
+    }
+    for (const layer of doc.holidayLayers) {
+      const fontId = layer.main.name.typography.fontId;
+      const descriptor = doc.fontCatalog[fontId];
+      if (!descriptor) continue;
+      for (const target of ["main", "mini"] as const) {
+        for (const element of ["holidayMarker", "workdayMarker"] as const) {
+          const config = layer[target][element];
+          const marker = config.marker;
+          if (marker.type === "image" && marker.assetId === "default-marker") {
+            // This placeholder never had image bytes. Restore a valid text marker.
+            config.marker = {
+              type: "text",
+              value: target === "mini" ? "•" : element === "holidayMarker" ? "休" : "班",
+              position: marker.position,
+              typography: {
+                ...layer.main.name.typography,
+                fontSize: 10,
+                fontWeight: descriptor.weight,
+                fontStyle: descriptor.style,
+              },
+            };
+          } else if (marker.type === "text" && marker.typography.fontId === fontId) {
+            // A previous switch reused the name font ID but hard-coded weight 500.
+            marker.typography.fontWeight = descriptor.weight;
+            marker.typography.fontStyle = descriptor.style;
+          }
+        }
+      }
+    }
+    return doc;
   });
 
 

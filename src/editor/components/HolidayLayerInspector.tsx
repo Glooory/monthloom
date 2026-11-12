@@ -172,7 +172,10 @@ export const HolidayLayerInspector: React.FC<HolidayLayerInspectorProps> = ({
 
         {enabled && (
           <MarkerInspector
+            key={`${target}.${layer.id}.${element}`}
             marker={marker}
+            defaultTextFontDescriptor={document.fontCatalog[layer.main.name.typography.fontId]}
+            defaultTextFontId={layer.main.name.typography.fontId}
             fontDescriptor={markerFontDescriptor}
             fontAssetStore={fontAssetStore}
             onSelectFont={(descriptor, typography) =>
@@ -271,7 +274,10 @@ export const HolidayLayerInspector: React.FC<HolidayLayerInspectorProps> = ({
 
         {enabled && (
           <MarkerInspector
+            key={`${target}.${layer.id}.${element}`}
             marker={marker}
+            defaultTextFontDescriptor={document.fontCatalog[layer.main.name.typography.fontId]}
+            defaultTextFontId={layer.main.name.typography.fontId}
             fontDescriptor={markerFontDescriptor}
             fontAssetStore={fontAssetStore}
             onSelectFont={(descriptor, typography) =>
