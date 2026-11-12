@@ -10,6 +10,7 @@ import { buildHolidaySemanticId } from "../model/holidaySemanticId";
 import { useI18n } from "../../shared/i18n/i18nStore";
 import { PositionInspector } from "./PositionInspector";
 import { TypographyInspector } from "./TypographyInspector";
+import { ColorInspector } from "./ColorInspector";
 import { MarkerInspector } from "./MarkerInspector";
 import { HolidayDateColorInspector } from "./HolidayDateColorInspector";
 
@@ -101,6 +102,21 @@ export const HolidayLayerInspector: React.FC<HolidayLayerInspectorProps> = ({
                   main: {
                     ...l.main,
                     name: { ...l.main.name, typography: nextTypo },
+                  },
+                }))
+              }
+            />
+            <ColorInspector
+              color={layer.main.name.typography.color}
+              onChangeColor={(color) =>
+                updateLayer((l) => ({
+                  ...l,
+                  main: {
+                    ...l.main,
+                    name: {
+                      ...l.main.name,
+                      typography: { ...l.main.name.typography, color },
+                    },
                   },
                 }))
               }
