@@ -20,6 +20,7 @@ export class ProjectOperations {
   private autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
   private saveChain: Promise<unknown> = Promise.resolve();
   private inFlightHydration: Promise<ProjectSnapshotV1> | null = null;
+  private isRestoringProject = false;
 
   constructor(customDb?: MonthloomDatabase) {
     const db = customDb ?? defaultDb;
@@ -34,7 +35,26 @@ export class ProjectOperations {
     }
   }
 
+  subscribeToProjectChanges(): () => void {
+    const unsubscribeDocument = useDocumentStore.subscribe((state, previous) => {
+      if (state.document !== previous.document) this.scheduleAutoSave();
+    });
+    const unsubscribeWorkspace = useWorkspaceStore.subscribe((state, previous) => {
+      if (
+        state.currentProjectId === previous.currentProjectId &&
+        (state.projectName !== previous.projectName || state.targetYear !== previous.targetYear)
+      ) {
+        this.scheduleAutoSave();
+      }
+    });
+    return () => {
+      unsubscribeDocument();
+      unsubscribeWorkspace();
+    };
+  }
+
   scheduleAutoSave(delayMs = 400): void {
+    if (this.isRestoringProject) return;
     this.cancelAutoSave();
     this.autoSaveTimer = setTimeout(async () => {
       this.autoSaveTimer = null;
@@ -47,16 +67,17 @@ export class ProjectOperations {
   }
 
   async flushAutoSave(): Promise<string | null> {
-    if (this.autoSaveTimer) {
-      this.cancelAutoSave();
-      try {
+    try {
+      if (this.autoSaveTimer) {
+        this.cancelAutoSave();
         return await this.saveCurrentProject();
-      } catch (err) {
-        console.warn("Auto-save flush failed:", err);
-        return null;
       }
+      await this.saveChain;
+      return null;
+    } catch (err) {
+      console.warn("Auto-save flush failed:", err);
+      return null;
     }
-    return null;
   }
 
   async saveCurrentProject(customName?: string): Promise<string> {
@@ -112,7 +133,8 @@ export class ProjectOperations {
   }
 
   async loadProject(id: string): Promise<void> {
-    this.cancelAutoSave();
+    await this.flushAutoSave();
+    await this.saveChain;
     const project = await this.repo.getById(id);
     if (!project) {
       throw new Error(`Project not found: ${id}`);
@@ -120,13 +142,17 @@ export class ProjectOperations {
 
     await useHolidayLibraryStore.getState().refresh(this.holidayRepo);
 
-    useWorkspaceStore.getState().loadWorkspace({
-      projectId: project.id,
-      projectName: project.name,
-      targetYear: project.targetYear,
-    });
-
-    useDocumentStore.getState().replaceDocument(project.document);
+    this.isRestoringProject = true;
+    try {
+      useWorkspaceStore.getState().loadWorkspace({
+        projectId: project.id,
+        projectName: project.name,
+        targetYear: project.targetYear,
+      });
+      useDocumentStore.getState().replaceDocument(project.document);
+    } finally {
+      this.isRestoringProject = false;
+    }
     setActiveProjectId(project.id);
   }
 
@@ -182,13 +208,15 @@ export class ProjectOperations {
   }
 
   async deleteProject(id: string): Promise<void> {
-    this.cancelAutoSave();
     const workspace = useWorkspaceStore.getState();
     const activeId = getActiveProjectId();
 
     const isCurrent = workspace.currentProjectId === id;
     const isActiveSession = activeId === id;
 
+    if (isCurrent || isActiveSession) this.cancelAutoSave();
+    await this.flushAutoSave();
+    await this.saveChain;
     await this.repo.delete(id);
 
     if (isCurrent || isActiveSession) {

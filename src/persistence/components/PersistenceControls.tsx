@@ -4,7 +4,6 @@ import { templateOperations } from "../operations/templateOperations";
 import { createMonthloomBundle } from "../bundle/exportBundle";
 import { importMonthloomBundle } from "../bundle/importBundle";
 import { ProjectRepository } from "../db/projectRepository";
-import { useWorkspaceStore } from "../../workspace/state/workspaceStore";
 import { useHolidayLibraryStore } from "../../workspace/state/holidayLibraryStore";
 import { useI18n } from "../../shared/i18n/i18nStore";
 
@@ -106,14 +105,9 @@ export const PersistenceControls: React.FC = () => {
 
   const handleExportProjectBundle = async () => {
     try {
-      const currentId = useWorkspaceStore.getState().currentProjectId;
+      const currentId = await projectOperations.saveCurrentProject();
       const repo = new ProjectRepository();
-      let snapshot = currentId ? await repo.getById(currentId) : null;
-      if (!snapshot) {
-        // Save first
-        const newId = await projectOperations.saveCurrentProject();
-        snapshot = await repo.getById(newId);
-      }
+      const snapshot = await repo.getById(currentId);
       if (!snapshot) return;
 
       const blob = await createMonthloomBundle({ snapshot });

@@ -52,7 +52,6 @@ export const WorkspaceControls: React.FC = () => {
           value={projectName}
           onChange={(e) => {
             setProjectInfo(currentProjectId, e.target.value);
-            projectOperations.scheduleAutoSave();
           }}
           onBlur={() => {
             projectOperations.flushAutoSave();
@@ -80,7 +79,6 @@ export const WorkspaceControls: React.FC = () => {
             value={targetYear}
             onChange={(e) => {
               setTargetYear(Number(e.target.value) || 2027);
-              projectOperations.scheduleAutoSave();
             }}
             onBlur={() => {
               projectOperations.flushAutoSave();

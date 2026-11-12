@@ -1,9 +1,14 @@
 import "fake-indexeddb/auto";
-import { describe, it, expect, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { act, render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { App } from "./App";
 import { AppErrorBoundary } from "./AppErrorBoundary";
 import { useI18nStore } from "../shared/i18n/i18nStore";
+import { useDocumentStore } from "../editor/state/documentStore";
+import { projectOperations } from "../persistence/operations/projectOperations";
+import { db } from "../persistence/db/monthloomDb";
+import { useWorkspaceStore } from "../workspace/state/workspaceStore";
+import * as bundleExport from "../persistence/bundle/exportBundle";
 
 describe("App Integration Smoke Test", () => {
   beforeEach(() => {
@@ -133,5 +138,65 @@ describe("App Integration Smoke Test", () => {
       expect(screen.queryByRole("status", { name: "loading-app" })).toBeNull();
       expect(screen.getByRole("textbox", { name: /项目名称/i })).toBeDefined();
     });
+  });
+
+  it("auto-saves document edits, undo and redo, and restores the edits on reload", async () => {
+    const app = render(<App />);
+    await screen.findByRole("textbox", { name: /项目名称/i });
+    const original = useDocumentStore.getState().document;
+    const edited = {
+      ...original,
+      mainTemplate: { ...original.mainTemplate, width: original.mainTemplate.width + 20 },
+      miniTemplate: { ...original.miniTemplate, width: original.miniTemplate.width + 10 },
+      holidayLayers: original.holidayLayers.map((layer, index) => index === 0 ? {
+        ...layer,
+        main: { ...layer.main, name: {
+          ...layer.main.name,
+          position: { ...layer.main.name.position, offsetX: layer.main.name.position.offsetX + 37 },
+        } },
+      } : layer),
+      pagePreview: { ...original.pagePreview, layout: {
+        ...original.pagePreview.layout, miniGap: original.pagePreview.layout.miniGap + 5,
+      } },
+    };
+    const expectSaved = async (document: typeof original) => {
+      await waitFor(async () => {
+        const id = useWorkspaceStore.getState().currentProjectId!;
+        expect((await db.projects.get(id))?.document).toEqual(document);
+      });
+    };
+
+    act(() => useDocumentStore.getState().commitDocument(edited));
+    await expectSaved(edited);
+    act(() => useDocumentStore.temporal.getState().undo());
+    await expectSaved(original);
+    act(() => useDocumentStore.temporal.getState().redo());
+    await expectSaved(edited);
+
+    app.unmount();
+    render(<App />);
+    await screen.findByRole("textbox", { name: /项目名称/i });
+    expect(useDocumentStore.getState().document).toEqual(edited);
+    projectOperations.cancelAutoSave();
+  });
+
+  it("exports the latest project edits before the auto-save delay expires", async () => {
+    render(<App />);
+    await screen.findByRole("textbox", { name: /项目名称/i });
+    fireEvent.click(screen.getByRole("button", { name: /项目与导出/i }));
+    // Stop after capturing the outgoing snapshot; no browser download is needed.
+    const exportSpy = vi.spyOn(bundleExport, "createMonthloomBundle")
+      .mockRejectedValueOnce(new Error("Snapshot captured"));
+    try {
+      const document = useDocumentStore.getState().document;
+      const edited = { ...document, mainTemplate: { ...document.mainTemplate, width: document.mainTemplate.width + 1 } };
+      act(() => useDocumentStore.getState().commitDocument(edited));
+      fireEvent.click(screen.getByRole("button", { name: /导出项目包/i }));
+      await waitFor(() => expect(exportSpy).toHaveBeenCalled());
+      expect(exportSpy.mock.calls[0][0].snapshot.document).toEqual(edited);
+    } finally {
+      exportSpy.mockRestore();
+      await act(async () => { await projectOperations.flushAutoSave(); });
+    }
   });
 });

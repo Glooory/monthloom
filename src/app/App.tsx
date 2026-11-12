@@ -60,6 +60,11 @@ export const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (!isReady) return;
+    return projectOperations.subscribeToProjectChanges();
+  }, [isReady]);
+
+  useEffect(() => {
     setEditingMonth((prev) => ({ ...prev, year: targetYear }));
   }, [targetYear]);
 
@@ -141,7 +146,6 @@ export const App: React.FC = () => {
             value={projectName}
             onChange={(e) => {
               setProjectInfo(currentProjectId, e.target.value);
-              projectOperations.scheduleAutoSave();
             }}
             onBlur={() => {
               projectOperations.flushAutoSave();
@@ -159,7 +163,6 @@ export const App: React.FC = () => {
               value={targetYear}
               onChange={(e) => {
                 setTargetYear(Number(e.target.value) || 2027);
-                projectOperations.scheduleAutoSave();
               }}
               onBlur={() => {
                 projectOperations.flushAutoSave();

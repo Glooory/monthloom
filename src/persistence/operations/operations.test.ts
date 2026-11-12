@@ -1,10 +1,11 @@
 import "fake-indexeddb/auto";
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { MonthloomDatabase } from "../db/monthloomDb";
 import { ProjectOperations } from "./projectOperations";
 import { TemplateOperations } from "./templateOperations";
 import { useWorkspaceStore } from "../../workspace/state/workspaceStore";
-import { useDocumentStore } from "../../editor/state/documentStore";
+import { createDefaultEditorDocument, useDocumentStore } from "../../editor/state/documentStore";
+import type { EditorDocument } from "../../editor/model/types";
 
 describe("Project and Template Operations", () => {
   let testDb: MonthloomDatabase;
@@ -234,6 +235,31 @@ describe("Project and Template Operations", () => {
     expect(loaded?.targetYear).toBe(2028);
   });
 
+  it("saves pending edits before switching projects without auto-saving restored state", async () => {
+    const firstId = await projectOps.saveCurrentProject("First");
+    useWorkspaceStore.getState().resetWorkspace();
+    const secondId = await projectOps.saveCurrentProject("Second");
+    const unsubscribe = projectOps.subscribeToProjectChanges();
+    try {
+      useWorkspaceStore.getState().setTargetYear(2031);
+      const document = useDocumentStore.getState().document;
+      const edited = { ...document, mainTemplate: { ...document.mainTemplate, width: 915 } };
+      useDocumentStore.getState().commitDocument(edited);
+
+      await projectOps.loadProject(firstId);
+      const saved = await testDb.projects.get(secondId);
+      expect(saved?.targetYear).toBe(2031);
+      expect(saved?.document.mainTemplate.width).toBe(915);
+      expect(useWorkspaceStore.getState().currentProjectId).toBe(firstId);
+      expect(await projectOps.flushAutoSave()).toBeNull();
+    } finally {
+      unsubscribe();
+      projectOps.cancelAutoSave();
+    }
+    useWorkspaceStore.getState().setTargetYear(2032);
+    expect(await projectOps.flushAutoSave()).toBeNull();
+  });
+
   it("preserves in-flight workspace project name edits during asynchronous save", async () => {
     useWorkspaceStore.getState().resetWorkspace();
     useWorkspaceStore.getState().setTargetYear(2028);
@@ -249,6 +275,110 @@ describe("Project and Template Operations", () => {
 
     // workspaceStore.projectName should not be rolled back to "Initial Name"
     expect(useWorkspaceStore.getState().projectName).toBe("Initial Name Extended");
+  });
+
+  const documentEdits: Record<string, (document: EditorDocument) => EditorDocument> = {
+    mainTemplate: (document) => ({ ...document, mainTemplate: { ...document.mainTemplate, width: 701 } }),
+    miniTemplate: (document) => ({ ...document, miniTemplate: { ...document.miniTemplate, width: 281 } }),
+    holidayLayers: (document) => ({ ...document, holidayLayers: document.holidayLayers.map((layer) => ({ ...layer, enabled: false })) }),
+    fontCatalog: (document) => ({ ...document, fontCatalog: { ...document.fontCatalog, "default-sans": { ...document.fontCatalog["default-sans"], weight: 500 } } }),
+    pageLayout: (document) => ({ ...document, pagePreview: { ...document.pagePreview, layout: { ...document.pagePreview.layout, miniGap: 31 } } }),
+    background: (document) => ({ ...document, pagePreview: { ...document.pagePreview, backgroundAssetId: "asset-test-background" } }),
+  };
+
+  it.each(Object.entries(documentEdits))("auto-saves %s independently", async (_field, edit) => {
+    useDocumentStore.getState().replaceDocument(createDefaultEditorDocument());
+    const id = await projectOps.saveCurrentProject();
+    const unsubscribe = projectOps.subscribeToProjectChanges();
+    try {
+      const edited = edit(useDocumentStore.getState().document);
+      useDocumentStore.getState().commitDocument(edited);
+      expect(await projectOps.flushAutoSave()).toBe(id);
+      expect((await testDb.projects.get(id))?.document).toEqual(edited);
+    } finally {
+      unsubscribe();
+      projectOps.cancelAutoSave();
+    }
+  });
+
+  it("auto-saves template application and clearing the background", async () => {
+    const document = createDefaultEditorDocument();
+    useDocumentStore.getState().replaceDocument(documentEdits.background(document));
+    const templateId = await templateOps.saveCurrentTemplate("With background");
+    useDocumentStore.getState().replaceDocument(document);
+    const id = await projectOps.saveCurrentProject();
+    const unsubscribe = projectOps.subscribeToProjectChanges();
+    try {
+      await templateOps.applyTemplate(templateId);
+      expect(await projectOps.flushAutoSave()).toBe(id);
+      expect((await testDb.projects.get(id))?.document.pagePreview.backgroundAssetId).toBe("asset-test-background");
+      useDocumentStore.getState().commitDocument(document);
+      expect(await projectOps.flushAutoSave()).toBe(id);
+      expect((await testDb.projects.get(id))?.document.pagePreview.backgroundAssetId).toBeUndefined();
+    } finally {
+      unsubscribe();
+      projectOps.cancelAutoSave();
+    }
+  });
+
+  it.each(["projectName", "targetYear"] as const)("auto-saves %s independently of the UI", async (field) => {
+    const id = await projectOps.saveCurrentProject();
+    const unsubscribe = projectOps.subscribeToProjectChanges();
+    try {
+      if (field === "projectName") useWorkspaceStore.getState().setProjectInfo(id, "Renamed project");
+      else useWorkspaceStore.getState().setTargetYear(2036);
+      expect(await projectOps.flushAutoSave()).toBe(id);
+      const saved = await testDb.projects.get(id);
+      if (field === "projectName") expect(saved?.name).toBe("Renamed project");
+      else expect(saved?.targetYear).toBe(2036);
+    } finally {
+      unsubscribe();
+      projectOps.cancelAutoSave();
+    }
+  });
+
+  it("waits for an auto-save already writing when flushed", async () => {
+    const id = await projectOps.saveCurrentProject();
+    let releaseWrite!: () => void;
+    let signalStarted!: () => void;
+    const writeGate = new Promise<void>((resolve) => { releaseWrite = resolve; });
+    const started = new Promise<void>((resolve) => { signalStarted = resolve; });
+    const originalSave = projectOps["repo"].save.bind(projectOps["repo"]);
+    const spy = vi.spyOn(projectOps["repo"], "save").mockImplementation(async (snapshot) => {
+      signalStarted();
+      await writeGate;
+      await originalSave(snapshot);
+    });
+    useWorkspaceStore.getState().setTargetYear(2034);
+    projectOps.scheduleAutoSave(0);
+    await started;
+    let finished = false;
+    const flush = projectOps.flushAutoSave().then(() => { finished = true; });
+    await Promise.resolve();
+    await Promise.resolve();
+    const finishedBeforeWrite = finished;
+    releaseWrite();
+    await flush;
+    await projectOps["saveChain"];
+    spy.mockRestore();
+    expect(finishedBeforeWrite).toBe(false);
+    expect((await testDb.projects.get(id))?.targetYear).toBe(2034);
+  });
+
+  it("preserves pending current-project edits when deleting another project", async () => {
+    const otherId = await projectOps.saveCurrentProject("Other");
+    useWorkspaceStore.getState().resetWorkspace();
+    const currentId = await projectOps.saveCurrentProject("Current");
+    const unsubscribe = projectOps.subscribeToProjectChanges();
+    try {
+      useWorkspaceStore.getState().setTargetYear(2035);
+      await projectOps.deleteProject(otherId);
+      await projectOps.flushAutoSave();
+      expect((await testDb.projects.get(currentId))?.targetYear).toBe(2035);
+    } finally {
+      unsubscribe();
+      projectOps.cancelAutoSave();
+    }
   });
 
   it("serializes concurrent save operations without racing", async () => {
