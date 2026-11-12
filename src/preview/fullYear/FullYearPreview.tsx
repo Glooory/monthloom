@@ -1,20 +1,19 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import type { HolidayDiagnostic, HolidayIndex } from "../../domain/holiday/types";
 import { calculatePageGeometry } from "../../domain/pagePreview/pageLayout";
 import { useDocumentStore } from "../../editor/state/documentStore";
 import type { AssetResolver } from "../../resources/assets/types";
-import type { ResolvedFontEngine } from "../../resources/fonts/fontkitEngine";
-import { resolveFontEngine } from "../../resources/fonts/resolveFonts";
-import type { FontCatalog, FontTextRequirements } from "../../resources/fonts/types";
 import { resolveBackgroundDataUri } from "./background";
 import { createFullYearCalendarSet } from "./calendarSet";
 import { collectFullYearPreviewFontRequirements } from "./fontRequirements";
 import { PagePreview } from "./PagePreview";
 import {
   renderFullYearPreviewDocuments,
-  type FullYearPreviewDocuments,
 } from "./renderDocuments";
 import { useI18n } from "../../shared/i18n/i18nStore";
+import { usePreviewFonts } from "../../resources/fonts/usePreviewFonts";
+import { usePreviewResource } from "../../shared/react/usePreviewResource";
+import { PreviewStatusBanner } from "../../shared/react/PreviewStatusBanner";
 import "./full-year-preview.css";
 
 export interface FullYearPreviewProps {
@@ -23,23 +22,6 @@ export interface FullYearPreviewProps {
   coverageDiagnostics?: readonly HolidayDiagnostic[];
   assetResolver: AssetResolver;
   fetchImpl?: typeof fetch;
-}
-
-function computeRequirementsKey(
-  catalog: FontCatalog,
-  requirements: FontTextRequirements,
-): string {
-  const parts: string[] = [];
-  for (const [fontId, chars] of requirements) {
-    const desc = catalog[fontId];
-    const sourceKey =
-      desc?.source.type === "local" ? desc.source.assetId : (desc?.source.family ?? "");
-    parts.push(
-      `${fontId}=${chars}@${desc?.family ?? ""}:${desc?.weight ?? 0}:${desc?.style ?? ""}:${sourceKey}`,
-    );
-  }
-  parts.sort();
-  return parts.join(";");
 }
 
 export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
@@ -52,20 +34,6 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
   const { t } = useI18n();
   // Subscribe only to canonical committed document
   const document = useDocumentStore((state) => state.document);
-
-  const [fontState, setFontState] = useState<{
-    key: string | null;
-    engine: ResolvedFontEngine | null;
-  }>({ key: null, engine: null });
-  const [renderedPages, setRenderedPages] = useState<{
-    inputs: object;
-    documents: FullYearPreviewDocuments;
-  } | null>(null);
-  const [backgroundDataUri, setBackgroundDataUri] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  const generationIdRef = useRef(0);
 
   const mainStartOfWeek = document.mainTemplate.weekdayRow.startOfWeek ?? 0;
   const miniStartOfWeek = document.miniTemplate.weekdayRow.startOfWeek ?? 0;
@@ -90,11 +58,9 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
     });
   }, [calendarSet, document.mainTemplate, document.miniTemplate, document.holidayLayers]);
 
-  const fontKey = useMemo(
-    () => computeRequirementsKey(document.fontCatalog, fontRequirements),
-    [document.fontCatalog, fontRequirements],
-  );
-  const fontEngine = fontState.key === fontKey ? fontState.engine : null;
+  const { fontEngine, issues, loading: fontLoading, error: fontError, retry: retryFonts } = usePreviewFonts({
+    catalog: document.fontCatalog, requirements: fontRequirements, assetResolver, fetchImpl,
+  });
   const renderInputs = useMemo(() => ({
     calendarSet,
     mainTemplate: document.mainTemplate,
@@ -110,85 +76,13 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
     fontEngine,
     assetResolver,
   ]);
-  const documents = renderedPages?.inputs === renderInputs ? renderedPages.documents : null;
-
-  // 3. Resolve Font Engine once per unique catalog & character requirements
-  useEffect(() => {
-    let isMounted = true;
-    setError(null);
-
-    resolveFontEngine({
-      catalog: document.fontCatalog,
-      requirements: fontRequirements,
-      assetResolver,
-      fetchImpl,
-    })
-      .then((engine) => {
-        if (!isMounted) return;
-        setFontState({ key: fontKey, engine });
-      })
-      .catch((err) => {
-        if (!isMounted) return;
-        setError(err instanceof Error ? err : new Error(String(err)));
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [fontKey, assetResolver, fetchImpl]);
-
-  // 4. Resolve Background Asset
-  useEffect(() => {
-    let isMounted = true;
-    resolveBackgroundDataUri({
-      assetId: document.pagePreview.backgroundAssetId,
-      assetResolver,
-    }).then((uri) => {
-      if (isMounted) {
-        setBackgroundDataUri(uri);
-      }
-    });
-    return () => {
-      isMounted = false;
-    };
-  }, [document.pagePreview.backgroundAssetId, assetResolver]);
-
-  // 5. Render 13 Main and 15 Mini SvgDocuments asynchronously
-  useEffect(() => {
-    if (!fontEngine) {
-      generationIdRef.current += 1;
-      setRenderedPages(null);
-      setLoading(true);
-      return;
-    }
-
-    const currentGeneration = ++generationIdRef.current;
-    setLoading(true);
-
-    renderFullYearPreviewDocuments({
-      calendarSet,
-      mainTemplate: document.mainTemplate,
-      miniTemplate: document.miniTemplate,
-      holidayLayers: document.holidayLayers,
-      fontEngine,
-      assetResolver,
-    })
-      .then((docs) => {
-        if (currentGeneration === generationIdRef.current) {
-          setRenderedPages({ inputs: renderInputs, documents: docs });
-          setLoading(false);
-        }
-      })
-      .catch((err) => {
-        if (currentGeneration === generationIdRef.current) {
-          setError(err instanceof Error ? err : new Error(String(err)));
-          setLoading(false);
-        }
-      });
-  }, [renderInputs]);
+  const backgroundKey = useMemo(() => ({ assetId: document.pagePreview.backgroundAssetId, assetResolver }),
+    [document.pagePreview.backgroundAssetId, assetResolver]);
+  const background = usePreviewResource({ resourceKey: backgroundKey,
+    load: () => resolveBackgroundDataUri(backgroundKey), retainPrevious: false });
 
   // 6. Page geometry shared by all 13 pages
-  const geometry = useMemo(() => {
+  const nextGeometry = useMemo(() => {
     return calculatePageGeometry({
       layout: document.pagePreview.layout,
       mainSize: {
@@ -207,6 +101,24 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
     document.miniTemplate.width,
     document.miniTemplate.height,
   ]);
+
+  const previewKey = useMemo(() => ({ renderInputs, nextGeometry, backgroundDataUri: background.value,
+    backgroundLoading: background.loading, backgroundError: background.error }),
+    [renderInputs, nextGeometry, background.value, background.loading, background.error]);
+  const preview = usePreviewResource({ resourceKey: previewKey, load: async () => {
+    if (!fontEngine || background.loading || background.error) return null;
+    const documents = await renderFullYearPreviewDocuments({ ...renderInputs, fontEngine });
+    return { documents, calendarSet, geometry: nextGeometry, backgroundDataUri: background.value, targetYear };
+  } });
+  const lastPreview = useRef<NonNullable<typeof preview.value> | null>(null);
+  if (preview.value) lastPreview.current = preview.value;
+  const displayed = lastPreview.current?.targetYear === targetYear ? lastPreview.current : null;
+  const documents = displayed?.documents ?? null;
+  const displayedCalendarSet = displayed?.calendarSet ?? calendarSet;
+  const geometry = displayed?.geometry ?? nextGeometry;
+  const backgroundDataUri = displayed?.backgroundDataUri ?? null;
+  const loading = fontLoading || preview.loading || background.loading;
+  const error = fontError ?? preview.error ?? background.error;
 
   const STORAGE_KEY = "monthloom_preview_mode";
 
@@ -237,18 +149,10 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
 
   const [focusPageIndex, setFocusPageIndex] = useState(0);
 
-  if (error) {
-    return (
-      <div className="full-year-preview-container full-year-preview-studio">
-        <div style={{ color: "var(--accent-rose)", padding: 24, textAlign: "center" }}>
-          {t.errors.previewRenderError(error.message)}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="full-year-preview-container full-year-preview-studio">
+      <PreviewStatusBanner error={error} issues={issues} loading={loading} retained={!!documents}
+        retry={() => { retryFonts(); preview.retry(); background.retry(); }} />
       {/* Top View Mode Control Bar */}
       <div className="gallery-control-bar">
         <div className="gallery-mode-switch">
@@ -315,7 +219,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
           </div>
         )}
 
-        {loading && !documents && (
+        {loading && !error && !documents && (
           <div className="loading-state-container">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: "spin 1s linear infinite" }}>
               <path d="M21 12a9 9 0 1 1-6.219-8.56" />
@@ -327,7 +231,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
         {/* 1. Grid Gallery View */}
         {documents && viewMode === "grid" && (
           <div className="gallery-grid">
-            {calendarSet.pages.map((pageDef, idx) => {
+            {displayedCalendarSet.pages.map((pageDef, idx) => {
               const mainKey = `${pageDef.mainMonth.year}-${pageDef.mainMonth.month}` as const;
               const prevKey = `${pageDef.previousMiniMonth.year}-${pageDef.previousMiniMonth.month}` as const;
               const nextKey = `${pageDef.nextMiniMonth.year}-${pageDef.nextMiniMonth.month}` as const;
@@ -371,7 +275,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
         {documents && viewMode === "focus" && (
           <div className="gallery-focus-container">
             {(() => {
-              const pageDef = calendarSet.pages[focusPageIndex] ?? calendarSet.pages[0];
+              const pageDef = displayedCalendarSet.pages[focusPageIndex] ?? displayedCalendarSet.pages[0];
               const mainKey = `${pageDef.mainMonth.year}-${pageDef.mainMonth.month}` as const;
               const prevKey = `${pageDef.previousMiniMonth.year}-${pageDef.previousMiniMonth.month}` as const;
               const nextKey = `${pageDef.nextMiniMonth.year}-${pageDef.nextMiniMonth.month}` as const;
@@ -402,8 +306,8 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
                     <button
                       type="button"
                       className="studio-btn studio-btn-secondary"
-                      disabled={focusPageIndex === calendarSet.pages.length - 1}
-                      onClick={() => setFocusPageIndex((p) => Math.min(calendarSet.pages.length - 1, p + 1))}
+                      disabled={focusPageIndex === displayedCalendarSet.pages.length - 1}
+                      onClick={() => setFocusPageIndex((p) => Math.min(displayedCalendarSet.pages.length - 1, p + 1))}
                     >
                       {t.gallery.nextPage}
                     </button>
@@ -422,7 +326,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
 
                   {/* Bottom Filmstrip */}
                   <div className="focus-filmstrip">
-                    {calendarSet.pages.map((p, i) => (
+                    {displayedCalendarSet.pages.map((p, i) => (
                       <button
                         key={p.label}
                         type="button"
@@ -442,7 +346,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
         {/* 3. Vertical Wall Flow View */}
         {documents && viewMode === "flow" && (
           <div className="full-year-flow-container">
-            {calendarSet.pages.map((pageDef) => {
+            {displayedCalendarSet.pages.map((pageDef) => {
               const mainKey = `${pageDef.mainMonth.year}-${pageDef.mainMonth.month}` as const;
               const prevKey = `${pageDef.previousMiniMonth.year}-${pageDef.previousMiniMonth.month}` as const;
               const nextKey = `${pageDef.nextMiniMonth.year}-${pageDef.nextMiniMonth.month}` as const;

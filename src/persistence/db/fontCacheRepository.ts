@@ -16,4 +16,8 @@ export class FontCacheRepository {
   async clear(): Promise<void> {
     await this.db.fontCache.clear();
   }
+
+  async delete(cacheKey: string): Promise<void> {
+    await this.db.fontCache.delete(cacheKey);
+  }
 }

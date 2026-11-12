@@ -42,6 +42,11 @@ export class PersistentFontCache {
       // Graceful fallback if cache write fails
     }
   }
+
+  async delete(cacheKey: string): Promise<void> {
+    if (typeof indexedDB === "undefined") return;
+    try { await this.repository.delete(cacheKey); } catch { /* Cache is optional. */ }
+  }
 }
 
 export const persistentFontCache = new PersistentFontCache();

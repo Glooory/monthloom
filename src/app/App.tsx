@@ -98,11 +98,14 @@ export const App: React.FC = () => {
       ? (document.mainTemplate.weekdayRow.startOfWeek ?? 0)
       : (document.miniTemplate.weekdayRow.startOfWeek ?? 0);
 
-  const editorCalendar = generateCalendarMonth(
-    editingMonth.year,
-    editingMonth.month,
-    holidayIndex,
-    currentStartOfWeek,
+  const editorCalendar = useMemo(
+    () => generateCalendarMonth(
+      editingMonth.year,
+      editingMonth.month,
+      holidayIndex,
+      currentStartOfWeek,
+    ),
+    [editingMonth.year, editingMonth.month, holidayIndex, currentStartOfWeek],
   );
 
   const header = (
@@ -350,6 +353,8 @@ export const App: React.FC = () => {
 
   const editor = (
     <TemplateEditor
+      key={currentProjectId ?? "unsaved"}
+      targetYear={targetYear}
       calendar={editorCalendar}
       assetResolver={persistentAssetStore}
     />
@@ -365,6 +370,7 @@ export const App: React.FC = () => {
 
   const preview = (
     <FullYearPreview
+      key={currentProjectId ?? "unsaved"}
       targetYear={targetYear}
       holidayIndex={holidayIndex}
       coverageDiagnostics={diagnostics}

@@ -1,4 +1,6 @@
-import React, { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { FontSelectionContext } from "../fonts/FontSelectionContext";
+import { supportsGoogleFontLanguage, type FontLanguageFilter } from "../../resources/fonts/googleFontCatalog";
 import { createPortal } from "react-dom";
 import type { Typography } from "../../domain/template/primitives";
 import type { FontDescriptor } from "../../domain/template/font";
@@ -35,11 +37,19 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
   fontAssetStore,
 }) => {
   const { t } = useI18n();
+  const prepareSelection = useContext(FontSelectionContext);
+  const applyFont = (descriptor: FontDescriptor, next: Typography) => {
+    localSelectionGeneration.current += 1;
+    if (!onSelectFont) return;
+    if (prepareSelection) prepareSelection.select(descriptor, next, onSelectFont);
+    else onSelectFont(descriptor, next);
+  };
   const [localFaces, setLocalFaces] = useState<LocalFontOption[] | null>(getCachedInstalledFonts);
   const [permissionChecked, setPermissionChecked] = useState(false);
   const [loadingFonts, setLoadingFonts] = useState(false);
   const [fontError, setFontError] = useState<string | null>(null);
   const [fontSearch, setFontSearch] = useState("");
+  const [fontLanguage, setFontLanguage] = useState<FontLanguageFilter>("all");
   const [pickerOpen, setPickerOpen] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState<{
     top: number;
@@ -51,6 +61,11 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
   const popoverRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const suppressFocusOpenRef = useRef(false);
+  const localSelectionGeneration = useRef(0);
+  useEffect(() => {
+    localSelectionGeneration.current += 1;
+    return () => { localSelectionGeneration.current += 1; };
+  }, [fontDescriptor]);
   const listId = useId();
   const isLocal = fontDescriptor?.source.type === "local";
   const localPostscriptName = fontDescriptor?.source.type === "local"
@@ -64,13 +79,13 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
   const currentFamily = fontDescriptor?.family ?? "Noto Sans";
   const searchTerm = fontSearch.trim().toLocaleLowerCase();
   const googleMatches = searchTerm
-    ? searchGoogleFontFamilies(fontSearch)
-    : listGoogleFontFamilies();
+    ? searchGoogleFontFamilies(fontSearch, 100, fontLanguage)
+    : listGoogleFontFamilies(fontLanguage);
   const localMatches = localFaces?.map((face, index) => ({ face, index })).filter(({ face }) =>
     !searchTerm || [face.family, face.fullName, face.style, face.postscriptName]
       .some((name) => name.toLocaleLowerCase().includes(searchTerm)),
   ) ?? [];
-  const googleFamilies = fontDescriptor?.source.type === "google" && !googleMatches.includes(fontDescriptor.family)
+  const googleFamilies = fontDescriptor?.source.type === "google" && supportsGoogleFontLanguage(fontDescriptor.family, fontLanguage) && !googleMatches.includes(fontDescriptor.family)
     ? [fontDescriptor.family, ...googleMatches]
     : googleMatches;
   const availableWeights = fontDescriptor?.source.type === "google"
@@ -85,7 +100,7 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
       ...googleFamilies.map((family) => ({ kind: "google" as const, family, value: `google:${family}` })),
     ] : []),
     ...(localMatches.length > 0 ? [
-      { kind: "header" as const, label: t.inspector.systemFontsGroup },
+      { kind: "header" as const, label: `${t.inspector.systemFontsGroup} · ${t.inspector.fontLanguageUnknown}` },
       ...localMatches.map(({ face, index }) => ({ kind: "local" as const, face, value: `local:${index}` })),
     ] : []),
   ];
@@ -180,7 +195,10 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
   };
 
   const selectFont = async (value: string) => {
+    const generation = ++localSelectionGeneration.current;
     if (!fontDescriptor || !onSelectFont) return;
+    prepareSelection?.cancel();
+    setLoadingFonts(false);
     if (value === selection) {
       setFontSearch("");
       return;
@@ -190,7 +208,7 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
       const family = value.slice(7);
       const face = chooseGoogleFontFace(family, typography.fontWeight, typography.fontStyle);
       setFontSearch("");
-      onSelectFont(
+      applyFont(
         { ...fontDescriptor, family, ...face, source: { type: "google", family } },
         { ...typography, fontWeight: face.weight, fontStyle: face.style },
       );
@@ -205,6 +223,7 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
     try {
       const face = await facePromise;
       const bytes = await (await face.blob()).arrayBuffer();
+      if (generation !== localSelectionGeneration.current) return;
       const weight = localFontWeight(face.style);
       const style = /italic|oblique/i.test(face.style) ? "italic" : "normal";
       const assetId = `font-${crypto.randomUUID()}`;
@@ -216,12 +235,16 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
       };
       parseFontkitFace({ fontId: typography.fontId, descriptor, bytes });
       await fontAssetStore.setAsset(assetId, { bytes, mimeType: "font/sfnt" });
-      onSelectFont(descriptor, { ...typography, fontWeight: weight, fontStyle: style });
+      if (generation !== localSelectionGeneration.current) return;
+      setLoadingFonts(false);
+      applyFont(descriptor, { ...typography, fontWeight: weight, fontStyle: style });
       setFontSearch("");
     } catch (error) {
-      setFontError(error instanceof Error ? error.message : String(error));
+      if (generation === localSelectionGeneration.current) {
+        setFontError(error instanceof Error ? error.message : String(error));
+      }
     } finally {
-      setLoadingFonts(false);
+      if (generation === localSelectionGeneration.current) setLoadingFonts(false);
     }
   };
 
@@ -230,6 +253,17 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
       <div className="section-heading">{t.inspector.typographyHeading}</div>
 
       <div className="field-group">
+        <div className="field-row">
+          <label className="field-label" htmlFor={`${listId}-language`}>{t.inspector.fontLanguageLabel}</label>
+          <select id={`${listId}-language`} className="field-input" value={fontLanguage}
+            onChange={(event) => { setFontLanguage(event.target.value as FontLanguageFilter); setFontSearch(""); closePicker(); }}>
+            <option value="all">{t.inspector.fontLanguageAll}</option>
+            <option value="zh">{t.inspector.fontLanguageChinese}</option>
+            <option value="ja">{t.inspector.fontLanguageJapanese}</option>
+            <option value="zh-ja">{t.inspector.fontLanguageBoth}</option>
+          </select>
+        </div>
+        <p className="font-language-hint">{t.inspector.fontLanguageHint}</p>
         <div ref={pickerRef} className="font-picker-controls">
           <div className="field-row">
             <label className="field-label" htmlFor="font-search">{t.inspector.fontFamilyLabel}</label>
@@ -299,7 +333,7 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
           >
             {pickerRows.length > 0 ? (
               <FontPickerList
-                key={fontSearch}
+                key={`${fontLanguage}:${fontSearch}`}
                 id={listId}
                 rows={pickerRows}
                 selectedValue={selection}
@@ -335,7 +369,7 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
             onChange={(e) => {
               const weight = parseInt(e.target.value, 10);
               if (fontDescriptor && onSelectFont) {
-                onSelectFont({ ...fontDescriptor, weight }, { ...typography, fontWeight: weight });
+                applyFont({ ...fontDescriptor, weight }, { ...typography, fontWeight: weight });
               } else {
                 onChangeTypography({ ...typography, fontWeight: weight });
               }
@@ -372,7 +406,7 @@ export const TypographyInspector: React.FC<TypographyInspectorProps> = ({
                 const face = fontDescriptor.source.type === "google"
                   ? chooseGoogleFontFace(fontDescriptor.family, typography.fontWeight, style)
                   : { weight: typography.fontWeight, style };
-                onSelectFont({ ...fontDescriptor, ...face }, { ...typography, fontWeight: face.weight, fontStyle: face.style });
+                applyFont({ ...fontDescriptor, ...face }, { ...typography, fontWeight: face.weight, fontStyle: face.style });
               } else {
                 onChangeTypography({ ...typography, fontStyle: style });
               }

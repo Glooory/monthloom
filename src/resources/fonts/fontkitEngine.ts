@@ -6,6 +6,8 @@ import type { TextMeasurer, TextMetrics } from "../../rendering/layout/textMetri
 export type ResolvedFontFace = Readonly<{
   fontId: string;
   descriptor: FontDescriptor;
+  /** Only preview substitutes carry the originally requested face. */
+  requestedDescriptor?: FontDescriptor;
   unitsPerEm: number;
   ascent: number;
   descent: number;
@@ -96,13 +98,14 @@ export class ResolvedFontEngine implements TextMeasurer {
       throw new Error(`Font face not found for fontId: "${fontId}"`);
     }
 
+    const requested = face.requestedDescriptor ?? face.descriptor;
     if (typography) {
-      if (typography.fontWeight !== face.descriptor.weight) {
+      if (typography.fontWeight !== requested.weight) {
         throw new Error(
           `Font weight mismatch for fontId "${fontId}": requested ${typography.fontWeight}, but registered descriptor is ${face.descriptor.weight}`,
         );
       }
-      if (typography.fontStyle !== face.descriptor.style) {
+      if (typography.fontStyle !== requested.style) {
         throw new Error(
           `Font style mismatch for fontId "${fontId}": requested ${typography.fontStyle}, but registered descriptor is ${face.descriptor.style}`,
         );
@@ -114,6 +117,10 @@ export class ResolvedFontEngine implements TextMeasurer {
 
   getDescriptor(fontId: string): FontDescriptor {
     return this.getFace(fontId).descriptor;
+  }
+
+  getResolvedFace(fontId: string): ResolvedFontFace | undefined {
+    return this.faces.get(fontId);
   }
 
   measure(text: string, typography: Typography): TextMetrics {

@@ -76,6 +76,13 @@ export interface TranslationDictionary {
     typographyHeading: string;
     fontFamilyLabel: string;
     googleFontsGroup: string;
+    fontLanguageLabel: string;
+    fontLanguageAll: string;
+    fontLanguageChinese: string;
+    fontLanguageJapanese: string;
+    fontLanguageBoth: string;
+    fontLanguageUnknown: string;
+    fontLanguageHint: string;
     fontSearchLabel: string;
     noFontResults: string;
     systemFontsGroup: string;
@@ -246,6 +253,16 @@ export interface TranslationDictionary {
     appErrorDesc: string;
     reloadAppBtn: string;
     fontLoadError: (msg: string) => string;
+    fontRetry: string;
+    fontRetrying: string;
+    fontPreviewUpdating: string;
+    fontPreviewUnavailable: string;
+    fontIncompatible: (family: string, characters: string) => string;
+    fontSelectionFailed: (family: string) => string;
+    fontSelectionPending: (family: string) => string;
+    cancelFontSelection: string;
+    fontSubstitution: (fonts: string) => string;
+    previewRetained: string;
     previewRenderError: (msg: string) => string;
   };
   holidayLibrary: {

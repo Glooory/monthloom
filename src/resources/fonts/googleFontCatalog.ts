@@ -1,19 +1,35 @@
 import catalog from "./googleFontCatalog.json";
+import languageMetadata from "./googleFontLanguages.json";
+
+// Google Fonts /metadata/fonts subset declarations, retrieved 2026-11-12.
+// These are discovery hints, not guarantees of individual glyph coverage.
+export type FontLanguageFilter = "all" | "zh" | "ja" | "zh-ja";
+const languages: Readonly<Record<string, readonly string[]>> = languageMetadata;
+
+export function matchesFontLanguage(subsets: readonly string[], filter: FontLanguageFilter): boolean {
+  const chinese = subsets.some((subset) => subset.startsWith("chinese-"));
+  const japanese = subsets.includes("japanese");
+  return filter === "all" || (filter === "zh" ? chinese : filter === "ja" ? japanese : chinese && japanese);
+}
+
+export function supportsGoogleFontLanguage(family: string, filter: FontLanguageFilter): boolean {
+  return matchesFontLanguage(languages[family] ?? [], filter);
+}
 
 // Snapshot of https://fonts.google.com/metadata/fonts, retrieved 2026-09-23.
 // The catalog is bundled so font selection needs no API key or runtime metadata request.
 const families = new Map(catalog.map((entry) => [entry.family, new Set(entry.variants)]));
 const familyNames = catalog.map((entry) => entry.family);
 
-export function listGoogleFontFamilies(): readonly string[] {
-  return familyNames;
+export function listGoogleFontFamilies(language: FontLanguageFilter = "all"): readonly string[] {
+  return language === "all" ? familyNames : familyNames.filter((family) => supportsGoogleFontLanguage(family, language));
 }
 
-export function searchGoogleFontFamilies(query: string, limit = 100): string[] {
+export function searchGoogleFontFamilies(query: string, limit = 100, language: FontLanguageFilter = "all"): string[] {
   const term = query.trim().toLocaleLowerCase();
   if (!term) return [];
   return catalog
-    .filter((entry) => entry.family.toLocaleLowerCase().includes(term))
+    .filter((entry) => entry.family.toLocaleLowerCase().includes(term) && supportsGoogleFontLanguage(entry.family, language))
     .slice(0, limit)
     .map((entry) => entry.family);
 }

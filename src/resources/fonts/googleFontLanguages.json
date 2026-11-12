@@ -1,0 +1,707 @@
+{
+  "Aoboshi One": [
+    "menu",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "BIZ UDGothic": [
+    "menu",
+    "cyrillic",
+    "greek-ext",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "BIZ UDMincho": [
+    "menu",
+    "cyrillic",
+    "greek-ext",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "BIZ UDPGothic": [
+    "menu",
+    "cyrillic",
+    "greek-ext",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "BIZ UDPMincho": [
+    "menu",
+    "cyrillic",
+    "greek-ext",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Bpmf Huninn": [
+    "menu",
+    "chinese-traditional",
+    "latin",
+    "latin-ext"
+  ],
+  "Bpmf Iansui": [
+    "menu",
+    "chinese-traditional",
+    "latin",
+    "latin-ext"
+  ],
+  "Bpmf Zihi Kai Std": [
+    "menu",
+    "chinese-traditional",
+    "latin",
+    "latin-ext"
+  ],
+  "Cactus Classical Serif": [
+    "menu",
+    "chinese-traditional",
+    "cyrillic",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "Cherry Bomb One": [
+    "menu",
+    "japanese",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "Chiron GoRound TC": [
+    "menu",
+    "chinese-traditional",
+    "cyrillic",
+    "cyrillic-ext",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "Chiron Hei HK": [
+    "menu",
+    "chinese-traditional",
+    "cyrillic",
+    "cyrillic-ext",
+    "greek",
+    "greek-ext",
+    "latin",
+    "latin-ext",
+    "symbols2",
+    "vietnamese"
+  ],
+  "Chiron Sung HK": [
+    "menu",
+    "chinese-hongkong",
+    "cyrillic",
+    "cyrillic-ext",
+    "greek",
+    "latin",
+    "latin-ext",
+    "symbols2",
+    "vietnamese"
+  ],
+  "Chocolate Classical Sans": [
+    "menu",
+    "chinese-traditional",
+    "cyrillic",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "Chokokutai": [
+    "menu",
+    "japanese",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "Darumadrop One": [
+    "menu",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Dela Gothic One": [
+    "menu",
+    "cyrillic",
+    "greek",
+    "japanese",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "DotGothic16": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Hachi Maru Pop": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Hina Mincho": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "Huninn": [
+    "menu",
+    "chinese-traditional",
+    "cyrillic",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "IBM Plex Sans JP": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Iansui": [
+    "menu",
+    "chinese-traditional",
+    "latin",
+    "latin-ext",
+    "symbols2"
+  ],
+  "Kaisei Decol": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Kaisei HarunoUmi": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Kaisei Opti": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Kaisei Tokumin": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Kapakana": [
+    "menu",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Kiwi Maru": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Klee One": [
+    "menu",
+    "cyrillic",
+    "greek-ext",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Kosugi": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Kosugi Maru": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "LINE Seed JP": [
+    "menu",
+    "cyrillic",
+    "greek-ext",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "LXGW Marker Gothic": [
+    "menu",
+    "chinese-traditional",
+    "cyrillic",
+    "cyrillic-ext",
+    "greek",
+    "latin",
+    "latin-ext",
+    "symbols2",
+    "vietnamese"
+  ],
+  "LXGW WenKai Mono TC": [
+    "menu",
+    "chinese-traditional",
+    "cyrillic",
+    "cyrillic-ext",
+    "greek",
+    "greek-ext",
+    "latin",
+    "latin-ext",
+    "lisu",
+    "vietnamese"
+  ],
+  "LXGW WenKai TC": [
+    "menu",
+    "chinese-traditional",
+    "cyrillic",
+    "cyrillic-ext",
+    "greek",
+    "greek-ext",
+    "latin",
+    "latin-ext",
+    "lisu",
+    "vietnamese"
+  ],
+  "Liu Jian Mao Cao": [
+    "menu",
+    "chinese-simplified",
+    "latin"
+  ],
+  "Long Cang": [
+    "menu",
+    "chinese-simplified",
+    "latin"
+  ],
+  "M PLUS 1": [
+    "menu",
+    "japanese",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "M PLUS 1 Code": [
+    "menu",
+    "japanese",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "M PLUS 1p": [
+    "menu",
+    "cyrillic",
+    "cyrillic-ext",
+    "greek",
+    "greek-ext",
+    "hebrew",
+    "japanese",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "M PLUS 2": [
+    "menu",
+    "japanese",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "M PLUS Rounded 1c": [
+    "menu",
+    "cyrillic",
+    "cyrillic-ext",
+    "greek",
+    "greek-ext",
+    "hebrew",
+    "japanese",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "M PLUS U": [
+    "menu",
+    "japanese",
+    "latin",
+    "latin-ext",
+    "symbols2",
+    "vietnamese"
+  ],
+  "Ma Shan Zheng": [
+    "menu",
+    "chinese-simplified",
+    "latin"
+  ],
+  "Mochiy Pop One": [
+    "menu",
+    "japanese",
+    "latin"
+  ],
+  "Mochiy Pop P One": [
+    "menu",
+    "japanese",
+    "latin"
+  ],
+  "Monomaniac One": [
+    "menu",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Murecho": [
+    "menu",
+    "cyrillic",
+    "cyrillic-ext",
+    "greek",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "New Tegomin": [
+    "menu",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Noto Sans HK": [
+    "menu",
+    "chinese-hongkong",
+    "cyrillic",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "Noto Sans JP": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "Noto Sans SC": [
+    "menu",
+    "chinese-simplified",
+    "cyrillic",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "Noto Sans TC": [
+    "menu",
+    "chinese-traditional",
+    "cyrillic",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "Noto Serif HK": [
+    "menu",
+    "chinese-hongkong",
+    "cyrillic",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "Noto Serif JP": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "Noto Serif SC": [
+    "menu",
+    "chinese-simplified",
+    "cyrillic",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "Noto Serif TC": [
+    "menu",
+    "chinese-traditional",
+    "cyrillic",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "Palette Mosaic": [
+    "menu",
+    "japanese",
+    "latin"
+  ],
+  "Potta One": [
+    "menu",
+    "japanese",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "Rampart One": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Reggae One": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Rock 3D": [
+    "menu",
+    "japanese",
+    "latin"
+  ],
+  "RocknRoll One": [
+    "menu",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Sawarabi Gothic": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "Sawarabi Mincho": [
+    "menu",
+    "braille",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Shippori Antique": [
+    "menu",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Shippori Antique B1": [
+    "menu",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Shippori Mincho": [
+    "menu",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Shippori Mincho B1": [
+    "menu",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Shizuru": [
+    "menu",
+    "japanese",
+    "latin"
+  ],
+  "Slackside One": [
+    "menu",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Stick": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Train One": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Tsukimi Rounded": [
+    "menu",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "UoqMunThenKhung": [
+    "menu",
+    "chinese-traditional",
+    "cyrillic",
+    "latin",
+    "symbols2"
+  ],
+  "WDXL Lubrifont JP N": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext",
+    "symbols2"
+  ],
+  "WDXL Lubrifont SC": [
+    "menu",
+    "chinese-simplified",
+    "cyrillic",
+    "latin",
+    "latin-ext",
+    "symbols2"
+  ],
+  "WDXL Lubrifont TC": [
+    "menu",
+    "chinese-traditional",
+    "cyrillic",
+    "latin",
+    "latin-ext",
+    "symbols2"
+  ],
+  "Yomogi": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext",
+    "vietnamese"
+  ],
+  "Yuji Boku": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Yuji Hentaigana Akari": [
+    "menu",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Yuji Hentaigana Akebono": [
+    "menu",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Yuji Mai": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Yuji Syuku": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Yusei Magic": [
+    "menu",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "ZCOOL KuaiLe": [
+    "menu",
+    "chinese-simplified",
+    "latin"
+  ],
+  "ZCOOL QingKe HuangYou": [
+    "menu",
+    "chinese-simplified",
+    "latin"
+  ],
+  "ZCOOL XiaoWei": [
+    "menu",
+    "chinese-simplified",
+    "latin"
+  ],
+  "Zen Antique": [
+    "menu",
+    "cyrillic",
+    "greek",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Zen Antique Soft": [
+    "menu",
+    "cyrillic",
+    "greek",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Zen Kaku Gothic Antique": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Zen Kaku Gothic New": [
+    "menu",
+    "cyrillic",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Zen Kurenaido": [
+    "menu",
+    "cyrillic",
+    "greek",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Zen Maru Gothic": [
+    "menu",
+    "cyrillic",
+    "greek",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Zen Old Mincho": [
+    "menu",
+    "cyrillic",
+    "greek",
+    "japanese",
+    "latin",
+    "latin-ext"
+  ],
+  "Zhi Mang Xing": [
+    "menu",
+    "chinese-simplified",
+    "latin"
+  ]
+}

@@ -4,16 +4,16 @@ import { generateCalendarMonth } from "../../domain/calendar/generateCalendarMon
 import { createDefaultEditorDocument } from "../state/documentStore";
 import { selectElementFont } from "../model/templateBindings";
 import { useEditorFontEngine } from "./useEditorFontEngine";
-import { resolveFontEngine } from "../../resources/fonts/resolveFonts";
-import type { ResolvedFontEngine } from "../../resources/fonts/fontkitEngine";
+import { resolvePreviewFontEngine } from "../../resources/fonts/previewFonts";
+import { ResolvedFontEngine } from "../../resources/fonts/fontkitEngine";
 
-vi.mock("../../resources/fonts/resolveFonts", () => ({ resolveFontEngine: vi.fn() }));
+vi.mock("../../resources/fonts/previewFonts", () => ({ resolvePreviewFontEngine: vi.fn() }));
 
 describe("useEditorFontEngine", () => {
   it("does not expose the previous font engine while a changed face loads", async () => {
-    const firstEngine = {} as ResolvedFontEngine;
-    vi.mocked(resolveFontEngine)
-      .mockResolvedValueOnce(firstEngine)
+    const firstEngine = new ResolvedFontEngine(new Map());
+    vi.mocked(resolvePreviewFontEngine)
+      .mockResolvedValueOnce({ fontEngine: firstEngine, issues: [] })
       .mockReturnValueOnce(new Promise(() => {}));
     const calendar = generateCalendarMonth(2027, 1);
     const firstDocument = createDefaultEditorDocument();

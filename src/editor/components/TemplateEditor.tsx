@@ -1,15 +1,12 @@
 import React, { useState, useEffect, useRef, useMemo, useSyncExternalStore } from "react";
 import type { CalendarMonth } from "../../domain/calendar/types";
 import type { BinaryAssetResolver, BinaryAssetWriter } from "../../resources/assets/types";
-import type { SvgDocument } from "../../rendering/svg/document";
-import type { RenderScene } from "../../rendering/scene/types";
 import type { PositionableSemanticId } from "../model/types";
 import type { Anchor } from "../../domain/template/primitives";
 import { useDocumentStore } from "../state/documentStore";
 import { useUiStore } from "../state/uiStore";
 import { createEffectiveDocument } from "../model/effectiveDocument";
 import { useEditorFontEngine } from "../fonts/useEditorFontEngine";
-import type { ResolvedFontEngine } from "../../resources/fonts/fontkitEngine";
 import { memoryAssetStore } from "../assets/memoryAssetStore";
 import { layoutMain } from "../../rendering/layout/mainLayout";
 import { layoutMini } from "../../rendering/layout/miniLayout";
@@ -27,10 +24,14 @@ import { Inspector } from "./Inspector";
 import { HolidayLayerTree } from "./HolidayLayerTree";
 import { useHolidayLibraryStore } from "../../workspace/state/holidayLibraryStore";
 import { useI18n } from "../../shared/i18n/i18nStore";
+import { usePreviewResource } from "../../shared/react/usePreviewResource";
+import { PreviewStatusBanner } from "../../shared/react/PreviewStatusBanner";
+import { FontSelectionContext, usePreparedFontSelection } from "../fonts/FontSelectionContext";
 import "./editor.css";
 
 export interface TemplateEditorProps {
   calendar: CalendarMonth;
+  targetYear?: number;
   weekdays?: readonly string[];
   fetchImpl?: typeof fetch;
   assetResolver?: BinaryAssetResolver;
@@ -38,6 +39,7 @@ export interface TemplateEditorProps {
 
 export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   calendar,
+  targetYear = calendar.year,
   weekdays,
   fetchImpl,
   assetResolver = memoryAssetStore,
@@ -69,13 +71,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     setDrag,
   } = useUiStore();
 
-  const [svgState, setSvgState] = useState<{
-    scene: RenderScene;
-    fontEngine: ResolvedFontEngine;
-    activeTemplate: "main" | "mini";
-    calendar: CalendarMonth;
-    document: SvgDocument;
-  } | null>(null);
+  const fontSelection = usePreparedFontSelection({ targetYear, assetResolver, fetchImpl });
 
   // Derive transient effective document
   const effectiveDocument = useMemo(() => {
@@ -87,65 +83,44 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   }, [document, drag]);
 
   // Load font engine with requirement stability
-  const { fontEngine, error: fontError } = useEditorFontEngine({
+  const { fontEngine, issues = [], loading: fontLoading, error: fontError, retry: retryFonts } = useEditorFontEngine({
     calendar,
+    targetYear,
+    activeTemplate,
+    weekdays,
     document: effectiveDocument,
     assetResolver,
     fetchImpl,
   });
 
-  // Calculate layout scene
-  const scene: RenderScene | null = useMemo(() => {
-    if (!fontEngine) return null;
-
-    if (activeTemplate === "main") {
-      return layoutMain({
-        calendar,
-        template: effectiveDocument.mainTemplate,
-        textMeasurer: fontEngine,
-        weekdays,
-        holidayLayers: effectiveDocument.holidayLayers,
-      });
-    } else {
-      return layoutMini({
-        calendar,
-        template: effectiveDocument.miniTemplate,
-        textMeasurer: fontEngine,
-        weekdays,
-        holidayLayers: effectiveDocument.holidayLayers,
-      });
-    }
-  }, [fontEngine, activeTemplate, calendar, effectiveDocument, weekdays]);
-  const svgDocument = svgState?.fontEngine === fontEngine &&
-    svgState.activeTemplate === activeTemplate && svgState.calendar === calendar
-    ? svgState.document
-    : null;
-  const canvasScene = svgDocument && svgState ? svgState.scene : scene;
-
-  // Materialize SVG document when scene or fontEngine changes
-  useEffect(() => {
-    if (!scene || !fontEngine) return;
-
-    let isMounted = true;
-    materializeSvg({
-      scene,
-      mode: "outlined",
-      fontEngine,
-      assetResolver,
-    })
-      .then((doc) => {
-        if (isMounted) {
-          setSvgState({ scene, fontEngine, activeTemplate, calendar, document: doc });
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to materialize SVG:", err);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [scene, fontEngine, assetResolver, activeTemplate, calendar]);
+  const renderKey = useMemo(() => ({ fontEngine, activeTemplate, calendar, effectiveDocument, weekdays, assetResolver }),
+    [fontEngine, activeTemplate, calendar, effectiveDocument, weekdays, assetResolver]);
+  const preview = usePreviewResource({
+    resourceKey: renderKey,
+    load: async () => {
+      if (!fontEngine) return null;
+      const scene = activeTemplate === "main"
+        ? layoutMain({ calendar, template: effectiveDocument.mainTemplate, textMeasurer: fontEngine, weekdays, holidayLayers: effectiveDocument.holidayLayers })
+        : layoutMini({ calendar, template: effectiveDocument.miniTemplate, textMeasurer: fontEngine, weekdays, holidayLayers: effectiveDocument.holidayLayers });
+      const svg = await materializeSvg({ scene, mode: "outlined", fontEngine, assetResolver });
+      return { scene, fontEngine, document: svg, activeTemplate, year: calendar.year, month: calendar.month };
+    },
+  });
+  // Preserve complete previews per view rather than one shared main/mini slot.
+  const previews = useRef(new Map<string, NonNullable<typeof preview.value>>());
+  const viewKey = `${activeTemplate}:${calendar.year}-${calendar.month}`;
+  if (preview.value) {
+    const value = preview.value;
+    previews.current.set(`${value.activeTemplate}:${value.year}-${value.month}`, value);
+    if (previews.current.size > 32) previews.current.delete(previews.current.keys().next().value!);
+  }
+  const displayedPreview = previews.current.get(viewKey);
+  const svgDocument = displayedPreview?.document ?? null;
+  const scene = displayedPreview?.scene ?? null;
+  const canvasScene = scene;
+  // Layout-only updates (including drag frames) must retain pointer capture.
+  const previewPending = fontLoading || !fontEngine || displayedPreview?.fontEngine !== fontEngine || !!preview.error;
+  const previewError = fontError ?? preview.error;
 
   // Drag interaction tracking
   const dragStartRef = useRef<{
@@ -288,12 +263,27 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const holidayCalendars = useHolidayLibraryStore((s) => s.snapshot.calendars);
 
   return (
+    <FontSelectionContext.Provider value={fontSelection}>
     <div className="monthloom-editor">
-      {fontError && (
-        <div className="font-error-banner">
-          <span>{t.errors.fontLoadError(fontError.message)}</span>
+      {fontSelection.job && (
+        <div className="font-error-banner" role={fontSelection.error ? "alert" : "status"}>
+          <div className="font-error-message">
+            <span>{fontSelection.coverageError
+              ? t.errors.fontIncompatible(fontSelection.coverageError.family, fontSelection.coverageError.characters)
+              : fontSelection.error ? t.errors.fontSelectionFailed(fontSelection.job.descriptor.family)
+              : t.errors.fontSelectionPending(fontSelection.job.descriptor.family)}</span>
+            {fontSelection.error && !fontSelection.coverageError && <span>{t.errors.fontLoadError(fontSelection.error.message)}</span>}
+          </div>
+          <div className="font-error-actions">
+            {!fontSelection.coverageError && <button type="button" className="studio-btn studio-btn-secondary" disabled={fontSelection.loading} onClick={fontSelection.retry}>
+              {fontSelection.loading ? t.errors.fontRetrying : t.errors.fontRetry}
+            </button>}
+            <button type="button" className="studio-btn studio-btn-secondary" onClick={fontSelection.cancel}>{t.errors.cancelFontSelection}</button>
+          </div>
         </div>
       )}
+      <PreviewStatusBanner error={previewError} issues={issues} loading={fontLoading || (preview.loading && displayedPreview?.fontEngine !== fontEngine)}
+        retained={!!svgDocument} retry={() => { retryFonts(); preview.retry(); }} />
 
       <EditorToolbar
         activeTemplate={activeTemplate}
@@ -390,6 +380,8 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         <EditorCanvas
           svgDocument={svgDocument}
           scene={canvasScene}
+          interactive={!previewPending}
+          emptyMessage={previewError ? t.errors.fontPreviewUnavailable : undefined}
           selection={selection}
           activeTemplate={activeTemplate}
           zoom={zoom}
@@ -404,6 +396,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
         {/* Right Inspector */}
         <Inspector
+          key={selection?.semanticId ?? "canvas"}
           document={document}
           selection={selection}
           activeTemplate={activeTemplate}
@@ -414,5 +407,6 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         />
       </div>
     </div>
+    </FontSelectionContext.Provider>
   );
 };

@@ -1,4 +1,5 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
+import { useMemo } from "react";
 import { describe, expect, it, vi } from "vitest";
 import type { SvgDocument } from "../../rendering/svg/document";
 import type { RenderScene } from "../../rendering/scene/types";
@@ -32,9 +33,13 @@ describe("TemplateEditor font preview", () => {
     const oldEngine = {} as ResolvedFontEngine;
     const newEngine = {} as ResolvedFontEngine;
     vi.mocked(useEditorFontEngine).mockImplementation(({ document }) => ({
-      fontEngine: document.mainTemplate.date.typography.fontWeight === 900 ? newEngine : oldEngine,
+      fontEngine: document.fontCatalog["main.holiday.builtin-cn-layer.name"].family === "Roboto Mono"
+        ? null : document.mainTemplate.date.typography.fontWeight === 900 ? newEngine : oldEngine,
+      issues: [],
       loading: false,
-      error: null,
+      error: document.fontCatalog["main.holiday.builtin-cn-layer.name"].family === "Roboto Mono"
+        ? new Error("Failed to fetch") : null,
+      retry: vi.fn(),
     }));
     vi.mocked(materializeSvg).mockImplementation(({ scene }) =>
       (scene as RenderScene & { kind?: string }).kind === "old"
@@ -42,10 +47,16 @@ describe("TemplateEditor font preview", () => {
         : new Promise(() => {}),
     );
 
-    render(<TemplateEditor calendar={generateCalendarMonth(2027, 1)} />);
+    function EditorWithCalendar() {
+      const layers = useDocumentStore((state) => state.document.holidayLayers);
+      // App rebuilds the calendar when holiday layer typography changes.
+      const calendar = useMemo(() => generateCalendarMonth(2027, 1), [layers]);
+      return <TemplateEditor calendar={calendar} />;
+    }
+    render(<EditorWithCalendar />);
     await waitFor(() => expect(screen.getByTestId("editor-preview-state").textContent).toBe("old:old"));
 
-    act(() => {
+    await act(async () => {
       const doc = useDocumentStore.getState().document;
       useDocumentStore.getState().commitDocument(setElementPosition(
         doc, "main.date", { ...doc.mainTemplate.date.position, offsetX: 123 },
@@ -53,7 +64,7 @@ describe("TemplateEditor font preview", () => {
     });
     expect(screen.getByTestId("editor-preview-state").textContent).toBe("old:old");
 
-    act(() => {
+    await act(async () => {
       const doc = useDocumentStore.getState().document;
       useDocumentStore.getState().commitDocument(selectElementFont(
         doc,
@@ -63,6 +74,19 @@ describe("TemplateEditor font preview", () => {
       ));
     });
 
-    expect(screen.getByTestId("editor-preview-state").textContent).toBe("new:none");
+    expect(screen.getByTestId("editor-preview-state").textContent).toBe("old:old");
+
+    await act(async () => {
+      const doc = useDocumentStore.getState().document;
+      const layer = doc.holidayLayers![0];
+      useDocumentStore.getState().commitDocument(selectElementFont(
+        doc,
+        "main.holiday.builtin-cn-layer.name",
+        { family: "Roboto Mono", weight: 400, style: "normal", source: { type: "google", family: "Roboto Mono" } },
+        layer.main.name.typography,
+      ));
+    });
+    expect(screen.getByRole("alert").textContent).toContain("Failed to fetch");
+    expect(screen.getByTestId("editor-preview-state").textContent).toBe("old:old");
   });
 });

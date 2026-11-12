@@ -38,30 +38,47 @@ export async function fetchGoogleFontBinary(
       `Google Fonts face ${request.family} ${request.weight} ${request.style} is unavailable`,
     );
   }
-  const cssUrl = buildGoogleFontsCssUrl(request);
-  const cssResponse = await fetchImpl(cssUrl, {
-    headers: {
-      // Chrome User-Agent receives WOFF2
-      "User-Agent":
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    },
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  try {
+    // An entirely unsupported text subset can make Google's binary endpoint
+    // return HTTP 400 without CORS headers. Include a space so ordinary text
+    // fonts produce a readable binary; the resolver still validates every
+    // originally requested character and rejects missing glyphs explicitly.
+    const cssUrl = buildGoogleFontsCssUrl({
+      ...request,
+      text: request.text && !request.text.includes(" ") ? `${request.text} ` : request.text,
+    });
+    const cssResponse = await fetchImpl(cssUrl, {
+      signal: controller.signal,
+      headers: {
+        // Chrome User-Agent receives WOFF2
+        "User-Agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      },
+    });
 
-  if (!cssResponse.ok) {
-    throw new Error(
-      `Failed to fetch Google Fonts CSS: HTTP ${cssResponse.status} for ${request.family} (weight: ${request.weight}, style: ${request.style}) from ${cssUrl}`,
-    );
+    if (!cssResponse.ok) {
+      throw new Error(
+        `Failed to fetch Google Fonts CSS: HTTP ${cssResponse.status} for ${request.family} (weight: ${request.weight}, style: ${request.style}) from ${cssUrl}`,
+      );
+    }
+
+    const css = await cssResponse.text();
+    const fontUrl = extractGoogleFontBinaryUrl(css);
+
+    const fontResponse = await fetchImpl(fontUrl, { signal: controller.signal });
+    if (!fontResponse.ok) {
+      throw new Error(
+        `Failed to fetch Google Font binary: HTTP ${fontResponse.status} for ${request.family} (weight: ${request.weight}, style: ${request.style}) from ${fontUrl}`,
+      );
+    }
+
+    return await fontResponse.arrayBuffer();
+  } catch (error) {
+    if (controller.signal.aborted) throw new Error(`Font download timed out: ${request.family}`);
+    throw error;
+  } finally {
+    clearTimeout(timeout);
   }
-
-  const css = await cssResponse.text();
-  const fontUrl = extractGoogleFontBinaryUrl(css);
-
-  const fontResponse = await fetchImpl(fontUrl);
-  if (!fontResponse.ok) {
-    throw new Error(
-      `Failed to fetch Google Font binary: HTTP ${fontResponse.status} for ${request.family} (weight: ${request.weight}, style: ${request.style}) from ${fontUrl}`,
-    );
-  }
-
-  return await fontResponse.arrayBuffer();
 }

@@ -12,6 +12,8 @@ export interface EditorCanvasProps {
   scene: RenderScene | null;
   selection: EditorSelection | null;
   activeTemplate: "main" | "mini";
+  interactive?: boolean;
+  emptyMessage?: string;
   zoom?: number;
   onZoomChange?: React.Dispatch<React.SetStateAction<number>> | ((updater: (prev: number) => number) => void);
   onSelect: (selection: EditorSelection | null) => void;
@@ -32,6 +34,8 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   scene,
   selection,
   activeTemplate,
+  interactive = true,
+  emptyMessage,
   zoom = 1,
   onZoomChange,
   onSelect,
@@ -74,7 +78,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   if (!svgDocument || !scene) {
     return (
       <div className="editor-canvas-container">
-        <div style={{ color: "var(--text-muted)", fontSize: "13px" }}>正在渲染预览...</div>
+        <div role="status" style={{ color: "var(--text-muted)", fontSize: "13px" }}>{emptyMessage ?? "正在渲染预览..."}</div>
       </div>
     );
   }
@@ -117,7 +121,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
             }}
           >
             <SvgPreview document={svgDocument} />
-            <EditorOverlay
+            {interactive && <EditorOverlay
               scene={scene}
               targets={targets}
               selection={selection}
@@ -128,7 +132,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
               onMoveDrag={onMoveDrag}
               onEndDrag={onEndDrag}
               onCancelDrag={onCancelDrag}
-            />
+            />}
           </div>
         </div>
       </div>

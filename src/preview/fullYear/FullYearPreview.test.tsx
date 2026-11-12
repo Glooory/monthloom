@@ -4,7 +4,7 @@ import { FullYearPreview } from "./FullYearPreview";
 import { useDocumentStore, createDefaultEditorDocument } from "../../editor/state/documentStore";
 import { MemoryAssetStore } from "../../editor/assets/memoryAssetStore";
 import { ResolvedFontEngine, type ResolvedFontFace } from "../../resources/fonts/fontkitEngine";
-import * as resolveFontsModule from "../../resources/fonts/resolveFonts";
+import * as resolveFontsModule from "../../resources/fonts/previewFonts";
 import * as renderDocumentsModule from "./renderDocuments";
 import * as pagePreviewModule from "./PagePreview";
 import { selectElementFont } from "../../editor/model/templateBindings";
@@ -66,7 +66,7 @@ describe("FullYearPreview", () => {
   beforeEach(() => {
     useDocumentStore.getState().replaceDocument(createDefaultEditorDocument());
     const mockEngine = createMockFontEngine();
-    vi.spyOn(resolveFontsModule, "resolveFontEngine").mockResolvedValue(mockEngine);
+    vi.spyOn(resolveFontsModule, "resolvePreviewFontEngine").mockResolvedValue({ fontEngine: mockEngine, issues: [] });
   });
 
   it("renders 13 pages in vertical flow for target year 2027", async () => {
@@ -155,16 +155,16 @@ describe("FullYearPreview", () => {
 
   it("does not render changed typography with the previous font engine", async () => {
     const firstEngine = createMockFontEngine();
-    vi.mocked(resolveFontsModule.resolveFontEngine)
+    vi.mocked(resolveFontsModule.resolvePreviewFontEngine)
       .mockReset()
-      .mockResolvedValueOnce(firstEngine)
+      .mockResolvedValueOnce({ fontEngine: firstEngine, issues: [] })
       .mockReturnValueOnce(new Promise(() => {}));
     const renderSpy = vi.spyOn(renderDocumentsModule, "renderFullYearPreviewDocuments");
     render(<FullYearPreview targetYear={2027} assetResolver={assetStore} />);
     await waitFor(() => expect(screen.getByText("2027-1")).toBeDefined());
     const renderedBeforeChange = renderSpy.mock.calls.length;
 
-    act(() => {
+    await act(async () => {
       const doc = useDocumentStore.getState().document;
       useDocumentStore.getState().commitDocument(selectElementFont(
         doc,
@@ -177,18 +177,18 @@ describe("FullYearPreview", () => {
     expect(renderSpy.mock.calls.length).toBe(renderedBeforeChange);
   });
 
-  it("does not display old pages during the first render after a font change", async () => {
+  it("retains the last complete pages while a replacement font loads", async () => {
     const firstEngine = createMockFontEngine();
-    vi.mocked(resolveFontsModule.resolveFontEngine)
+    vi.mocked(resolveFontsModule.resolvePreviewFontEngine)
       .mockReset()
-      .mockResolvedValueOnce(firstEngine)
+      .mockResolvedValueOnce({ fontEngine: firstEngine, issues: [] })
       .mockReturnValueOnce(new Promise(() => {}));
     const pageSpy = vi.spyOn(pagePreviewModule, "PagePreview");
     render(<FullYearPreview targetYear={2027} assetResolver={assetStore} />);
     await waitFor(() => expect(screen.getByText("2027-1")).toBeDefined());
     const pageRendersBeforeChange = pageSpy.mock.calls.length;
 
-    act(() => {
+    await act(async () => {
       const doc = useDocumentStore.getState().document;
       useDocumentStore.getState().commitDocument(selectElementFont(
         doc,
@@ -198,6 +198,7 @@ describe("FullYearPreview", () => {
       ));
     });
 
-    expect(pageSpy.mock.calls.length).toBe(pageRendersBeforeChange);
+    expect(pageSpy.mock.calls.length).toBeGreaterThan(pageRendersBeforeChange);
+    expect(screen.getByText("2027-1")).toBeDefined();
   });
 });

@@ -130,4 +130,37 @@ describe("Production Google Fonts Provider", () => {
     }, mockFetch)).rejects.toThrow(/Lato.*500.*unavailable/i);
     expect(mockFetch).not.toHaveBeenCalled();
   });
+
+  it("includes a space when requesting text that the face might not support", async () => {
+    const mockFetch = vi.fn<typeof fetch>(async (input) => {
+      const url = new URL(String(input));
+      if (url.hostname === "fonts.googleapis.com") {
+        const readable = url.searchParams.get("text")?.includes(" ");
+        return { ok: true, text: async () => `src: url(https://fonts.gstatic.com/${readable ? "font" : "empty"});` } as Response;
+      }
+      return { ok: url.pathname === "/font", status: url.pathname === "/font" ? 200 : 400,
+        arrayBuffer: async () => new ArrayBuffer(1) } as Response;
+    });
+    await expect(fetchGoogleFontBinary({
+      family: "Roboto Mono", weight: 400, style: "normal", text: "劳动节",
+    }, mockFetch)).resolves.toBeInstanceOf(ArrayBuffer);
+    expect(new URL(String(mockFetch.mock.calls[0][0])).searchParams.get("text")).toBe("劳动节 ");
+  });
+
+  it("aborts a stalled download so recovery does not stay pending forever", async () => {
+    vi.useFakeTimers();
+    try {
+      const stalled = vi.fn<typeof fetch>((_input, options) => new Promise((_resolve, reject) => {
+        options?.signal?.addEventListener("abort", () => reject(new Error("aborted")));
+      }));
+      const result = expect(fetchGoogleFontBinary({
+        family: "Noto Sans", weight: 400, style: "normal", text: "012",
+      }, stalled)).rejects.toThrow(/timed out.*Noto Sans/);
+      await vi.advanceTimersByTimeAsync(15000);
+      await result;
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
