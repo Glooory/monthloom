@@ -5,6 +5,8 @@ export type Rect = Readonly<{
   height: number;
 }>;
 
+export type VerticalAlignment = "top" | "center" | "bottom";
+
 export type PageLayout = Readonly<{
   width: number;
   height: number;
@@ -13,6 +15,8 @@ export type PageLayout = Readonly<{
   columnGap: number;
   miniHeightRatio: number;
   miniGap: number;
+  mainVerticalAlignment?: VerticalAlignment;
+  miniVerticalAlignment?: VerticalAlignment;
 }>;
 
 export type PagePreviewConfig = Readonly<{

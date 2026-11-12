@@ -161,6 +161,11 @@ export interface TranslationDictionary {
     columnGapLabel: string;
     miniHeightRatioLabel: string;
     miniGapLabel: string;
+    mainVerticalAlignmentLabel: string;
+    miniVerticalAlignmentLabel: string;
+    alignTop: string;
+    alignCenter: string;
+    alignBottom: string;
   };
   gallery: {
     viewModes: {

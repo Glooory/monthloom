@@ -64,7 +64,8 @@ export function calculatePageGeometry(args: {
 
   const main: Placement = {
     x: content.x + leftColumnWidth + layout.columnGap,
-    y: content.y,
+    y: content.y + Math.max(0, content.height - renderedMainHeight) *
+      (layout.mainVerticalAlignment === "bottom" ? 1 : layout.mainVerticalAlignment === "center" ? 0.5 : 0),
     width: renderedMainWidth,
     height: renderedMainHeight,
     scale: mainScale,
@@ -127,15 +128,24 @@ export function calculatePageGeometry(args: {
   const previousMini = computeMiniPlacement(previousMiniSlot);
   const nextMini = computeMiniPlacement(nextMiniSlot);
 
+  // Move the mini calendars as a pair, using their rendered bounds so even
+  // width-constrained calendars meet the bottom padding exactly.
+  const miniBottomSpace = Math.max(0, content.y + content.height - (nextMini.y + nextMini.height));
+  const miniOffset = layout.miniVerticalAlignment === "bottom"
+    ? miniBottomSpace
+    : layout.miniVerticalAlignment === "center"
+      ? Math.max(0, (miniBottomSpace - (previousMini.y - content.y)) / 2)
+      : 0;
+
   return {
     page,
     content,
     leftColumn,
     main,
-    previousMiniSlot,
-    nextMiniSlot,
-    previousMini,
-    nextMini,
+    previousMiniSlot: { ...previousMiniSlot, y: previousMiniSlot.y + miniOffset },
+    nextMiniSlot: { ...nextMiniSlot, y: nextMiniSlot.y + miniOffset },
+    previousMini: { ...previousMini, y: previousMini.y + miniOffset },
+    nextMini: { ...nextMini, y: nextMini.y + miniOffset },
     warnings,
   };
 }

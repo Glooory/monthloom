@@ -8,6 +8,8 @@ export const DEFAULT_PAGE_LAYOUT: PageLayout = {
   columnGap: 30,
   miniHeightRatio: 0.28,
   miniGap: 24,
+  mainVerticalAlignment: "top",
+  miniVerticalAlignment: "top",
 } as const;
 
 export const DEFAULT_PAGE_PREVIEW_CONFIG: PagePreviewConfig = {

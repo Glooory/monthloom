@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import type { PageLayout, PagePreviewConfig } from "../../domain/pagePreview/types";
+import type { PageLayout, PagePreviewConfig, VerticalAlignment } from "../../domain/pagePreview/types";
 import { useI18n } from "../../shared/i18n/i18nStore";
 import { NumberInput } from "./NumberInput";
 
@@ -21,10 +21,11 @@ const NumberField: React.FC<{
   max?: number;
   onChange: (val: number) => void;
 }> = ({ label, value, step, min, max, onChange }) => (
-  <div className="field-row" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-    <span className="field-label" style={{ fontSize: "12px", color: "var(--text-secondary)" }}>{label}</span>
+  <div className="field-row" style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+    <span className="field-label" style={{ fontSize: "12px", color: "var(--text-secondary)", minWidth: 0, whiteSpace: "nowrap" }}>{label}</span>
     <NumberInput
       value={value}
+      style={{ width: 76, flex: "none" }}
       step={step}
       min={min}
       max={max}
@@ -132,7 +133,7 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))", gap: "10px 20px" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px 16px" }}>
         <NumberField
           label={t.pagePreview.widthLabel}
           value={layout.width}
@@ -177,6 +178,23 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
           max={0.95}
           onChange={(miniHeightRatio) => updateLayout({ miniHeightRatio })}
         />
+        {(["mainVerticalAlignment", "miniVerticalAlignment"] as const).map((key) => (
+          <label key={key} className="field-row" style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            <span className="field-label" style={{ fontSize: "12px", color: "var(--text-secondary)", minWidth: 0, whiteSpace: "nowrap" }}>
+              {key === "mainVerticalAlignment" ? t.pagePreview.mainVerticalAlignmentLabel : t.pagePreview.miniVerticalAlignmentLabel}
+            </span>
+            <select
+              className="field-input"
+              style={{ width: "auto", flex: "none" }}
+              value={layout[key] ?? "top"}
+              onChange={(event) => updateLayout({ [key]: event.target.value as VerticalAlignment })}
+            >
+              <option value="top">{t.pagePreview.alignTop}</option>
+              <option value="center">{t.pagePreview.alignCenter}</option>
+              <option value="bottom">{t.pagePreview.alignBottom}</option>
+            </select>
+          </label>
+        ))}
         <NumberField
           label={t.pagePreview.miniGapLabel}
           value={layout.miniGap}

@@ -186,6 +186,11 @@ export const en: TranslationDictionary = {
     columnGapLabel: "Column Gap",
     miniHeightRatioLabel: "Mini Calendar Ratio",
     miniGapLabel: "Mini Calendar Gap",
+    mainVerticalAlignmentLabel: "Main Calendar Alignment",
+    miniVerticalAlignmentLabel: "Mini Calendars Alignment",
+    alignTop: "Top",
+    alignCenter: "Center",
+    alignBottom: "Bottom",
   },
   gallery: {
     viewModes: {

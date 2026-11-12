@@ -186,6 +186,11 @@ export const zh: TranslationDictionary = {
     columnGapLabel: "分栏间距",
     miniHeightRatioLabel: "附日历高度比",
     miniGapLabel: "附日历间距",
+    mainVerticalAlignmentLabel: "主日历垂直对齐",
+    miniVerticalAlignmentLabel: "附日历垂直对齐",
+    alignTop: "顶部",
+    alignCenter: "居中",
+    alignBottom: "底部",
   },
   gallery: {
     viewModes: {

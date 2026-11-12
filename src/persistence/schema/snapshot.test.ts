@@ -11,6 +11,20 @@ import type { TemplateSnapshotV1 } from "./templateSnapshot";
 describe("Snapshot validation", () => {
   const defaultDoc = createDefaultEditorDocument();
 
+  it("preserves preview alignment and accepts older layouts", () => {
+    const doc: typeof defaultDoc = { ...defaultDoc, pagePreview: { ...defaultDoc.pagePreview, layout: {
+      ...defaultDoc.pagePreview.layout, mainVerticalAlignment: "bottom", miniVerticalAlignment: "center",
+    } } };
+    expect(editorDocumentSchema.parse(doc).pagePreview.layout).toEqual(doc.pagePreview.layout);
+    const legacyLayout = { ...doc.pagePreview.layout };
+    delete legacyLayout.mainVerticalAlignment;
+    delete legacyLayout.miniVerticalAlignment;
+    expect(editorDocumentSchema.parse({ ...doc, pagePreview: { layout: legacyLayout } }).pagePreview.layout)
+      .toEqual(legacyLayout);
+    expect(editorDocumentSchema.safeParse({ ...doc, pagePreview: { layout: { ...legacyLayout, mainVerticalAlignment: "invalid" } } }).success)
+      .toBe(false);
+  });
+
   it.each([
     ["main", "holidayMarker"], ["main", "workdayMarker"],
     ["mini", "holidayMarker"], ["mini", "workdayMarker"],

@@ -181,6 +181,8 @@ const pageLayoutConfigSchema = z.object({
   columnGap: z.number(),
   miniHeightRatio: z.number(),
   miniGap: z.number(),
+  mainVerticalAlignment: z.enum(["top", "center", "bottom"]).optional(),
+  miniVerticalAlignment: z.enum(["top", "center", "bottom"]).optional(),
 });
 
 const pagePreviewConfigSchema = z.object({

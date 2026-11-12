@@ -26,6 +26,55 @@ describe("calculatePageGeometry", () => {
   const mainSize = { width: 1000, height: 700 } as const;
   const miniSize = { width: 300, height: 200 } as const;
 
+  it.each([0.28, 0.45])("bottom-aligns rendered calendars with mini height ratio %s", (miniHeightRatio) => {
+    const geometry = calculatePageGeometry({
+      layout: { ...DEFAULT_PAGE_LAYOUT, miniHeightRatio, mainVerticalAlignment: "bottom", miniVerticalAlignment: "bottom" },
+      mainSize,
+      miniSize,
+    });
+    const bottom = geometry.content.y + geometry.content.height;
+    expect(geometry.main.y + geometry.main.height).toBeCloseTo(bottom);
+    expect(geometry.nextMini.y + geometry.nextMini.height).toBeCloseTo(bottom);
+    expect(geometry.previousMini.y).toBeLessThan(geometry.nextMini.y);
+    expect(geometry.nextMiniSlot.y - geometry.previousMiniSlot.y)
+      .toBeCloseTo(geometry.previousMiniSlot.height + DEFAULT_PAGE_LAYOUT.miniGap);
+  });
+
+  it("centers each column independently", () => {
+    const geometry = calculatePageGeometry({
+      layout: { ...DEFAULT_PAGE_LAYOUT, mainVerticalAlignment: "center", miniVerticalAlignment: "center" },
+      mainSize,
+      miniSize,
+    });
+    const center = geometry.content.y + geometry.content.height / 2;
+    expect(geometry.main.y + geometry.main.height / 2).toBeCloseTo(center);
+    expect((geometry.previousMini.y + geometry.nextMini.y + geometry.nextMini.height) / 2).toBeCloseTo(center);
+    const mainOnly = calculatePageGeometry({
+      layout: { ...DEFAULT_PAGE_LAYOUT, mainVerticalAlignment: "bottom" }, mainSize, miniSize,
+    });
+    const original = calculatePageGeometry({ layout: DEFAULT_PAGE_LAYOUT, mainSize, miniSize });
+    expect(mainOnly.previousMini).toEqual(original.previousMini);
+    expect(mainOnly.nextMini).toEqual(original.nextMini);
+  });
+
+  it("preserves legacy layouts without alignment settings", () => {
+    const legacy = { ...DEFAULT_PAGE_LAYOUT };
+    delete legacy.mainVerticalAlignment;
+    delete legacy.miniVerticalAlignment;
+    expect(calculatePageGeometry({ layout: legacy, mainSize, miniSize }))
+      .toEqual(calculatePageGeometry({ layout: DEFAULT_PAGE_LAYOUT, mainSize, miniSize }));
+  });
+
+  it("keeps overflowing calendars at the top and reports warnings", () => {
+    const geometry = calculatePageGeometry({
+      layout: { ...DEFAULT_PAGE_LAYOUT, mainVerticalAlignment: "bottom", miniVerticalAlignment: "bottom", miniHeightRatio: 0.8 },
+      mainSize: { width: 1000, height: 1200 }, miniSize: { width: 200, height: 1000 },
+    });
+    expect(geometry.main.y).toBe(geometry.content.y);
+    expect(geometry.previousMini.y).toBeCloseTo(geometry.content.y);
+    expect(geometry.warnings.map((warning) => warning.code)).toEqual(["main-height-overflow", "mini-stack-overflow"]);
+  });
+
   it("computes content area correctly", () => {
     const layout: PageLayout = {
       width: 1400,
