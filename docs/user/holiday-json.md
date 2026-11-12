@@ -73,3 +73,23 @@ Monthloom allows you to edit or add manual overrides for any date in a calendar.
 ## 4. Coverage Requirements and Diagnostics
 
 For target year $Y$, Monthloom monitors required holiday coverage spanning $Y-1$ December through $Y+1$ February (15 months). Missing dates in confirmed coverage ranges trigger non-blocking diagnostics in the workspace.
+
+## 5. Chinese Festival Labels
+
+The built-in Chinese calendar calculates festival labels independently of provider
+leave schedules: 元旦 (January 1), 劳动节 (May 1), 国庆节 (October 1), 除夕,
+春节 (lunar January 1), 清明节, 端午节 (lunar May 5), and 中秋节 (lunar August 15).
+Lunar dates and Qingming are calculated with `lunar-typescript`. Coincident
+festivals share a label, for example `国庆节、中秋节`.
+
+Provider records remain unchanged in the library. Their names describe leave
+periods and are not used as built-in Chinese festival labels. Rest/workday markers
+and configured date colors still come from those records. Calculated festivals
+without a leave record display a name only; they do not imply a rest day or
+confirmed holiday coverage. No resync is needed for existing records.
+
+Manual overrides take precedence: add/edit a holiday record on the festival date
+to replace its label, leave its name empty to hide the label, or delete the record
+to suppress both its label and leave status. For festivals without a source record,
+use Add Record on that date to create an override. Japanese and custom calendars
+continue to display their record names unchanged.

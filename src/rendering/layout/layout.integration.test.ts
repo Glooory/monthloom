@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { generateCalendarMonth } from "../../domain/calendar/generateCalendarMonth";
-import {
-  base,
-  fixtureLibrary,
-} from "../../domain/holiday/testFixtures";
+import { base, fixtureLibrary } from "../../domain/holiday/testFixtures";
 import { resolveHolidayIndex } from "../../domain/holiday/resolveHolidayIndex";
 import { createDefaultHolidayLayers } from "../../domain/template/holidayLayer";
 import {
@@ -11,6 +8,10 @@ import {
   DEFAULT_MINI_TEMPLATE,
 } from "../../domain/template/defaults";
 import type { MainTemplate } from "../../domain/template/mainTemplate";
+import {
+  collectMainFontText,
+  collectMiniFontText,
+} from "../../resources/fonts/textRequirements";
 import { layoutMain } from "./mainLayout";
 import { layoutMini } from "./miniLayout";
 import type { TextMeasurer } from "./textMetrics";
@@ -88,7 +89,8 @@ describe("Domain -> Layout Integration", () => {
     const chinaHolidayNames = scene.nodes.filter(
       (n) => n.semanticId === `main.holiday.${cnLayer.id}.name`,
     );
-    expect(chinaHolidayNames.length).toBeGreaterThanOrEqual(2);
+    // Provider names on non-festival dates do not become festival labels.
+    expect(chinaHolidayNames).toHaveLength(1);
 
     const japanHolidayNames = scene.nodes.filter(
       (n) => n.semanticId === `main.holiday.${jpLayer.id}.name`,
@@ -111,7 +113,7 @@ describe("Domain -> Layout Integration", () => {
         n.kind === "text" &&
         n.text === "端午节",
     );
-    expect(may5ChinaName).toBeDefined();
+    expect(may5ChinaName).toBeUndefined();
 
     const may5JapanName = scene.nodes.find(
       (n) =>
@@ -138,6 +140,56 @@ describe("Domain -> Layout Integration", () => {
           : 0.4,
       );
     }
+  });
+
+  it("renders calculated festival names and collects their glyphs without rest/workday markers", () => {
+    const index = resolveHolidayIndex({
+      library: fixtureLibrary(),
+      layers: [cnLayer],
+      targetYear: 2027,
+    });
+    const february = generateCalendarMonth(2027, 2, index);
+    const main = layoutMain({
+      calendar: february,
+      template: DEFAULT_MAIN_TEMPLATE,
+      holidayLayers: [cnLayer],
+      textMeasurer: fakeMeasurer,
+    });
+    const mini = layoutMini({
+      calendar: february,
+      template: DEFAULT_MINI_TEMPLATE,
+      holidayLayers: [cnLayer],
+      textMeasurer: fakeMeasurer,
+    });
+    expect(
+      main.nodes
+        .filter((n) => n.semanticId === `main.holiday.${cnLayer.id}.name`)
+        .map((n) => n.kind === "text" && n.text),
+    ).toEqual(["除夕", "春节"]);
+    for (const scene of [main, mini]) {
+      expect(
+        scene.nodes.some((n) =>
+          /\.(holidayMarker|workdayMarker)$/.test(n.semanticId),
+        ),
+      ).toBe(false);
+    }
+    const mainFonts = collectMainFontText({
+      calendar: february,
+      template: DEFAULT_MAIN_TEMPLATE,
+      holidayLayers: [cnLayer],
+    });
+    expect(mainFonts.get(cnLayer.main.name.typography.fontId)).toBe("除夕春节");
+    if (cnLayer.main.workdayMarker.marker.type === "text") {
+      expect(
+        mainFonts.has(cnLayer.main.workdayMarker.marker.typography.fontId),
+      ).toBe(false);
+    }
+    const miniFonts = collectMiniFontText({
+      calendar: february,
+      template: DEFAULT_MINI_TEMPLATE,
+      holidayLayers: [cnLayer],
+    });
+    expect(Array.from(miniFonts.values()).join("")).not.toContain("休");
   });
 
   it("converts CalendarMonth + MiniTemplate into a full semantic Mini RenderScene", () => {

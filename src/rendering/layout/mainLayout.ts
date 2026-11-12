@@ -157,11 +157,7 @@ export function layoutMain(args: {
           if (!layer || !layer.enabled) continue;
 
           // 1. Holiday Name
-          if (
-            occurrence.type === "holiday" &&
-            occurrence.name &&
-            layer.main.showName
-          ) {
+          if (occurrence.name && layer.main.showName) {
             const namePos = positionText({
               text: occurrence.name,
               cell: cellRect,
@@ -187,6 +183,7 @@ export function layoutMain(args: {
           }
 
           // 2. Holiday / Workday Marker
+          if (!occurrence.type) continue;
           const markerConfig =
             occurrence.type === "holiday"
               ? layer.main.holidayMarker

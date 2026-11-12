@@ -33,6 +33,7 @@ export const BatchExportPanel: React.FC = () => {
     try {
       // 1. Compute holiday index
       const holidayIndex = resolveHolidayIndex({
+        targetYear,
         library: holidayLibrary,
         layers: document.holidayLayers ?? [],
       });

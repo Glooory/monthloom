@@ -59,11 +59,7 @@ export function collectMainFontText(args: {
           if (!layer || !layer.enabled) continue;
 
           // Holiday name
-          if (
-            occurrence.type === "holiday" &&
-            occurrence.name &&
-            layer.main.showName
-          ) {
+          if (occurrence.name && layer.main.showName) {
             appendText(
               rawMap,
               layer.main.name.typography.fontId,
@@ -72,6 +68,7 @@ export function collectMainFontText(args: {
           }
 
           // Marker
+          if (!occurrence.type) continue;
           const markerConfig =
             occurrence.type === "holiday"
               ? layer.main.holidayMarker
@@ -138,6 +135,7 @@ export function collectMiniFontText(args: {
             );
             if (!layer || !layer.enabled) continue;
 
+            if (!occurrence.type) continue;
             const markerConfig =
               occurrence.type === "holiday"
                 ? layer.mini.holidayMarker

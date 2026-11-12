@@ -114,7 +114,7 @@ export function holidayRecordId(calendarId: string, date: LocalDate): string {
 export type HolidayOccurrence = Readonly<{
   layerId: string;
   calendarId: string;
-  type: HolidayRecordType;
+  type?: HolidayRecordType;
   name?: string;
 }>;
 

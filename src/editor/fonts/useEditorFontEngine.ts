@@ -60,6 +60,7 @@ export function useEditorFontEngine(args: {
   const requirements = useMemo(() => {
     const { document, calendar, activeTemplate } = args;
     const holidayIndex = resolveHolidayIndex({
+      targetYear: args.targetYear ?? calendar.year,
       library,
       layers: document.holidayLayers,
     });

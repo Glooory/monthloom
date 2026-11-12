@@ -82,10 +82,11 @@ export const App: React.FC = () => {
   const holidayIndex = useMemo(
     () =>
       resolveHolidayIndex({
+        targetYear,
         library: holidayLibrary,
         layers: document.holidayLayers ?? [],
       }),
-    [holidayLibrary, document.holidayLayers],
+    [targetYear, holidayLibrary, document.holidayLayers],
   );
 
   const diagnostics = useMemo(

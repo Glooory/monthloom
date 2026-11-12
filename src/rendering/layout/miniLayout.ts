@@ -183,6 +183,7 @@ export function layoutMini(args: {
           const layer = holidayLayers.find((l) => l.id === occurrence.layerId);
           if (!layer || !layer.enabled) continue;
 
+          if (!occurrence.type) continue;
           const markerConfig =
             occurrence.type === "holiday"
               ? layer.mini.holidayMarker

@@ -77,6 +77,7 @@ export function usePreparedFontSelection(args: {
         isCurrent,
         prepare: async () => {
           const holidayIndex = resolveHolidayIndex({
+            targetYear: args.targetYear,
             library,
             layers: next.document.holidayLayers,
           });
