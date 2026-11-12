@@ -7,6 +7,8 @@ import { ResolvedFontEngine, type ResolvedFontFace } from "../../resources/fonts
 import type { MainTemplate } from "../../domain/template/mainTemplate";
 import type { MiniTemplate } from "../../domain/template/miniTemplate";
 import type { HolidayLayer } from "../../domain/template/holidayLayer";
+import { DEFAULT_PAGE_LAYOUT } from "../../domain/pagePreview/defaults";
+import { calculatePageGeometry } from "../../domain/pagePreview/pageLayout";
 
 function createMockFontEngine(): ResolvedFontEngine {
   const face: ResolvedFontFace = {
@@ -141,6 +143,60 @@ describe("renderFullYearPreviewDocuments", () => {
       expect(doc.height).toBe(testMiniTemplate.height);
       expect(doc.children.length).toBeGreaterThan(0);
     }
+  });
+
+  it.each([
+    { mainWidth: 500, mainHeight: 700, miniWidth: 200, miniHeight: 300 },
+    { mainWidth: 500 },
+    { miniWidth: 200 },
+    { mainHeight: 700, miniHeight: 300 },
+  ])("reflows explicit preview dimensions without scaling glyphs: %j", async (dimensions) => {
+    const calendarSet = createFullYearCalendarSet({ targetYear: 2027 });
+    const fontEngine = createMockFontEngine();
+    const args = {
+      calendarSet, mainTemplate: testMainTemplate, miniTemplate: testMiniTemplate,
+      fontEngine, assetResolver: mockAssetResolver,
+    };
+    const pageLayout = { ...DEFAULT_PAGE_LAYOUT, ...dimensions };
+    const geometry = calculatePageGeometry({
+      layout: pageLayout, mainSize: testMainTemplate, miniSize: testMiniTemplate,
+    });
+    const original = await renderFullYearPreviewDocuments(args);
+    const resized = await renderFullYearPreviewDocuments({ ...args, pageLayout });
+    for (const [kind, placement] of [["main", geometry.main], ["mini", geometry.previousMini]] as const) {
+      const explicit = kind === "main"
+        ? dimensions.mainWidth !== undefined || dimensions.mainHeight !== undefined
+        : dimensions.miniWidth !== undefined || dimensions.miniHeight !== undefined;
+      const before = original[kind].get("2027-1")!;
+      const after = resized[kind].get("2027-1")!;
+      if (!explicit) {
+        expect(after).toEqual(before);
+        continue;
+      }
+      expect(after.width).toBe(placement.width);
+      expect(after.height).toBe(placement.height);
+      expect(after.viewBox).toBe(`0 0 ${placement.width} ${placement.height}`);
+      const beforePaths = before.children.filter((node) => node.kind === "path");
+      const afterPaths = after.children.filter((node) => node.kind === "path");
+      expect(afterPaths.length).toBeGreaterThan(0);
+      expect(afterPaths[0].transform).toMatch(/scale\([^)]+\)/);
+      expect(afterPaths.map((node) => node.d)).toEqual(beforePaths.map((node) => node.d));
+      expect(afterPaths.map((node) => node.transform?.match(/scale\([^)]+\)/)?.[0]))
+        .toEqual(beforePaths.map((node) => node.transform?.match(/scale\([^)]+\)/)?.[0]));
+      expect(afterPaths[0].transform).not.toBe(beforePaths[0].transform);
+    }
+    expect(testMainTemplate.width).toBe(DEFAULT_MAIN_TEMPLATE.width);
+    expect(testMiniTemplate.height).toBe(DEFAULT_MINI_TEMPLATE.height);
+  });
+
+  it("preserves template documents for legacy preview layouts", async () => {
+    const args = {
+      calendarSet: createFullYearCalendarSet({ targetYear: 2027 }),
+      mainTemplate: testMainTemplate, miniTemplate: testMiniTemplate,
+      fontEngine: createMockFontEngine(), assetResolver: mockAssetResolver,
+    };
+    expect(await renderFullYearPreviewDocuments({ ...args, pageLayout: DEFAULT_PAGE_LAYOUT }))
+      .toEqual(await renderFullYearPreviewDocuments(args));
   });
 
   it("renders holiday names and markers in Main and markers only in Mini", async () => {

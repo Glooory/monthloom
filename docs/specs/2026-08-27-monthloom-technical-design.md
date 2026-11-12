@@ -1507,6 +1507,14 @@ type PageLayout = {
 
 The Page Preview must not distort Main geometry.
 
+When `mainWidth` or `mainHeight` is explicitly configured, reflow a copy of
+the Main template at the dimensions resolved by `calculatePageGeometry`.
+Keep typography, border widths, and position offsets unchanged, as in the
+template editor. The SVG dimensions must match its placement dimensions.
+This preview override does not change the saved template or formal SVG export.
+
+For legacy layouts without explicit Main dimensions, retain uniform scaling:
+
 Recommended rule:
 
 ```text
@@ -1536,6 +1544,10 @@ If it exceeds page content height, show a layout warning rather than non-uniform
 ## 24.4 Mini Preview scaling
 
 Each Mini is placed inside the configured left-column Mini slot.
+
+When `miniWidth` or `miniHeight` is explicitly configured, reflow a copy of
+the Mini template at the resolved placement dimensions using the same rules
+as Main. Otherwise, retain the legacy scaling behavior below.
 
 Use uniform `contain` behavior.
 

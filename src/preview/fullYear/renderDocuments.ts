@@ -8,6 +8,8 @@ import { materializeSvg } from "../../rendering/svg/materialize";
 import type { AssetResolver } from "../../resources/assets/types";
 import type { ResolvedFontEngine } from "../../resources/fonts/fontkitEngine";
 import type { CalendarKey, FullYearCalendarSet } from "./calendarSet";
+import type { PageLayout } from "../../domain/pagePreview/types";
+import { calculatePageGeometry } from "../../domain/pagePreview/pageLayout";
 
 export type FullYearPreviewDocuments = Readonly<{
   main: ReadonlyMap<CalendarKey, SvgDocument>;
@@ -18,6 +20,7 @@ export async function renderFullYearPreviewDocuments(args: {
   calendarSet: FullYearCalendarSet;
   mainTemplate: MainTemplate;
   miniTemplate: MiniTemplate;
+  pageLayout?: PageLayout;
   holidayLayers?: readonly HolidayLayer[];
   fontEngine: ResolvedFontEngine;
   assetResolver: AssetResolver;
@@ -29,7 +32,22 @@ export async function renderFullYearPreviewDocuments(args: {
     holidayLayers,
     fontEngine,
     assetResolver,
+    pageLayout,
   } = args;
+
+  const geometry = pageLayout && calculatePageGeometry({
+    layout: pageLayout, mainSize: mainTemplate, miniSize: miniTemplate,
+  });
+  // Explicit preview sizes reflow a copy of the template. Legacy layouts keep
+  // their original documents and uniform display scaling.
+  const previewMainTemplate = geometry &&
+    (pageLayout?.mainWidth !== undefined || pageLayout?.mainHeight !== undefined)
+    ? { ...mainTemplate, width: geometry.main.width, height: geometry.main.height }
+    : mainTemplate;
+  const previewMiniTemplate = geometry &&
+    (pageLayout?.miniWidth !== undefined || pageLayout?.miniHeight !== undefined)
+    ? { ...miniTemplate, width: geometry.previousMini.width, height: geometry.previousMini.height }
+    : miniTemplate;
 
   const main = new Map<CalendarKey, SvgDocument>();
   const mini = new Map<CalendarKey, SvgDocument>();
@@ -38,7 +56,7 @@ export async function renderFullYearPreviewDocuments(args: {
   for (const [key, calendar] of calendarSet.mainCalendars) {
     const scene = layoutMain({
       calendar,
-      template: mainTemplate,
+      template: previewMainTemplate,
       holidayLayers,
       textMeasurer: fontEngine,
     });
@@ -55,7 +73,7 @@ export async function renderFullYearPreviewDocuments(args: {
   for (const [key, calendar] of calendarSet.miniCalendars) {
     const scene = layoutMini({
       calendar,
-      template: miniTemplate,
+      template: previewMiniTemplate,
       holidayLayers,
       textMeasurer: fontEngine,
     });
