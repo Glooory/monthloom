@@ -53,13 +53,18 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
   // Subscribe only to canonical committed document
   const document = useDocumentStore((state) => state.document);
 
-  const [fontEngine, setFontEngine] = useState<ResolvedFontEngine | null>(null);
-  const [documents, setDocuments] = useState<FullYearPreviewDocuments | null>(null);
+  const [fontState, setFontState] = useState<{
+    key: string | null;
+    engine: ResolvedFontEngine | null;
+  }>({ key: null, engine: null });
+  const [renderedPages, setRenderedPages] = useState<{
+    inputs: object;
+    documents: FullYearPreviewDocuments;
+  } | null>(null);
   const [backgroundDataUri, setBackgroundDataUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const currentFontKeyRef = useRef<string>("");
   const generationIdRef = useRef(0);
 
   const mainStartOfWeek = document.mainTemplate.weekdayRow.startOfWeek ?? 0;
@@ -85,14 +90,32 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
     });
   }, [calendarSet, document.mainTemplate, document.miniTemplate, document.holidayLayers]);
 
+  const fontKey = useMemo(
+    () => computeRequirementsKey(document.fontCatalog, fontRequirements),
+    [document.fontCatalog, fontRequirements],
+  );
+  const fontEngine = fontState.key === fontKey ? fontState.engine : null;
+  const renderInputs = useMemo(() => ({
+    calendarSet,
+    mainTemplate: document.mainTemplate,
+    miniTemplate: document.miniTemplate,
+    holidayLayers: document.holidayLayers,
+    fontEngine,
+    assetResolver,
+  }), [
+    calendarSet,
+    document.mainTemplate,
+    document.miniTemplate,
+    document.holidayLayers,
+    fontEngine,
+    assetResolver,
+  ]);
+  const documents = renderedPages?.inputs === renderInputs ? renderedPages.documents : null;
+
   // 3. Resolve Font Engine once per unique catalog & character requirements
   useEffect(() => {
-    const reqKey = computeRequirementsKey(document.fontCatalog, fontRequirements);
-    if (reqKey === currentFontKeyRef.current && fontEngine) {
-      return;
-    }
-
     let isMounted = true;
+    setError(null);
 
     resolveFontEngine({
       catalog: document.fontCatalog,
@@ -102,8 +125,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
     })
       .then((engine) => {
         if (!isMounted) return;
-        currentFontKeyRef.current = reqKey;
-        setFontEngine(engine);
+        setFontState({ key: fontKey, engine });
       })
       .catch((err) => {
         if (!isMounted) return;
@@ -113,7 +135,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [document.fontCatalog, fontRequirements, assetResolver, fetchImpl, fontEngine]);
+  }, [fontKey, assetResolver, fetchImpl]);
 
   // 4. Resolve Background Asset
   useEffect(() => {
@@ -133,7 +155,12 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
 
   // 5. Render 13 Main and 15 Mini SvgDocuments asynchronously
   useEffect(() => {
-    if (!fontEngine) return;
+    if (!fontEngine) {
+      generationIdRef.current += 1;
+      setRenderedPages(null);
+      setLoading(true);
+      return;
+    }
 
     const currentGeneration = ++generationIdRef.current;
     setLoading(true);
@@ -148,7 +175,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
     })
       .then((docs) => {
         if (currentGeneration === generationIdRef.current) {
-          setDocuments(docs);
+          setRenderedPages({ inputs: renderInputs, documents: docs });
           setLoading(false);
         }
       })
@@ -158,14 +185,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
           setLoading(false);
         }
       });
-  }, [
-    calendarSet,
-    document.mainTemplate,
-    document.miniTemplate,
-    document.holidayLayers,
-    fontEngine,
-    assetResolver,
-  ]);
+  }, [renderInputs]);
 
   // 6. Page geometry shared by all 13 pages
   const geometry = useMemo(() => {

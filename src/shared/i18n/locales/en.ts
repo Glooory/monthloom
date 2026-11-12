@@ -89,6 +89,13 @@ export const en: TranslationDictionary = {
     },
     typographyHeading: "Typography",
     fontFamilyLabel: "Font Family",
+    googleFontsGroup: "Google Fonts",
+    fontSearchLabel: "Search fonts",
+    noFontResults: "No matching fonts",
+    systemFontsGroup: "System Fonts",
+    currentLocalFont: "Current system font",
+    loadSystemFonts: "Load system fonts…",
+    loadingSystemFonts: "Loading system fonts…",
     fontWeightLabel: "Weight",
     fontWeights: {
       light: "300 - Light",

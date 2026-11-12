@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useSyncExternalStore } from "react";
 import type { CalendarMonth } from "../../domain/calendar/types";
-import type { BinaryAssetResolver } from "../../resources/assets/types";
+import type { BinaryAssetResolver, BinaryAssetWriter } from "../../resources/assets/types";
 import type { SvgDocument } from "../../rendering/svg/document";
 import type { RenderScene } from "../../rendering/scene/types";
 import type { PositionableSemanticId } from "../model/types";
@@ -9,6 +9,7 @@ import { useDocumentStore } from "../state/documentStore";
 import { useUiStore } from "../state/uiStore";
 import { createEffectiveDocument } from "../model/effectiveDocument";
 import { useEditorFontEngine } from "../fonts/useEditorFontEngine";
+import type { ResolvedFontEngine } from "../../resources/fonts/fontkitEngine";
 import { memoryAssetStore } from "../assets/memoryAssetStore";
 import { layoutMain } from "../../rendering/layout/mainLayout";
 import { layoutMini } from "../../rendering/layout/miniLayout";
@@ -68,7 +69,13 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     setDrag,
   } = useUiStore();
 
-  const [svgDocument, setSvgDocument] = useState<SvgDocument | null>(null);
+  const [svgState, setSvgState] = useState<{
+    scene: RenderScene;
+    fontEngine: ResolvedFontEngine;
+    activeTemplate: "main" | "mini";
+    calendar: CalendarMonth;
+    document: SvgDocument;
+  } | null>(null);
 
   // Derive transient effective document
   const effectiveDocument = useMemo(() => {
@@ -109,6 +116,11 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
       });
     }
   }, [fontEngine, activeTemplate, calendar, effectiveDocument, weekdays]);
+  const svgDocument = svgState?.fontEngine === fontEngine &&
+    svgState.activeTemplate === activeTemplate && svgState.calendar === calendar
+    ? svgState.document
+    : null;
+  const canvasScene = svgDocument && svgState ? svgState.scene : scene;
 
   // Materialize SVG document when scene or fontEngine changes
   useEffect(() => {
@@ -123,7 +135,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     })
       .then((doc) => {
         if (isMounted) {
-          setSvgDocument(doc);
+          setSvgState({ scene, fontEngine, activeTemplate, calendar, document: doc });
         }
       })
       .catch((err) => {
@@ -133,7 +145,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [scene, fontEngine, assetResolver]);
+  }, [scene, fontEngine, assetResolver, activeTemplate, calendar]);
 
   // Drag interaction tracking
   const dragStartRef = useRef<{
@@ -377,7 +389,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         {/* Center Canvas */}
         <EditorCanvas
           svgDocument={svgDocument}
-          scene={scene}
+          scene={canvasScene}
           selection={selection}
           activeTemplate={activeTemplate}
           zoom={zoom}
@@ -396,7 +408,9 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
           selection={selection}
           activeTemplate={activeTemplate}
           onCommitDocument={commitDocument}
+          getCurrentDocument={() => useDocumentStore.getState().document}
           onAnchorChange={handleSelectAnchor}
+          fontAssetStore={"setAsset" in assetResolver ? assetResolver as BinaryAssetResolver & BinaryAssetWriter : undefined}
         />
       </div>
     </div>

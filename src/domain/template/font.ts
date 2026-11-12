@@ -6,6 +6,7 @@ export type FontSource =
   | Readonly<{
       type: "local";
       assetId: string;
+      postscriptName?: string;
     }>;
 
 export type FontDescriptor = Readonly<{

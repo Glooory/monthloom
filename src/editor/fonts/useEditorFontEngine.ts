@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { CalendarMonth } from "../../domain/calendar/types";
 import type { EditorDocument } from "../model/types";
 import type { BinaryAssetResolver } from "../../resources/assets/types";
@@ -60,26 +60,25 @@ export function useEditorFontEngine(args: {
 }): EditorFontEngineState {
   const { calendar, document, assetResolver, fetchImpl } = args;
 
-  const [state, setState] = useState<EditorFontEngineState>({
+  const { key, requirements } = useMemo(
+    () => computeFontRequirementKey({ calendar, document }),
+    [calendar, document],
+  );
+
+  const [state, setState] = useState<EditorFontEngineState & { key: string | null }>({
+    key: null,
     fontEngine: null,
     loading: true,
     error: null,
   });
 
-  const currentKeyRef = useRef<string>("");
-
   useEffect(() => {
-    const { key, requirements } = computeFontRequirementKey({
-      calendar,
-      document,
-    });
-
-    if (key === currentKeyRef.current && state.fontEngine) {
+    if (key === state.key && state.fontEngine) {
       return;
     }
 
     let isMounted = true;
-    setState((prev) => ({ ...prev, loading: true, error: null }));
+    setState({ key, fontEngine: null, loading: true, error: null });
 
     resolveFontEngine({
       catalog: document.fontCatalog,
@@ -89,8 +88,8 @@ export function useEditorFontEngine(args: {
     })
       .then((engine) => {
         if (!isMounted) return;
-        currentKeyRef.current = key;
         setState({
+          key,
           fontEngine: engine,
           loading: false,
           error: null,
@@ -99,6 +98,7 @@ export function useEditorFontEngine(args: {
       .catch((err) => {
         if (!isMounted) return;
         setState({
+          key,
           fontEngine: null,
           loading: false,
           error: err instanceof Error ? err : new Error(String(err)),
@@ -108,7 +108,9 @@ export function useEditorFontEngine(args: {
     return () => {
       isMounted = false;
     };
-  }, [calendar, document, assetResolver, fetchImpl]);
+  }, [key, assetResolver, fetchImpl]);
 
-  return state;
+  return state.key === key
+    ? state
+    : { fontEngine: null, loading: true, error: null };
 }

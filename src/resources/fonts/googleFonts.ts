@@ -1,3 +1,5 @@
+import { supportsGoogleFontFace } from "./googleFontCatalog";
+
 export type GoogleFontFaceRequest = Readonly<{
   family: string;
   weight: number;
@@ -6,7 +8,7 @@ export type GoogleFontFaceRequest = Readonly<{
 }>;
 
 export function buildGoogleFontsCssUrl(request: GoogleFontFaceRequest): string {
-  const familyEncoded = request.family.trim().replace(/ /g, "+");
+  const familyEncoded = encodeURIComponent(request.family.trim()).replace(/%20/g, "+");
   const isItalic = request.style === "italic";
   const familyParam = isItalic
     ? `${familyEncoded}:ital,wght@1,${request.weight}`
@@ -31,6 +33,11 @@ export async function fetchGoogleFontBinary(
   request: GoogleFontFaceRequest,
   fetchImpl: typeof fetch = globalThis.fetch,
 ): Promise<ArrayBuffer> {
+  if (supportsGoogleFontFace(request.family, request.weight, request.style) === false) {
+    throw new Error(
+      `Google Fonts face ${request.family} ${request.weight} ${request.style} is unavailable`,
+    );
+  }
   const cssUrl = buildGoogleFontsCssUrl(request);
   const cssResponse = await fetchImpl(cssUrl, {
     headers: {

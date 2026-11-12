@@ -4,7 +4,9 @@ import type { HolidayLayer } from "../../domain/template/holidayLayer";
 import { updateHolidayLayer } from "../../domain/template/holidayLayer";
 import type { HolidayLayerElement } from "../model/holidaySemanticId";
 import type { EditorDocument } from "../model/types";
-import { updateFontDescriptor } from "../model/templateBindings";
+import type { BinaryAssetWriter } from "../../resources/assets/types";
+import { selectElementFont } from "../model/templateBindings";
+import { buildHolidaySemanticId } from "../model/holidaySemanticId";
 import { useI18n } from "../../shared/i18n/i18nStore";
 import { PositionInspector } from "./PositionInspector";
 import { TypographyInspector } from "./TypographyInspector";
@@ -17,7 +19,9 @@ export type HolidayLayerInspectorProps = {
   element: HolidayLayerElement;
   target: "main" | "mini";
   onCommitDocument: (next: EditorDocument) => void;
+  getCurrentDocument: () => EditorDocument;
   onAnchorChange?: (nextAnchor: Anchor) => void;
+  fontAssetStore?: BinaryAssetWriter;
 };
 
 export const HolidayLayerInspector: React.FC<HolidayLayerInspectorProps> = ({
@@ -26,7 +30,9 @@ export const HolidayLayerInspector: React.FC<HolidayLayerInspectorProps> = ({
   element,
   target,
   onCommitDocument,
+  getCurrentDocument,
   onAnchorChange,
+  fontAssetStore,
 }) => {
   const { t } = useI18n();
 
@@ -83,6 +89,12 @@ export const HolidayLayerInspector: React.FC<HolidayLayerInspectorProps> = ({
             <TypographyInspector
               typography={layer.main.name.typography}
               fontDescriptor={fontDescriptor}
+              fontAssetStore={fontAssetStore}
+              onSelectFont={(descriptor, typography) =>
+                onCommitDocument(selectElementFont(
+                  getCurrentDocument(), buildHolidaySemanticId("main", layer.id, "name"), descriptor, typography,
+                ))
+              }
               onChangeTypography={(nextTypo) =>
                 updateLayer((l) => ({
                   ...l,
@@ -91,15 +103,6 @@ export const HolidayLayerInspector: React.FC<HolidayLayerInspectorProps> = ({
                     name: { ...l.main.name, typography: nextTypo },
                   },
                 }))
-              }
-              onChangeFontDescriptor={(nextDesc) =>
-                onCommitDocument(
-                  updateFontDescriptor(
-                    document,
-                    layer.main.name.typography.fontId,
-                    () => nextDesc,
-                  ),
-                )
               }
             />
           </>
@@ -171,6 +174,12 @@ export const HolidayLayerInspector: React.FC<HolidayLayerInspectorProps> = ({
           <MarkerInspector
             marker={marker}
             fontDescriptor={markerFontDescriptor}
+            fontAssetStore={fontAssetStore}
+            onSelectFont={(descriptor, typography) =>
+              onCommitDocument(selectElementFont(
+                getCurrentDocument(), buildHolidaySemanticId(target, layer.id, "holidayMarker"), descriptor, typography,
+              ))
+            }
             onChangeMarker={(nextMarker) =>
               updateLayer((l) => ({
                 ...l,
@@ -195,17 +204,6 @@ export const HolidayLayerInspector: React.FC<HolidayLayerInspectorProps> = ({
                     }),
               }))
             }
-            onChangeFontDescriptor={(nextDesc) => {
-              if (marker.type === "text") {
-                onCommitDocument(
-                  updateFontDescriptor(
-                    document,
-                    marker.typography.fontId,
-                    () => nextDesc,
-                  ),
-                );
-              }
-            }}
           />
         )}
       </>
@@ -275,6 +273,12 @@ export const HolidayLayerInspector: React.FC<HolidayLayerInspectorProps> = ({
           <MarkerInspector
             marker={marker}
             fontDescriptor={markerFontDescriptor}
+            fontAssetStore={fontAssetStore}
+            onSelectFont={(descriptor, typography) =>
+              onCommitDocument(selectElementFont(
+                getCurrentDocument(), buildHolidaySemanticId(target, layer.id, "workdayMarker"), descriptor, typography,
+              ))
+            }
             onChangeMarker={(nextMarker) =>
               updateLayer((l) => ({
                 ...l,
@@ -299,17 +303,6 @@ export const HolidayLayerInspector: React.FC<HolidayLayerInspectorProps> = ({
                     }),
               }))
             }
-            onChangeFontDescriptor={(nextDesc) => {
-              if (marker.type === "text") {
-                onCommitDocument(
-                  updateFontDescriptor(
-                    document,
-                    marker.typography.fontId,
-                    () => nextDesc,
-                  ),
-                );
-              }
-            }}
           />
         )}
       </>

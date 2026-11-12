@@ -5,6 +5,7 @@ import {
   setElementPosition,
   getTypography,
   setTypography,
+  selectElementFont,
   getCalendarColors,
   setCalendarColors,
   getGridBorder,
@@ -61,6 +62,46 @@ describe("templateBindings", () => {
 
     // main.grid should return null
     expect(getTypography(doc, "main.grid")).toBeNull();
+  });
+
+  it("selects a separate font face for one holiday marker without changing a shared face", () => {
+    const doc = createDefaultEditorDocument();
+    const id = "mini.holiday.builtin-cn-layer.holidayMarker" as const;
+    const marker = doc.holidayLayers[0].mini.holidayMarker.marker;
+    if (marker.type !== "text") throw new Error("Expected text marker");
+    const descriptor = {
+      family: "Local Example",
+      weight: 700,
+      style: "normal" as const,
+      source: { type: "local" as const, assetId: "font-asset" },
+    };
+
+    const updated = selectElementFont(doc, id, descriptor, marker.typography);
+    const updatedMarker = updated.holidayLayers[0].mini.holidayMarker.marker;
+    if (updatedMarker.type !== "text") throw new Error("Expected text marker");
+
+    expect(updatedMarker.typography.fontId).toBe(id);
+    expect(updated.fontCatalog[id]).toEqual(descriptor);
+    expect(updated.fontCatalog["default-sans"]).toEqual(doc.fontCatalog["default-sans"]);
+    expect(updated.holidayLayers[0].mini.workdayMarker.marker).toEqual(doc.holidayLayers[0].mini.workdayMarker.marker);
+  });
+
+  it("keeps the latest typography edit and matches the selected descriptor to a mini marker", () => {
+    const doc = createDefaultEditorDocument();
+    const id = "mini.holiday.builtin-cn-layer.holidayMarker" as const;
+    const initial = getTypography(doc, id);
+    if (!initial) throw new Error("Expected mini marker typography");
+    const edited = setTypography(doc, id, { ...initial, fontSize: 17 });
+
+    const updated = selectElementFont(
+      edited,
+      id,
+      { family: "Noto Sans", weight: 400, style: "normal", source: { type: "google", family: "Noto Sans" } },
+      initial,
+    );
+
+    expect(getTypography(updated, id)).toMatchObject({ fontSize: 17, fontWeight: 700, fontId: id });
+    expect(updated.fontCatalog[id]).toMatchObject({ weight: 700, style: "normal" });
   });
 
   it("handles calendar colors get and set for main and mini", () => {

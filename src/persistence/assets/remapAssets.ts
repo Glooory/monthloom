@@ -56,7 +56,7 @@ export function remapDocumentAssetIds(
           {
             ...descriptor,
             source: {
-              type: "local",
+              ...descriptor.source,
               assetId: getMappedId(descriptor.source.assetId),
             },
           },

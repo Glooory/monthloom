@@ -122,4 +122,12 @@ describe("Production Google Fonts Provider", () => {
       /Failed to fetch Google Fonts CSS: HTTP 500 for Noto Sans/,
     );
   });
+
+  it("rejects Lato 500 before requesting a face Google Fonts does not serve", async () => {
+    const mockFetch = vi.fn<typeof fetch>();
+    await expect(fetchGoogleFontBinary({
+      family: "Lato", weight: 500, style: "normal", text: "1234567890",
+    }, mockFetch)).rejects.toThrow(/Lato.*500.*unavailable/i);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
 });

@@ -72,6 +72,13 @@ export interface TranslationDictionary {
     anchors: Record<string, string>;
     typographyHeading: string;
     fontFamilyLabel: string;
+    googleFontsGroup: string;
+    fontSearchLabel: string;
+    noFontResults: string;
+    systemFontsGroup: string;
+    currentLocalFont: string;
+    loadSystemFonts: string;
+    loadingSystemFonts: string;
     fontWeightLabel: string;
     fontWeights: {
       light: string;

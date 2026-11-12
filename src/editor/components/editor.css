@@ -393,6 +393,99 @@
   box-shadow: 0 0 0 2px var(--accent-primary-light);
 }
 
+.font-picker-error {
+  margin: 0;
+  color: var(--text-danger, #dc2626);
+  font-size: 12px;
+}
+
+.font-picker-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.font-picker-input-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.font-picker-combobox {
+  width: 100%;
+  padding-right: 26px;
+}
+
+.font-picker-chevron {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.font-picker-list {
+  overflow-y: auto;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+}
+
+.font-picker-popover {
+  z-index: 1000;
+  box-sizing: border-box;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+}
+
+.font-picker-list-content {
+  position: relative;
+}
+
+.font-picker-option,
+.font-picker-group-label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 44px;
+  box-sizing: border-box;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.font-picker-option {
+  padding: 10px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+
+.font-picker-group-label {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.font-picker-option:hover,
+.font-picker-option[aria-selected="true"],
+.font-picker-option[data-active="true"],
+.font-picker-option:focus-visible {
+  background: var(--accent-primary-light);
+  outline: none;
+}
+
+.font-search-empty {
+  display: block;
+  padding: 6px 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
 .field-input-number {
   width: 76px;
   text-align: left;
@@ -667,6 +760,5 @@
   color: #ffffff;
   font-weight: 600;
 }
-
 
 

@@ -1,10 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { act, render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { FullYearPreview } from "./FullYearPreview";
 import { useDocumentStore, createDefaultEditorDocument } from "../../editor/state/documentStore";
 import { MemoryAssetStore } from "../../editor/assets/memoryAssetStore";
 import { ResolvedFontEngine, type ResolvedFontFace } from "../../resources/fonts/fontkitEngine";
 import * as resolveFontsModule from "../../resources/fonts/resolveFonts";
+import * as renderDocumentsModule from "./renderDocuments";
+import * as pagePreviewModule from "./PagePreview";
+import { selectElementFont } from "../../editor/model/templateBindings";
 import type { HolidayDiagnostic } from "../../domain/holiday/types";
 
 function createMockFontEngine(): ResolvedFontEngine {
@@ -149,6 +152,52 @@ describe("FullYearPreview", () => {
       expect(screen.getByRole("button", { name: /13页平铺/i }).className).toContain("active");
     });
   });
+
+  it("does not render changed typography with the previous font engine", async () => {
+    const firstEngine = createMockFontEngine();
+    vi.mocked(resolveFontsModule.resolveFontEngine)
+      .mockReset()
+      .mockResolvedValueOnce(firstEngine)
+      .mockReturnValueOnce(new Promise(() => {}));
+    const renderSpy = vi.spyOn(renderDocumentsModule, "renderFullYearPreviewDocuments");
+    render(<FullYearPreview targetYear={2027} assetResolver={assetStore} />);
+    await waitFor(() => expect(screen.getByText("2027-1")).toBeDefined());
+    const renderedBeforeChange = renderSpy.mock.calls.length;
+
+    act(() => {
+      const doc = useDocumentStore.getState().document;
+      useDocumentStore.getState().commitDocument(selectElementFont(
+        doc,
+        "main.date",
+        { ...doc.fontCatalog["main.date"], weight: 900 },
+        { ...doc.mainTemplate.date.typography, fontWeight: 900 },
+      ));
+    });
+
+    expect(renderSpy.mock.calls.length).toBe(renderedBeforeChange);
+  });
+
+  it("does not display old pages during the first render after a font change", async () => {
+    const firstEngine = createMockFontEngine();
+    vi.mocked(resolveFontsModule.resolveFontEngine)
+      .mockReset()
+      .mockResolvedValueOnce(firstEngine)
+      .mockReturnValueOnce(new Promise(() => {}));
+    const pageSpy = vi.spyOn(pagePreviewModule, "PagePreview");
+    render(<FullYearPreview targetYear={2027} assetResolver={assetStore} />);
+    await waitFor(() => expect(screen.getByText("2027-1")).toBeDefined());
+    const pageRendersBeforeChange = pageSpy.mock.calls.length;
+
+    act(() => {
+      const doc = useDocumentStore.getState().document;
+      useDocumentStore.getState().commitDocument(selectElementFont(
+        doc,
+        "main.date",
+        { ...doc.fontCatalog["main.date"], weight: 900 },
+        { ...doc.mainTemplate.date.typography, fontWeight: 900 },
+      ));
+    });
+
+    expect(pageSpy.mock.calls.length).toBe(pageRendersBeforeChange);
+  });
 });
-
-

@@ -30,6 +30,33 @@ describe("Snapshot validation", () => {
     expect(validated.document.holidayLayers.length).toBeGreaterThan(0);
   });
 
+  it("retains a selected face name for a local font", () => {
+    const snapshot: ProjectSnapshotV1 = {
+      version: 1,
+      type: "project",
+      id: "project-local-font",
+      name: "Local font",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      targetYear: 2027,
+      document: {
+        ...defaultDoc,
+        fontCatalog: {
+          ...defaultDoc.fontCatalog,
+          "main.date": {
+            family: "Menlo",
+            weight: 700,
+            style: "normal",
+            source: { type: "local", assetId: "font-1", postscriptName: "Menlo-Bold" },
+          },
+        },
+      },
+    };
+
+    expect(validateProjectSnapshot(snapshot).document.fontCatalog["main.date"].source)
+      .toEqual({ type: "local", assetId: "font-1", postscriptName: "Menlo-Bold" });
+  });
+
   it("rejects an invalid ProjectSnapshot missing required fields", () => {
     expect(() =>
       validateProjectSnapshot({

@@ -13,6 +13,7 @@ const fontDescriptorSchema = z.object({
     z.object({
       type: z.literal("local"),
       assetId: z.string(),
+      postscriptName: z.string().optional(),
     }),
   ]),
 });

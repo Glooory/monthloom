@@ -38,6 +38,7 @@ describe("Referenced assets and remapping", () => {
           source: {
             type: "local" as const,
             assetId: "old-font-id",
+            postscriptName: "MyFont-Bold",
           },
         },
       },
@@ -65,6 +66,7 @@ describe("Referenced assets and remapping", () => {
     expect(remapped.fontCatalog["custom-font"].source).toEqual({
       type: "local",
       assetId: "new-font-id",
+      postscriptName: "MyFont-Bold",
     });
     expect(remapped.pagePreview.backgroundAssetId).toBe("new-bg-id");
   });

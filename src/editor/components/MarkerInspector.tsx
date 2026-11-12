@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import type { MarkerTemplate } from "../../domain/template/primitives";
 import type { FontDescriptor } from "../../domain/template/font";
+import type { Typography } from "../../domain/template/primitives";
+import type { BinaryAssetWriter } from "../../resources/assets/types";
 import { TypographyInspector } from "./TypographyInspector";
 import { ColorInspector } from "./ColorInspector";
 import { NumberInput } from "./NumberInput";
@@ -11,14 +13,16 @@ export interface MarkerInspectorProps {
   marker: MarkerTemplate;
   fontDescriptor?: FontDescriptor;
   onChangeMarker: (next: MarkerTemplate) => void;
-  onChangeFontDescriptor?: (next: FontDescriptor) => void;
+  onSelectFont?: (descriptor: FontDescriptor, typography: Typography) => void;
+  fontAssetStore?: BinaryAssetWriter;
 }
 
 export const MarkerInspector: React.FC<MarkerInspectorProps> = ({
   marker,
   fontDescriptor,
   onChangeMarker,
-  onChangeFontDescriptor,
+  onSelectFont,
+  fontAssetStore,
 }) => {
   const { t } = useI18n();
   const [draftValue, setDraftValue] = useState(marker.type === "text" ? marker.value : "");
@@ -122,7 +126,8 @@ export const MarkerInspector: React.FC<MarkerInspectorProps> = ({
             typography={marker.typography}
             fontDescriptor={fontDescriptor}
             onChangeTypography={(nextTypo) => onChangeMarker({ ...marker, typography: nextTypo })}
-            onChangeFontDescriptor={onChangeFontDescriptor}
+            onSelectFont={onSelectFont}
+            fontAssetStore={fontAssetStore}
           />
 
           <ColorInspector

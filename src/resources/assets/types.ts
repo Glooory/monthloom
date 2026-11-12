@@ -8,3 +8,7 @@ export interface AssetResolver {
 }
 
 export type BinaryAssetResolver = AssetResolver;
+
+export interface BinaryAssetWriter {
+  setAsset(assetId: string, asset: BinaryAsset): Promise<void> | void;
+}

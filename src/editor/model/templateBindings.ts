@@ -251,6 +251,19 @@ export function getTypography(
         ) {
           return layer.main.workdayMarker.marker.typography;
         }
+      } else {
+        if (
+          parsedHoliday.element === "holidayMarker" &&
+          layer.mini.holidayMarker.marker.type === "text"
+        ) {
+          return layer.mini.holidayMarker.marker.typography;
+        }
+        if (
+          parsedHoliday.element === "workdayMarker" &&
+          layer.mini.workdayMarker.marker.type === "text"
+        ) {
+          return layer.mini.workdayMarker.marker.typography;
+        }
       }
     }
     return null;
@@ -327,6 +340,37 @@ export function setTypography(
                   ...layer.main.workdayMarker.marker,
                   typography,
                 },
+              },
+            },
+          };
+        }
+      } else {
+        if (
+          parsedHoliday.element === "holidayMarker" &&
+          layer.mini.holidayMarker.marker.type === "text"
+        ) {
+          return {
+            ...layer,
+            mini: {
+              ...layer.mini,
+              holidayMarker: {
+                ...layer.mini.holidayMarker,
+                marker: { ...layer.mini.holidayMarker.marker, typography },
+              },
+            },
+          };
+        }
+        if (
+          parsedHoliday.element === "workdayMarker" &&
+          layer.mini.workdayMarker.marker.type === "text"
+        ) {
+          return {
+            ...layer,
+            mini: {
+              ...layer.mini,
+              workdayMarker: {
+                ...layer.mini.workdayMarker,
+                marker: { ...layer.mini.workdayMarker.marker, typography },
               },
             },
           };
@@ -493,6 +537,37 @@ export function updateFontDescriptor(
     fontCatalog: {
       ...document.fontCatalog,
       [fontId]: updater(current),
+    },
+  };
+}
+
+export function selectElementFont(
+  document: EditorDocument,
+  semanticId: EditableSemanticId,
+  descriptor: FontDescriptor,
+  typography: Typography,
+): EditorDocument {
+  const currentTypography = getTypography(document, semanticId);
+  if (!currentTypography) {
+    throw new Error(`Cannot select a font for element: ${semanticId}`);
+  }
+  const fontId = semanticId;
+  const nextTypography = {
+    ...currentTypography,
+    fontId,
+    fontWeight: typography.fontWeight,
+    fontStyle: typography.fontStyle,
+  };
+  const nextDocument = setTypography(document, semanticId, nextTypography);
+  return {
+    ...nextDocument,
+    fontCatalog: {
+      ...nextDocument.fontCatalog,
+      [fontId]: {
+        ...descriptor,
+        weight: nextTypography.fontWeight,
+        style: nextTypography.fontStyle,
+      },
     },
   };
 }
@@ -744,4 +819,3 @@ export function setAdjacentDaysSettings(
     },
   };
 }
-

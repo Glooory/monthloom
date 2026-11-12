@@ -1,6 +1,7 @@
 import React from "react";
 import type { EditorDocument, EditorSelection, PositionableSemanticId } from "../model/types";
 import type { Anchor } from "../../domain/template/primitives";
+import type { BinaryAssetWriter } from "../../resources/assets/types";
 import {
   getElementPosition,
   setElementPosition,
@@ -10,7 +11,7 @@ import {
   setCalendarColors,
   getGridBorder,
   setGridBorder,
-  updateFontDescriptor,
+  selectElementFont,
   getWeekdayRowSettings,
   setWeekdayRowSettings,
   setAdjacentDaysSettings,
@@ -31,7 +32,9 @@ export interface InspectorProps {
   selection: EditorSelection | null;
   activeTemplate?: "main" | "mini";
   onCommitDocument: (next: EditorDocument) => void;
+  getCurrentDocument: () => EditorDocument;
   onAnchorChange?: (nextAnchor: Anchor) => void;
+  fontAssetStore?: BinaryAssetWriter;
 }
 
 export const Inspector: React.FC<InspectorProps> = ({
@@ -39,7 +42,9 @@ export const Inspector: React.FC<InspectorProps> = ({
   selection,
   activeTemplate = "main",
   onCommitDocument,
+  getCurrentDocument,
   onAnchorChange,
+  fontAssetStore,
 }) => {
   const { t } = useI18n();
 
@@ -91,7 +96,9 @@ export const Inspector: React.FC<InspectorProps> = ({
             element={parsedHoliday.element}
             target={parsedHoliday.target}
             onCommitDocument={onCommitDocument}
+            getCurrentDocument={getCurrentDocument}
             onAnchorChange={onAnchorChange}
+            fontAssetStore={fontAssetStore}
           />
         </div>
       );
@@ -160,13 +167,12 @@ export const Inspector: React.FC<InspectorProps> = ({
         <TypographyInspector
           typography={typography}
           fontDescriptor={fontDescriptor}
+          fontAssetStore={fontAssetStore}
+          onSelectFont={(descriptor, nextTypography) =>
+            onCommitDocument(selectElementFont(getCurrentDocument(), semanticId, descriptor, nextTypography))
+          }
           onChangeTypography={(nextTypo) =>
             onCommitDocument(setTypography(document, semanticId, nextTypo))
-          }
-          onChangeFontDescriptor={(nextDesc) =>
-            onCommitDocument(
-              updateFontDescriptor(document, typography.fontId, () => nextDesc),
-            )
           }
         />
       )}

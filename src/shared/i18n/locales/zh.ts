@@ -89,6 +89,13 @@ export const zh: TranslationDictionary = {
     },
     typographyHeading: "文字排版",
     fontFamilyLabel: "字体",
+    googleFontsGroup: "Google Fonts",
+    fontSearchLabel: "搜索字体",
+    noFontResults: "没有匹配的字体",
+    systemFontsGroup: "系统字体",
+    currentLocalFont: "当前系统字体",
+    loadSystemFonts: "加载系统字体…",
+    loadingSystemFonts: "正在加载系统字体…",
     fontWeightLabel: "字重",
     fontWeights: {
       light: "300 - 细体 (Light)",

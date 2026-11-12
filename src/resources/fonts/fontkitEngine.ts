@@ -52,10 +52,20 @@ export function parseFontkitFace(args: {
 }): ResolvedFontFace {
   const { fontId, descriptor, bytes } = args;
   const buffer = new Uint8Array(bytes);
-  const parsed = fontkit.create(buffer as unknown as Buffer);
+  const postscriptName = descriptor.source.type === "local"
+    ? descriptor.source.postscriptName
+    : undefined;
+  const isCollection = buffer[0] === 0x74 && buffer[1] === 0x74 &&
+    buffer[2] === 0x63 && buffer[3] === 0x66;
+  const parsed = fontkit.create(
+    buffer as unknown as Buffer,
+    isCollection ? postscriptName : undefined,
+  );
 
   if (!parsed) {
-    throw new Error(`Failed to parse font binary with fontkit for fontId: "${fontId}"`);
+    throw new Error(
+      `Font face "${postscriptName ?? "unknown"}" was not found in the font collection for fontId: "${fontId}"`,
+    );
   }
 
   const font =

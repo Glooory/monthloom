@@ -31,12 +31,12 @@ declare module "fontkit" {
     fonts: Font[];
   }
 
-  export function create(buffer: Uint8Array | ArrayBuffer): Font | FontCollection;
+  export function create(buffer: Uint8Array | ArrayBuffer, postscriptName?: string): Font | FontCollection;
   export function open(path: string): Promise<Font | FontCollection>;
   export function openSync(path: string): Font | FontCollection;
 
   const fontkit: {
-    create(buffer: Uint8Array | ArrayBuffer): Font | FontCollection;
+    create(buffer: Uint8Array | ArrayBuffer, postscriptName?: string): Font | FontCollection;
     open(path: string): Promise<Font | FontCollection>;
     openSync(path: string): Font | FontCollection;
   };
