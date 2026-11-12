@@ -28,19 +28,19 @@ interface DimensionPreset {
 }
 
 const MAIN_PRESETS: DimensionPreset[] = [
-  { label: "700 × 500 (7:5 默认)", width: 700, height: 500 },
-  { label: "800 × 600 (4:3 标准)", width: 800, height: 600 },
-  { label: "800 × 450 (16:9 宽屏)", width: 800, height: 450 },
-  { label: "600 × 600 (1:1 方形)", width: 600, height: 600 },
-  { label: "600 × 800 (3:4 竖版)", width: 600, height: 800 },
+  { label: "700 × 500 (7:5)", width: 700, height: 500 },
+  { label: "800 × 600 (4:3)", width: 800, height: 600 },
+  { label: "800 × 450 (16:9)", width: 800, height: 450 },
+  { label: "600 × 600 (1:1)", width: 600, height: 600 },
+  { label: "600 × 800 (3:4)", width: 600, height: 800 },
 ];
 
 const MINI_PRESETS: DimensionPreset[] = [
-  { label: "280 × 210 (4:3 默认)", width: 280, height: 210 },
-  { label: "300 × 200 (3:2 标准)", width: 300, height: 200 },
-  { label: "320 × 180 (16:9 宽屏)", width: 320, height: 180 },
-  { label: "240 × 240 (1:1 方形)", width: 240, height: 240 },
-  { label: "200 × 260 (竖版小卡)", width: 200, height: 260 },
+  { label: "280 × 210 (4:3)", width: 280, height: 210 },
+  { label: "300 × 200 (3:2)", width: 300, height: 200 },
+  { label: "320 × 180 (16:9)", width: 320, height: 180 },
+  { label: "240 × 240 (1:1)", width: 240, height: 240 },
+  { label: "200 × 260 (10:13)", width: 200, height: 260 },
 ];
 
 export const CanvasInspector: React.FC<CanvasInspectorProps> = ({

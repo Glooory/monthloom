@@ -372,7 +372,7 @@ export const App: React.FC = () => {
 
   if (!isReady) {
     return (
-      <div className="monthloom-app-loading" role="status" aria-label="loading-app">
+      <div className="monthloom-app-loading" role="status" aria-label={t.nav.loadingApp}>
         <div className="monthloom-loading-brand">
           <div className="monthloom-brand-icon">
             <svg
@@ -394,9 +394,7 @@ export const App: React.FC = () => {
         <div className="monthloom-loading-indicator">
           <div className="monthloom-loading-spinner" />
           <span>
-            {locale === "zh"
-              ? "正在准备工作室与项目数据..."
-              : "Loading studio & project..."}
+            {t.nav.loadingApp}
           </span>
         </div>
       </div>

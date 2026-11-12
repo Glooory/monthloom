@@ -28,7 +28,7 @@ describe("HolidayLibraryPanel", () => {
       />,
     );
 
-    expect(screen.getByText("全局节假日资料库")).toBeDefined();
+    expect(screen.getByText("节假日库")).toBeDefined();
     expect(screen.getAllByText("中国公众假期").length).toBeGreaterThan(0);
     expect(screen.getByText("日本公众假期")).toBeDefined();
 
@@ -53,7 +53,7 @@ describe("HolidayLibraryPanel", () => {
       />,
     );
 
-    const addCalBtn = screen.getByRole("button", { name: /\+ 新增日历/i });
+    const addCalBtn = screen.getByRole("button", { name: /\+ 添加日历/i });
     fireEvent.click(addCalBtn);
 
     await waitFor(() => {

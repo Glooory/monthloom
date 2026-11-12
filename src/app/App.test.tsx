@@ -34,7 +34,7 @@ describe("App Integration Smoke Test", () => {
     expect(screen.getByRole("button", { name: /附日历/i })).toBeDefined();
 
     // Section: Page Preview Settings
-    expect(screen.getByText("页面版面与背景")).toBeDefined();
+    expect(screen.getByText("页面布局与背景")).toBeDefined();
     expect(screen.getByText("上传背景图")).toBeDefined();
 
     // Switch to Workspace Tab
@@ -45,7 +45,7 @@ describe("App Integration Smoke Test", () => {
     fireEvent.click(workspaceTabBtn);
 
     // Section 1: Workspace Controls
-    expect(screen.getAllByText(/节假日资料库/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/节假日库/i).length).toBeGreaterThan(0);
 
     // Section 2: Persistence Controls
     expect(screen.getByText("项目与模板")).toBeDefined();
@@ -54,8 +54,8 @@ describe("App Integration Smoke Test", () => {
     expect(screen.getByText("导入项目包 (.monthloom)")).toBeDefined();
 
     // Section 3: Batch Export
-    expect(screen.getByText("正式批量导出 SVG")).toBeDefined();
-    expect(screen.getByText("批量导出 28 张 SVG")).toBeDefined();
+    expect(screen.getAllByText("导出 SVG")[0]).toBeDefined();
+    expect(screen.getByText("导出 28 个 SVG")).toBeDefined();
 
     // Language switcher toggle
     const langBtn = screen.getByTestId("language-toggle-btn");
@@ -64,7 +64,7 @@ describe("App Integration Smoke Test", () => {
 
     // Should switch to English
     expect(screen.getByText("Save Project")).toBeDefined();
-    expect(screen.getByText("Batch Export 28 SVGs")).toBeDefined();
+    expect(screen.getByText("Export 28 SVGs")).toBeDefined();
 
     // Switch back to editor tab in English
     const editorTabBtn = screen.getByRole("button", {
@@ -131,11 +131,11 @@ describe("App Integration Smoke Test", () => {
     );
 
     // Initial render displays the loading status indicator
-    expect(screen.getByRole("status", { name: "loading-app" })).toBeDefined();
+    expect(screen.getByRole("status", { name: "正在加载项目…" })).toBeDefined();
 
     // After hydration completes, the loading screen is removed and the editor is shown
     await waitFor(() => {
-      expect(screen.queryByRole("status", { name: "loading-app" })).toBeNull();
+      expect(screen.queryByRole("status", { name: "正在加载项目…" })).toBeNull();
       expect(screen.getByRole("textbox", { name: /项目名称/i })).toBeDefined();
     });
   });

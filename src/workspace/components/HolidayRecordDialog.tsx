@@ -85,7 +85,7 @@ export const HolidayRecordDialog: React.FC<HolidayRecordDialogProps> = ({
       if (tab === "single") {
         const parsedDate = parseISODate(dateStr);
         if (!parsedDate) {
-          throw new Error("Invalid date format (YYYY-MM-DD)");
+          throw new Error(t.holidayLibrary.dialog.invalidDate);
         }
         await onSaveSingle({
           date: parsedDate,
@@ -96,7 +96,7 @@ export const HolidayRecordDialog: React.FC<HolidayRecordDialogProps> = ({
         const start = parseISODate(startDateStr);
         const end = parseISODate(endDateStr);
         if (!start || !end) {
-          throw new Error("Invalid start or end date format (YYYY-MM-DD)");
+          throw new Error(t.holidayLibrary.dialog.invalidDateRange);
         }
         await onSaveRange({
           start,

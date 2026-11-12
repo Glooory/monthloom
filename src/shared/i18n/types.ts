@@ -3,6 +3,7 @@ export type Locale = "zh" | "en";
 export interface TranslationDictionary {
   nav: {
     brandSubtitle: string;
+    loadingApp: string;
     templateEditorTab: string;
     fullYearGalleryTab: string;
     workspaceTab: string;
@@ -264,6 +265,7 @@ export interface TranslationDictionary {
     cancelFontSelection: string;
     fontSubstitution: (fonts: string) => string;
     previewRetained: string;
+    previewLoading: string;
     previewRenderError: (msg: string) => string;
   };
   holidayLibrary: {
@@ -324,6 +326,8 @@ export interface TranslationDictionary {
       typeLabel: string;
       nameLabel: string;
       namePlaceholder: string;
+      invalidDate: string;
+      invalidDateRange: string;
       cancelBtn: string;
       saveBtn: string;
     };

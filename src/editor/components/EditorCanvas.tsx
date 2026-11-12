@@ -5,6 +5,7 @@ import type { EditorSelection, PositionableSemanticId } from "../model/types";
 import type { Anchor } from "../../domain/template/primitives";
 import { SvgPreview } from "../../rendering/svg/SvgPreview";
 import { EditorOverlay } from "./EditorOverlay";
+import { useI18n } from "../../shared/i18n/i18nStore";
 import { buildEditorHitTargets } from "../selection/hitTargets";
 
 export interface EditorCanvasProps {
@@ -45,6 +46,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   onEndDrag,
   onCancelDrag,
 }) => {
+  const { t } = useI18n();
   const containerRef = useRef<HTMLDivElement>(null);
 
   const targets = useMemo(() => {
@@ -78,7 +80,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   if (!svgDocument || !scene) {
     return (
       <div className="editor-canvas-container">
-        <div role="status" style={{ color: "var(--text-muted)", fontSize: "13px" }}>{emptyMessage ?? "正在渲染预览..."}</div>
+        <div role="status" style={{ color: "var(--text-muted)", fontSize: "13px" }}>{emptyMessage ?? t.errors.previewLoading}</div>
       </div>
     );
   }

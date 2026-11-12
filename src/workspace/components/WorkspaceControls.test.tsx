@@ -14,7 +14,7 @@ describe("WorkspaceControls", () => {
     const yearInput = screen.getByLabelText(/目标年份/i) as HTMLInputElement;
     expect(nameInput.value).toBe("未命名项目");
     expect(yearInput.value).toBe("2027");
-    expect(screen.getByText(/节假日资料库/i)).toBeDefined();
+    expect(screen.getByText(/节假日库/i)).toBeDefined();
   });
 
   it("updates target year via input", () => {

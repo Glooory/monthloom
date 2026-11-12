@@ -45,7 +45,7 @@ describe("CanvasInspector", () => {
       />
     );
 
-    const presetBtn = screen.getByText("800 × 600 (4:3 标准)");
+    const presetBtn = screen.getByText("800 × 600 (4:3)");
     fireEvent.click(presetBtn);
 
     expect(handleCommit).toHaveBeenCalledTimes(1);
