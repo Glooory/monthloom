@@ -27,6 +27,8 @@ export type MainTemplate = Readonly<{
 
   dateGrid: Readonly<{
     showBorder?: boolean;
+    outerBorderWidth?: number;
+    outerBorderColor?: string;
     borderWidth: number;
     borderColor: string;
   }>;

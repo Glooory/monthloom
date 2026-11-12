@@ -1,3 +1,4 @@
+import { HexColorInput } from "./HexColorInput";
 import React from "react";
 import type { DotTemplate } from "../../domain/template/primitives";
 import { useI18n } from "../../shared/i18n/i18nStore";
@@ -35,7 +36,11 @@ export const DotInspector: React.FC<DotInspectorProps> = ({ dot, onChangeDot }) 
               value={dot.color}
               onChange={(e) => onChangeDot({ ...dot, color: e.target.value })}
             />
-            <span style={{ fontSize: 11, color: "#94a3b8" }}>{dot.color}</span>
+            <HexColorInput
+              value={dot.color}
+              label={t.inspector.dotColorLabel}
+              onChange={(color) => onChangeDot({ ...dot, color })}
+            />
           </div>
         </div>
 

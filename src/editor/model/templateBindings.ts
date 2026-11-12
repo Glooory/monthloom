@@ -1,3 +1,4 @@
+import type { MainTemplate } from "../../domain/template/mainTemplate";
 import type {
   EditorDocument,
   EditableSemanticId,
@@ -490,8 +491,16 @@ export function setCalendarColors(
 
 export function getGridBorder(
   document: EditorDocument,
-): { showBorder?: boolean; borderWidth: number; borderColor: string } {
+): {
+  showBorder?: boolean;
+  borderWidth: number;
+  borderColor: string;
+  outerBorderWidth: number;
+  outerBorderColor: string;
+} {
   return {
+    outerBorderWidth: document.mainTemplate.dateGrid.outerBorderWidth ?? document.mainTemplate.dateGrid.borderWidth,
+    outerBorderColor: document.mainTemplate.dateGrid.outerBorderColor ?? document.mainTemplate.dateGrid.borderColor,
     showBorder: document.mainTemplate.dateGrid.showBorder ?? true,
     borderWidth: document.mainTemplate.dateGrid.borderWidth,
     borderColor: document.mainTemplate.dateGrid.borderColor,
@@ -500,7 +509,7 @@ export function getGridBorder(
 
 export function setGridBorder(
   document: EditorDocument,
-  border: { showBorder?: boolean; borderWidth?: number; borderColor?: string },
+  border: Partial<MainTemplate["dateGrid"]>,
 ): EditorDocument {
   return {
     ...document,
@@ -508,6 +517,8 @@ export function setGridBorder(
       ...document.mainTemplate,
       dateGrid: {
         ...document.mainTemplate.dateGrid,
+        outerBorderWidth: border.outerBorderWidth ?? document.mainTemplate.dateGrid.outerBorderWidth ?? document.mainTemplate.dateGrid.borderWidth,
+        outerBorderColor: border.outerBorderColor ?? document.mainTemplate.dateGrid.outerBorderColor ?? document.mainTemplate.dateGrid.borderColor,
         showBorder:
           border.showBorder !== undefined
             ? border.showBorder

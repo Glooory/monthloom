@@ -680,10 +680,10 @@ describe("Main Layout", () => {
         n.semanticId === "main.grid" &&
         (n.kind === "rect" || n.kind === "line"),
     );
-    // 12 date grid borders + 9 weekday row borders = 21 border nodes
-    expect(borderNodes.length).toBe(21);
+    // One frame, 12 vertical segments, 6 horizontal dividers.
+    expect(borderNodes.length).toBe(19);
 
     const rectNodes = borderNodes.filter((n) => n.kind === "rect");
-    expect(rectNodes).toHaveLength(1); // Only the date grid outer rect
+    expect(rectNodes).toHaveLength(1); // One frame includes the weekday row
   });
 });

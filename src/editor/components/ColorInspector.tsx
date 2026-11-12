@@ -1,3 +1,4 @@
+import { HexColorInput } from "./HexColorInput";
 import React from "react";
 import type { CalendarColors } from "../model/types";
 import { useI18n } from "../../shared/i18n/i18nStore";
@@ -35,7 +36,11 @@ export const ColorInspector: React.FC<ColorInspectorProps> = ({
                   onChangeCalendarColors({ ...calendarColors, default: e.target.value })
                 }
               />
-              <span style={{ fontSize: 11, color: "#94a3b8" }}>{calendarColors.default}</span>
+              <HexColorInput
+                value={calendarColors.default}
+                label={t.inspector.weekdayColorLabel}
+                onChange={(color) => onChangeCalendarColors({ ...calendarColors, default: color })}
+              />
             </div>
           </div>
 
@@ -50,7 +55,11 @@ export const ColorInspector: React.FC<ColorInspectorProps> = ({
                   onChangeCalendarColors({ ...calendarColors, sunday: e.target.value })
                 }
               />
-              <span style={{ fontSize: 11, color: "#94a3b8" }}>{calendarColors.sunday}</span>
+              <HexColorInput
+                value={calendarColors.sunday}
+                label={t.inspector.sundayColorLabel}
+                onChange={(color) => onChangeCalendarColors({ ...calendarColors, sunday: color })}
+              />
             </div>
           </div>
 
@@ -65,7 +74,11 @@ export const ColorInspector: React.FC<ColorInspectorProps> = ({
                   onChangeCalendarColors({ ...calendarColors, saturday: e.target.value })
                 }
               />
-              <span style={{ fontSize: 11, color: "#94a3b8" }}>{calendarColors.saturday}</span>
+              <HexColorInput
+                value={calendarColors.saturday}
+                label={t.inspector.saturdayColorLabel}
+                onChange={(color) => onChangeCalendarColors({ ...calendarColors, saturday: color })}
+              />
             </div>
           </div>
         </div>
@@ -86,7 +99,7 @@ export const ColorInspector: React.FC<ColorInspectorProps> = ({
               value={color}
               onChange={(e) => onChangeColor(e.target.value)}
             />
-            <span style={{ fontSize: 11, color: "#94a3b8" }}>{color}</span>
+            <HexColorInput value={color} label={t.inspector.textColorLabel} onChange={onChangeColor} />
           </div>
         </div>
       </div>

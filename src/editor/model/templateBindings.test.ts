@@ -127,7 +127,14 @@ describe("templateBindings", () => {
     expect(border.showBorder).toBe(true);
 
     const updated = setGridBorder(doc, { borderWidth: 3, borderColor: "#000000", showBorder: false });
-    expect(getGridBorder(updated)).toEqual({ borderWidth: 3, borderColor: "#000000", showBorder: false });
+    expect(getGridBorder(updated)).toEqual({
+      borderWidth: 3, borderColor: "#000000", showBorder: false,
+      outerBorderWidth: border.borderWidth, outerBorderColor: border.borderColor,
+    });
+    const outerUpdated = setGridBorder(updated, { outerBorderWidth: 5, outerBorderColor: "#FF0000" });
+    expect(getGridBorder(outerUpdated)).toMatchObject({
+      outerBorderWidth: 5, outerBorderColor: "#FF0000", borderWidth: 3, borderColor: "#000000",
+    });
   });
 
   it("handles weekday labels get and set for main and mini templates", () => {

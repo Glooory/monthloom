@@ -13,6 +13,7 @@ import {
 import { DEFAULT_MAIN_TEMPLATE, DEFAULT_MINI_TEMPLATE } from "../../domain/template/defaults";
 import { useI18n } from "../../shared/i18n/i18nStore";
 import { NumberInput } from "./NumberInput";
+import { HexColorInput } from "./HexColorInput";
 
 export interface CanvasInspectorProps {
   document: EditorDocument;
@@ -92,6 +93,8 @@ export const CanvasInspector: React.FC<CanvasInspectorProps> = ({
     showBorder?: boolean;
     borderWidth?: number;
     borderColor?: string;
+    outerBorderWidth?: number;
+    outerBorderColor?: string;
   }) => {
     const next = setGridBorder(document, updates);
     onCommitDocument(next);
@@ -248,34 +251,36 @@ export const CanvasInspector: React.FC<CanvasInspectorProps> = ({
 
             {(gridBorder.showBorder ?? true) && (
               <div className="weekday-border-options" style={{ marginTop: "6px" }}>
-                <div className="field-row">
-                  <span className="field-label">{t.inspector.borderWidthLabel}</span>
-                  <NumberInput
-                    min={0.5}
-                    max={10}
-                    step={0.5}
-                    value={gridBorder.borderWidth}
-                    onChange={(borderWidth) =>
-                      handleGridBorderChange({ borderWidth })
-                    }
-                  />
-                </div>
-                <div className="field-row">
-                  <span className="field-label">{t.inspector.borderColorLabel}</span>
-                  <div className="color-input-container">
-                    <input
-                      type="color"
-                      className="color-picker-input"
-                      value={gridBorder.borderColor}
-                      onChange={(e) =>
-                        handleGridBorderChange({ borderColor: e.target.value })
-                      }
-                    />
-                    <span style={{ fontSize: 11, color: "var(--text-secondary)", fontFamily: "monospace" }}>
-                      {gridBorder.borderColor}
-                    </span>
-                  </div>
-                </div>
+                {(["outer", "inner"] as const).map((part) => {
+                  const isOuter = part === "outer";
+                  const width = isOuter ? gridBorder.outerBorderWidth : gridBorder.borderWidth;
+                  const color = isOuter ? gridBorder.outerBorderColor : gridBorder.borderColor;
+                  const label = isOuter ? t.inspector.outerBorderLabel : t.inspector.innerGridLinesLabel;
+                  return (
+                    <div className="field-group" key={part}>
+                      <div className="field-label">{label}</div>
+                      <label className="field-row">
+                        <span className="field-label">{t.inspector.borderWidthLabel}</span>
+                        <NumberInput min={0} max={10} step={0.5} value={width}
+                          onChange={(value) => handleGridBorderChange(isOuter ? { outerBorderWidth: value } : { borderWidth: value })}
+                        />
+                      </label>
+                      <div className="field-row">
+                        <span className="field-label">{t.inspector.borderColorLabel}</span>
+                        <div className="color-input-container">
+                          <input type="color" className="color-picker-input" value={color}
+                            aria-label={`${label}: ${t.inspector.borderColorLabel}`}
+                            onChange={(e) => handleGridBorderChange(isOuter ? { outerBorderColor: e.target.value } : { borderColor: e.target.value })}
+                          />
+                          <HexColorInput value={color} label={`${label}: ${t.inspector.borderColorLabel}`}
+                            onChange={(value) => handleGridBorderChange(isOuter ? { outerBorderColor: value } : { borderColor: value })}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                <p className="field-label">{t.inspector.outerBorderHint}</p>
               </div>
             )}
           </div>
@@ -317,9 +322,11 @@ export const CanvasInspector: React.FC<CanvasInspectorProps> = ({
                     value={weekdaySettings.borderColor ?? "#E5E7EB"}
                     onChange={(e) => handleWeekdayBorderChange({ borderColor: e.target.value })}
                   />
-                  <span style={{ fontSize: 11, color: "var(--text-secondary)", fontFamily: "monospace" }}>
-                    {weekdaySettings.borderColor ?? "#E5E7EB"}
-                  </span>
+                  <HexColorInput
+                    value={weekdaySettings.borderColor ?? "#E5E7EB"}
+                    label={`${t.inspector.weekdayBorderLabel}: ${t.weekday.borderColorLabel}`}
+                    onChange={(color) => handleWeekdayBorderChange({ borderColor: color })}
+                  />
                 </div>
               </div>
             </div>

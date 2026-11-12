@@ -58,6 +58,9 @@ export interface TranslationDictionary {
     presetsLabel: string;
     canvasHelpHint: string;
     gridSystemHeading: string;
+    outerBorderLabel: string;
+    innerGridLinesLabel: string;
+    outerBorderHint: string;
     dateGridLinesLabel: string;
     showDateGridBorderLabel: string;
     weekdayBorderLabel: string;

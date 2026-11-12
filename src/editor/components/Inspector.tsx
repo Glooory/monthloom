@@ -206,13 +206,24 @@ export const Inspector: React.FC<InspectorProps> = ({
 
       {/* 4. Grid Border */}
       {gridBorder && (
-        <BorderInspector
-          borderWidth={gridBorder.borderWidth}
-          borderColor={gridBorder.borderColor}
-          onChangeBorder={(nextBorder) =>
-            onCommitDocument(setGridBorder(document, nextBorder))
-          }
-        />
+        <>
+          <BorderInspector
+            title={t.inspector.outerBorderLabel}
+            borderWidth={gridBorder.outerBorderWidth}
+            borderColor={gridBorder.outerBorderColor}
+            onChangeBorder={(border) => onCommitDocument(setGridBorder(document, {
+              outerBorderWidth: border.borderWidth, outerBorderColor: border.borderColor,
+            }))}
+          />
+          <BorderInspector
+            title={t.inspector.innerGridLinesLabel}
+            borderWidth={gridBorder.borderWidth}
+            borderColor={gridBorder.borderColor}
+            onChangeBorder={(nextBorder) =>
+              onCommitDocument(setGridBorder(document, nextBorder))
+            }
+          />
+        </>
       )}
 
       {/* 5. Adjacent Month Dates (Main Date only) */}

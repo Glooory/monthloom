@@ -140,6 +140,7 @@ describe("Snapshot validation", () => {
       ...defaultDoc,
       mainTemplate: {
         ...defaultDoc.mainTemplate,
+        dateGrid: { ...defaultDoc.mainTemplate.dateGrid, outerBorderWidth: 4, outerBorderColor: "#123456" },
         weekdayRow: {
           ...defaultDoc.mainTemplate.weekdayRow,
           labels: ["日", "一", "二", "三", "四", "五", "六"],
@@ -168,6 +169,8 @@ describe("Snapshot validation", () => {
     };
 
     const validated = validateProjectSnapshot(snapshot);
+    expect(validated.document.mainTemplate.dateGrid.outerBorderWidth).toBe(4);
+    expect(validated.document.mainTemplate.dateGrid.outerBorderColor).toBe("#123456");
     expect(validated.document.mainTemplate.weekdayRow.startOfWeek).toBe(1);
     expect(validated.document.mainTemplate.weekdayRow.showBorder).toBe(true);
     expect(validated.document.mainTemplate.weekdayRow.borderWidth).toBe(2);

@@ -1,3 +1,4 @@
+import { HexColorInput } from "./HexColorInput";
 import React, { useState, useEffect } from "react";
 import { useI18n } from "../../shared/i18n/i18nStore";
 import type { WeekdayRowSettings } from "../model/templateBindings";
@@ -116,15 +117,12 @@ export const WeekdayInspector: React.FC<WeekdayInspectorProps> = ({
                 })
               }
             />
-            <input
-              type="text"
-              className="field-input"
+            <HexColorInput
               value={settings.colors.default ?? "#374151"}
-              onChange={(e) =>
-                onChangeSettings({
-                  colors: { ...settings.colors, default: e.target.value },
-                })
-              }
+              label={t.weekday.defaultColorLabel}
+              onChange={(color) => onChangeSettings({
+                colors: { ...settings.colors, default: color },
+              })}
             />
           </div>
         </div>
@@ -143,15 +141,12 @@ export const WeekdayInspector: React.FC<WeekdayInspectorProps> = ({
                 })
               }
             />
-            <input
-              type="text"
-              className="field-input"
+            <HexColorInput
               value={settings.colors.sunday ?? "#DC2626"}
-              onChange={(e) =>
-                onChangeSettings({
-                  colors: { ...settings.colors, sunday: e.target.value },
-                })
-              }
+              label={t.weekday.sundayColorLabel}
+              onChange={(color) => onChangeSettings({
+                colors: { ...settings.colors, sunday: color },
+              })}
             />
           </div>
         </div>
@@ -170,15 +165,12 @@ export const WeekdayInspector: React.FC<WeekdayInspectorProps> = ({
                 })
               }
             />
-            <input
-              type="text"
-              className="field-input"
+            <HexColorInput
               value={settings.colors.saturday ?? "#2563EB"}
-              onChange={(e) =>
-                onChangeSettings({
-                  colors: { ...settings.colors, saturday: e.target.value },
-                })
-              }
+              label={t.weekday.saturdayColorLabel}
+              onChange={(color) => onChangeSettings({
+                colors: { ...settings.colors, saturday: color },
+              })}
             />
           </div>
         </div>

@@ -511,6 +511,12 @@
   flex: 1;
 }
 
+.field-input-hex {
+  width: 90px;
+  min-width: 0;
+  font-family: monospace;
+}
+
 .color-picker-input {
   -webkit-appearance: none;
   border: none;

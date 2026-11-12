@@ -6,7 +6,7 @@ import type { Rect, RenderNode, RenderScene } from "../scene/types";
 import { DEFAULT_MAIN_WEEKDAYS } from "../../domain/template/defaults";
 import { resolveDateColor, resolveWeekdayColor } from "./colorRules";
 import {
-  buildGridBorderNodes,
+  buildMainGridBorderNodes,
   buildMarkerRenderNode,
   createGridGeometry,
 } from "./geometry";
@@ -35,25 +35,6 @@ export function layoutMain(args: {
   const nodes: RenderNode[] = [];
 
   // 1. Weekday row
-  const hasDateGridBorder =
-    (template.dateGrid.showBorder ?? true) &&
-    template.dateGrid.borderWidth > 0;
-  if (
-    template.weekdayRow.showBorder &&
-    (template.weekdayRow.borderWidth ?? 1) > 0
-  ) {
-    const weekdayBorderNodes = buildGridBorderNodes({
-      bounds: { x: 0, y: 0, width, height: weekdayRowHeight },
-      columns: 7,
-      rows: 1,
-      strokeWidth: template.weekdayRow.borderWidth ?? 1,
-      strokeColor: template.weekdayRow.borderColor ?? "#E5E7EB",
-      semanticId: "main.grid",
-      omitBottomBorder: hasDateGridBorder,
-    });
-    nodes.push(...weekdayBorderNodes);
-  }
-
   const weekdayGrid = createGridGeometry({
     x: 0,
     y: 0,
@@ -115,20 +96,14 @@ export function layoutMain(args: {
     rows: calendar.weekCount,
   });
 
-  if (
-    (template.dateGrid.showBorder ?? true) &&
-    template.dateGrid.borderWidth > 0
-  ) {
-    const borderNodes = buildGridBorderNodes({
-      bounds: dateGridBounds,
-      columns: 7,
-      rows: calendar.weekCount,
-      strokeWidth: template.dateGrid.borderWidth,
-      strokeColor: template.dateGrid.borderColor,
-      semanticId: "main.grid",
-    });
-    nodes.push(...borderNodes);
-  }
+  nodes.push(...buildMainGridBorderNodes({
+    width,
+    height,
+    weekdayRowHeight,
+    rows: calendar.weekCount,
+    dateGrid: template.dateGrid,
+    weekdayRow: template.weekdayRow,
+  }));
 
   // 3. Date Cells
   let cellIndex = 0;

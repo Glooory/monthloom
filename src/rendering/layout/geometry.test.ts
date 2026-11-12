@@ -1,6 +1,8 @@
+import { DEFAULT_MAIN_TEMPLATE } from "../../domain/template/defaults";
 import { describe, expect, it } from "vitest";
 import {
   buildGridBorderNodes,
+  buildMainGridBorderNodes,
   buildMarkerRenderNode,
   calculateImageMarkerBounds,
   createGridGeometry,
@@ -193,6 +195,54 @@ describe("Grid Geometry", () => {
       stroke: "#E5E7EB",
       strokeWidth: 1,
     });
+  });
+
+  it.each([4, 5, 6])("separates the outer frame and inner lines for %i date rows", (rows) => {
+    for (const showBorder of [false, true]) {
+      const nodes = buildMainGridBorderNodes({
+        width: 700, height: 500, weekdayRowHeight: 50, rows,
+        dateGrid: { borderWidth: 2, borderColor: "#111111", outerBorderWidth: 8, outerBorderColor: "#FF0000" },
+        weekdayRow: { height: 50, showBorder, borderWidth: 3, borderColor: "#0000FF", weekday: DEFAULT_MAIN_TEMPLATE.weekdayRow.weekday },
+      });
+      const frames = nodes.filter((n) => n.kind === "rect");
+      expect(frames).toEqual([{
+        kind: "rect", semanticId: "main.grid", x: 4, y: showBorder ? 4 : 54,
+        width: 692, height: showBorder ? 492 : 442,
+        stroke: "#FF0000", strokeWidth: 8, fill: "none",
+      }]);
+      const lines = nodes.filter((n) => n.kind === "line");
+      const dividers = lines.filter((n) => n.y1 === n.y2);
+      expect(dividers).toHaveLength(showBorder ? rows : rows - 1);
+      expect(dividers.every((n) => n.x1 === 4 && n.x2 === 696 && n.strokeWidth === 2 && n.stroke === "#111111")).toBe(true);
+      expect(dividers.filter((n) => n.y1 === 50)).toHaveLength(showBorder ? 1 : 0);
+      expect(lines.filter((n) => n.stroke === "#0000FF")).toHaveLength(showBorder ? 6 : 0);
+      expect(lines.every((n) => n.x1 >= 4 && n.x2 <= 696 && n.y1 >= (showBorder ? 4 : 54) && n.y2 <= 496)).toBe(true);
+    }
+  });
+
+  it("allows hiding either inner lines or the outer frame independently", () => {
+    const args = {
+      width: 700, height: 500, weekdayRowHeight: 50, rows: 5,
+      weekdayRow: DEFAULT_MAIN_TEMPLATE.weekdayRow,
+    };
+    expect(buildMainGridBorderNodes({ ...args,
+      dateGrid: { borderWidth: 0, borderColor: "#111111", outerBorderWidth: 4 },
+    }).map((n) => n.kind)).toEqual(["rect"]);
+    const innerOnly = buildMainGridBorderNodes({ ...args,
+      dateGrid: { borderWidth: 2, borderColor: "#111111", outerBorderWidth: 0 },
+    });
+    expect(innerOnly).toHaveLength(10);
+    expect(innerOnly.every((n) => n.kind === "line")).toBe(true);
+  });
+
+  it("keeps the weekday row independently bordered when date borders are hidden", () => {
+    const nodes = buildMainGridBorderNodes({
+      width: 700, height: 500, weekdayRowHeight: 50, rows: 5,
+      dateGrid: { showBorder: false, borderWidth: 2, borderColor: "#111111", outerBorderWidth: 8 },
+      weekdayRow: { ...DEFAULT_MAIN_TEMPLATE.weekdayRow, showBorder: true, borderWidth: 3 },
+    });
+    expect(nodes).toHaveLength(7);
+    expect(nodes[0]).toMatchObject({ kind: "rect", y: 1.5, height: 47, strokeWidth: 3 });
   });
 
   it("calculates image marker bounds correctly for various anchors", () => {

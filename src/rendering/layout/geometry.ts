@@ -1,3 +1,4 @@
+import type { MainTemplate } from "../../domain/template/mainTemplate";
 import type { ImageMarkerTemplate, MarkerTemplate } from "../../domain/template/primitives";
 import type { Rect, RenderNode } from "../scene/types";
 import { applyOffset, getAnchorPoint } from "./anchors";
@@ -249,5 +250,54 @@ export function buildGridBorderNodes(args: {
     });
   }
 
+  return nodes;
+}
+
+/** One perimeter surrounds dates and, when bordered, the weekday row. */
+export function buildMainGridBorderNodes(args: {
+  width: number;
+  height: number;
+  weekdayRowHeight: number;
+  rows: number;
+  dateGrid: MainTemplate["dateGrid"];
+  weekdayRow: MainTemplate["weekdayRow"];
+}): readonly RenderNode[] {
+  const { width, height, weekdayRowHeight, rows, dateGrid, weekdayRow } = args;
+  const weekdayWidth = weekdayRow.borderWidth ?? 1;
+  const weekdayColor = weekdayRow.borderColor ?? "#E5E7EB";
+  const hasWeekdayBorder = !!weekdayRow.showBorder && weekdayWidth > 0;
+  const outerWidth = dateGrid.outerBorderWidth ?? dateGrid.borderWidth;
+  const outerColor = dateGrid.outerBorderColor ?? dateGrid.borderColor;
+  if (!(dateGrid.showBorder ?? true) || (outerWidth <= 0 && dateGrid.borderWidth <= 0)) {
+    return hasWeekdayBorder ? buildGridBorderNodes({
+      bounds: { x: 0, y: 0, width, height: weekdayRowHeight },
+      columns: 7, rows: 1, strokeWidth: weekdayWidth,
+      strokeColor: weekdayColor, semanticId: "main.grid",
+    }) : [];
+  }
+
+  const top = hasWeekdayBorder ? 0 : weekdayRowHeight;
+  const inset = outerWidth / 2;
+  const nodes: RenderNode[] = [];
+  const addLine = (x1: number, y1: number, x2: number, y2: number, strokeWidth: number, stroke: string) => {
+    if (strokeWidth > 0) nodes.push({
+      kind: "line", semanticId: "main.grid", x1, y1, x2, y2, strokeWidth, stroke,
+    });
+  };
+  for (let c = 1; c < 7; c++) {
+    const x = c * width / 7;
+    addLine(x, weekdayRowHeight + (hasWeekdayBorder ? 0 : inset), x, height - inset, dateGrid.borderWidth, dateGrid.borderColor);
+    if (hasWeekdayBorder) addLine(x, inset, x, weekdayRowHeight, weekdayWidth, weekdayColor);
+  }
+  for (let r = hasWeekdayBorder ? 0 : 1; r < rows; r++) {
+    const y = weekdayRowHeight + r * (height - weekdayRowHeight) / rows;
+    addLine(inset, y, width - inset, y, dateGrid.borderWidth, dateGrid.borderColor);
+  }
+  // Paint the frame last so inner lines meet it cleanly, even with different widths.
+  if (outerWidth > 0) nodes.push(...buildGridBorderNodes({
+    bounds: { x: 0, y: top, width, height: height - top },
+    columns: 1, rows: 1, strokeWidth: outerWidth,
+    strokeColor: outerColor, semanticId: "main.grid",
+  }));
   return nodes;
 }

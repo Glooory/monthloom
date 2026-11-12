@@ -19,7 +19,7 @@ describe("CanvasInspector", () => {
     const inputs = screen.getAllByRole("spinbutton") as HTMLInputElement[];
     expect(inputs[0].value).toBe("700");
     expect(inputs[1].value).toBe("500");
-    expect(inputs[2].value).toBe("1"); // grid border width
+    expect(inputs[2].value).toBe("1"); // outer border width
 
     fireEvent.change(inputs[0], { target: { value: "850" } });
     expect(handleCommit).toHaveBeenCalledTimes(1);
@@ -30,7 +30,7 @@ describe("CanvasInspector", () => {
     fireEvent.change(inputs[2], { target: { value: "2" } });
     expect(handleCommit).toHaveBeenCalledTimes(2);
     const borderUpdatedDoc = handleCommit.mock.calls[1][0];
-    expect(borderUpdatedDoc.mainTemplate.dateGrid.borderWidth).toBe(2);
+    expect(borderUpdatedDoc.mainTemplate.dateGrid.outerBorderWidth).toBe(2);
   });
 
   it("applies preset when clicked", () => {

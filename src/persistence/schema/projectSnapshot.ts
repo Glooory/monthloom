@@ -96,6 +96,8 @@ const mainTemplateSchema = z.object({
     }),
   }),
   dateGrid: z.object({
+    outerBorderWidth: z.number().nonnegative().optional(),
+    outerBorderColor: z.string().optional(),
     showBorder: z.boolean().optional(),
     borderWidth: z.number(),
     borderColor: z.string(),

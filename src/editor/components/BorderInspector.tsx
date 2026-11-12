@@ -1,14 +1,17 @@
 import React from "react";
 import { useI18n } from "../../shared/i18n/i18nStore";
 import { NumberInput } from "./NumberInput";
+import { HexColorInput } from "./HexColorInput";
 
 export interface BorderInspectorProps {
+  title?: string;
   borderWidth: number;
   borderColor: string;
   onChangeBorder: (border: { borderWidth: number; borderColor: string }) => void;
 }
 
 export const BorderInspector: React.FC<BorderInspectorProps> = ({
+  title,
   borderWidth,
   borderColor,
   onChangeBorder,
@@ -17,7 +20,7 @@ export const BorderInspector: React.FC<BorderInspectorProps> = ({
 
   return (
     <div className="inspector-section">
-      <div className="section-heading">{t.inspector.borderHeading}</div>
+      <div className="section-heading">{title ?? t.inspector.borderHeading}</div>
       <div className="field-group">
         <div className="field-row">
           <span className="field-label">{t.inspector.borderWidthLabel}</span>
@@ -38,7 +41,11 @@ export const BorderInspector: React.FC<BorderInspectorProps> = ({
               value={borderColor}
               onChange={(e) => onChangeBorder({ borderWidth, borderColor: e.target.value })}
             />
-            <span style={{ fontSize: 11, color: "#94a3b8" }}>{borderColor}</span>
+            <HexColorInput
+              value={borderColor}
+              label={`${title ?? t.inspector.borderHeading}: ${t.inspector.borderColorLabel}`}
+              onChange={(color) => onChangeBorder({ borderWidth, borderColor: color })}
+            />
           </div>
         </div>
       </div>

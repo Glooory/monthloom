@@ -1,3 +1,4 @@
+import { HexColorInput } from "./HexColorInput";
 import React from "react";
 import type { HolidayDateColors } from "../../domain/template/holidayLayer";
 import { useI18n } from "../../shared/i18n/i18nStore";
@@ -79,9 +80,11 @@ export const HolidayDateColorInspector: React.FC<
                   cursor: "pointer",
                 }}
               />
-              <span style={{ fontFamily: "monospace", fontSize: "0.8rem" }}>
-                {dateColors.holiday}
-              </span>
+              <HexColorInput
+                value={dateColors.holiday}
+                label={t.holidayLayersUI.inspector.holidayDateColorLabel}
+                onChange={(color) => onChange({ ...dateColors, holiday: color })}
+              />
             </div>
           </div>
 
@@ -114,9 +117,11 @@ export const HolidayDateColorInspector: React.FC<
                   cursor: "pointer",
                 }}
               />
-              <span style={{ fontFamily: "monospace", fontSize: "0.8rem" }}>
-                {dateColors.workday}
-              </span>
+              <HexColorInput
+                value={dateColors.workday}
+                label={t.holidayLayersUI.inspector.workdayDateColorLabel}
+                onChange={(color) => onChange({ ...dateColors, workday: color })}
+              />
             </div>
           </div>
         </div>
