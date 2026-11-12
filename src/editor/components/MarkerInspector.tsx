@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
-import type { MarkerTemplate } from "../../domain/template/primitives";
+import type { Anchor, MarkerTemplate } from "../../domain/template/primitives";
 import type { FontDescriptor } from "../../domain/template/font";
 import type { Typography } from "../../domain/template/primitives";
 import type { BinaryAssetWriter } from "../../resources/assets/types";
 import { TypographyInspector } from "./TypographyInspector";
 import { ColorInspector } from "./ColorInspector";
 import { NumberInput } from "./NumberInput";
+import { PositionInspector } from "./PositionInspector";
 import { memoryAssetStore } from "../assets/memoryAssetStore";
 import { useI18n } from "../../shared/i18n/i18nStore";
 
@@ -15,6 +16,7 @@ export interface MarkerInspectorProps {
   defaultTextFontDescriptor: FontDescriptor;
   fontDescriptor?: FontDescriptor;
   onChangeMarker: (next: MarkerTemplate) => void;
+  onAnchorChange?: (nextAnchor: Anchor) => void;
   onSelectFont?: (descriptor: FontDescriptor, typography: Typography) => void;
   fontAssetStore?: BinaryAssetWriter;
 }
@@ -25,6 +27,7 @@ export const MarkerInspector: React.FC<MarkerInspectorProps> = ({
   defaultTextFontDescriptor,
   fontDescriptor,
   onChangeMarker,
+  onAnchorChange,
   onSelectFont,
   fontAssetStore,
 }) => {
@@ -91,6 +94,12 @@ export const MarkerInspector: React.FC<MarkerInspectorProps> = ({
   };
 
   return (
+    <>
+      <PositionInspector
+        position={marker.position}
+        onChange={(position) => onChangeMarker({ ...marker, position })}
+        onAnchorChange={onAnchorChange}
+      />
     <div className="inspector-section">
       <div className="section-heading">{t.inspector.markerHeading}</div>
 
@@ -205,5 +214,6 @@ export const MarkerInspector: React.FC<MarkerInspectorProps> = ({
         </div>
       )}
     </div>
+    </>
   );
 };

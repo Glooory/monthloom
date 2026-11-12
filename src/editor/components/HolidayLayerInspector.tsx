@@ -174,6 +174,7 @@ export const HolidayLayerInspector: React.FC<HolidayLayerInspectorProps> = ({
           <MarkerInspector
             key={`${target}.${layer.id}.${element}`}
             marker={marker}
+            onAnchorChange={onAnchorChange}
             defaultTextFontDescriptor={document.fontCatalog[layer.main.name.typography.fontId]}
             defaultTextFontId={layer.main.name.typography.fontId}
             fontDescriptor={markerFontDescriptor}
@@ -276,6 +277,7 @@ export const HolidayLayerInspector: React.FC<HolidayLayerInspectorProps> = ({
           <MarkerInspector
             key={`${target}.${layer.id}.${element}`}
             marker={marker}
+            onAnchorChange={onAnchorChange}
             defaultTextFontDescriptor={document.fontCatalog[layer.main.name.typography.fontId]}
             defaultTextFontId={layer.main.name.typography.fontId}
             fontDescriptor={markerFontDescriptor}
