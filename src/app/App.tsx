@@ -18,15 +18,63 @@ import { generateCalendarMonth } from "../domain/calendar/generateCalendarMonth"
 import { getMiniMonths } from "../domain/calendar/monthSequence";
 import { useI18n } from "../shared/i18n/i18nStore";
 
+type ActiveView = "editor" | "gallery" | "workspace";
+
+function readActiveView(): ActiveView {
+  const view = new URLSearchParams(window.location.search).get("view");
+  return view === "gallery" || view === "workspace" ? view : "editor";
+}
+
+function readActiveTemplate(): "main" | "mini" {
+  return new URLSearchParams(window.location.search).get("template") === "mini"
+    ? "mini"
+    : "main";
+}
+
 export const App: React.FC = () => {
   const { t, locale, toggleLocale } = useI18n();
   const { projectName, targetYear, setProjectInfo, setTargetYear, currentProjectId } =
     useWorkspaceStore();
 
-  const [activeView, setActiveView] = useState<"editor" | "gallery" | "workspace">(
-    "editor",
-  );
+  const [activeView, updateActiveView] = useState<ActiveView>(readActiveView);
   const [isReady, setIsReady] = useState(false);
+
+  const setActiveView = (view: ActiveView) => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("view") !== view) {
+      url.searchParams.set("view", view);
+      window.history.pushState(window.history.state, "", url);
+    }
+    updateActiveView(view);
+  };
+
+  useEffect(() => {
+    useUiStore.getState().setActiveTemplate(readActiveTemplate());
+
+    const unsubscribe = useUiStore.subscribe((state, previous) => {
+      if (
+        state.activeTemplate === previous.activeTemplate ||
+        state.activeTemplate === readActiveTemplate()
+      ) return;
+
+      const url = new URL(window.location.href);
+      url.searchParams.set("template", state.activeTemplate);
+      window.history.pushState(window.history.state, "", url);
+    });
+
+    const handlePopState = () => {
+      updateActiveView(readActiveView());
+      const template = readActiveTemplate();
+      if (useUiStore.getState().activeTemplate !== template) {
+        useUiStore.getState().setActiveTemplate(template);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      unsubscribe();
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
 
   const [editingMonth, setEditingMonth] = useState<{
     year: number;
