@@ -17,8 +17,6 @@ describe("PagePreview", () => {
 
   const geometry = calculatePageGeometry({
     layout: DEFAULT_PAGE_LAYOUT,
-    mainSize: { width: 1000, height: 700 },
-    miniSize: { width: 300, height: 200 },
   });
 
   const mainDoc = createSvgDocument(1000, 700, []);

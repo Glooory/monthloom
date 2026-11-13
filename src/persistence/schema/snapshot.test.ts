@@ -11,32 +11,21 @@ import type { TemplateSnapshotV1 } from "./templateSnapshot";
 describe("Snapshot validation", () => {
   const defaultDoc = createDefaultEditorDocument();
 
-  it("preserves explicit preview dimensions and rejects invalid sizes", () => {
-    const layout = { ...defaultDoc.pagePreview.layout,
-      mainWidth: 900, mainHeight: 820, miniWidth: 300, miniHeight: 220 };
-    const doc = { ...defaultDoc, pagePreview: { ...defaultDoc.pagePreview, layout } };
-    expect(editorDocumentSchema.parse(doc).pagePreview.layout).toEqual(layout);
-    for (const field of ["mainWidth", "mainHeight", "miniWidth", "miniHeight"]) {
-      for (const value of [0, -1, Infinity, NaN]) {
-        expect(editorDocumentSchema.safeParse({ ...doc,
-          pagePreview: { layout: { ...layout, [field]: value } },
-        }).success).toBe(false);
+  it("preserves independent calendar placements and rejects invalid sizes and anchors", () => {
+    const doc = { ...defaultDoc, pagePreview: { ...defaultDoc.pagePreview, layout: { ...defaultDoc.pagePreview.layout,
+      previousMini: { width: 123, height: 234, position: { anchor: "center" as const, offsetX: -10, offsetY: 20 } } } } };
+    expect(editorDocumentSchema.parse(doc).pagePreview).toEqual(doc.pagePreview);
+    for (const role of ["main", "previousMini", "nextMini"] as const) {
+      for (const field of ["width", "height"]) {
+        for (const value of [0, -1, Infinity, NaN]) {
+          const layout = { ...doc.pagePreview.layout, [role]: { ...doc.pagePreview.layout[role], [field]: value } };
+          expect(editorDocumentSchema.safeParse({ ...doc, pagePreview: { layout } }).success).toBe(false);
+        }
       }
+      const layout = { ...doc.pagePreview.layout, [role]: { ...doc.pagePreview.layout[role],
+        position: { anchor: "invalid", offsetX: 0, offsetY: 0 } } };
+      expect(editorDocumentSchema.safeParse({ ...doc, pagePreview: { layout } }).success).toBe(false);
     }
-  });
-
-  it("preserves preview alignment and accepts older layouts", () => {
-    const doc: typeof defaultDoc = { ...defaultDoc, pagePreview: { ...defaultDoc.pagePreview, layout: {
-      ...defaultDoc.pagePreview.layout, mainVerticalAlignment: "bottom", miniVerticalAlignment: "center",
-    } } };
-    expect(editorDocumentSchema.parse(doc).pagePreview.layout).toEqual(doc.pagePreview.layout);
-    const legacyLayout = { ...doc.pagePreview.layout };
-    delete legacyLayout.mainVerticalAlignment;
-    delete legacyLayout.miniVerticalAlignment;
-    expect(editorDocumentSchema.parse({ ...doc, pagePreview: { layout: legacyLayout } }).pagePreview.layout)
-      .toEqual(legacyLayout);
-    expect(editorDocumentSchema.safeParse({ ...doc, pagePreview: { layout: { ...legacyLayout, mainVerticalAlignment: "invalid" } } }).success)
-      .toBe(false);
   });
 
   it.each([

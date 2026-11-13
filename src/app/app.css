@@ -502,3 +502,34 @@ body {
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
+
+.monthloom-gallery-layout {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.monthloom-gallery-preview {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.monthloom-page-sidebar {
+  flex: 0 0 300px;
+  overflow-y: auto;
+  border-left: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+@media (max-width: 720px) {
+  .monthloom-gallery-layout { flex-direction: column; }
+  .monthloom-page-sidebar {
+    flex: 0 1 auto;
+    max-height: 40%;
+    border-left: 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+}

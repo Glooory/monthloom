@@ -50,7 +50,7 @@ describe("documentStore", () => {
     expect(doc.fontCatalog).toBeDefined();
     expect(doc.pagePreview).toBeDefined();
     expect(doc.mainTemplate.date.position.offsetX).toBe(10);
-    expect(doc.pagePreview.layout.leftColumnRatio).toBe(0.3);
+    expect(doc.pagePreview.layout.width).toBe(1400);
   });
 
   it("records history on commitDocument and supports undo and redo", () => {
@@ -85,7 +85,7 @@ describe("documentStore", () => {
 
   it("supports undo and redo for Page Layout changes", () => {
     const initialDoc = useDocumentStore.getState().document;
-    expect(initialDoc.pagePreview.layout.leftColumnRatio).toBe(0.3);
+    expect(initialDoc.pagePreview.layout.width).toBe(1400);
 
     const modifiedDoc = {
       ...initialDoc,
@@ -93,21 +93,21 @@ describe("documentStore", () => {
         ...initialDoc.pagePreview,
         layout: {
           ...initialDoc.pagePreview.layout,
-          leftColumnRatio: 0.34,
+          width: 1500,
         },
       },
     };
 
     useDocumentStore.getState().commitDocument(modifiedDoc);
-    expect(useDocumentStore.getState().document.pagePreview.layout.leftColumnRatio).toBe(0.34);
+    expect(useDocumentStore.getState().document.pagePreview.layout.width).toBe(1500);
 
     // Undo
     useDocumentStore.temporal.getState().undo();
-    expect(useDocumentStore.getState().document.pagePreview.layout.leftColumnRatio).toBe(0.3);
+    expect(useDocumentStore.getState().document.pagePreview.layout.width).toBe(1400);
 
     // Redo
     useDocumentStore.temporal.getState().redo();
-    expect(useDocumentStore.getState().document.pagePreview.layout.leftColumnRatio).toBe(0.34);
+    expect(useDocumentStore.getState().document.pagePreview.layout.width).toBe(1500);
   });
 
   it("replaceDocument replaces document and resets undo/redo history", () => {

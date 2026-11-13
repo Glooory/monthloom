@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useId } from "react";
 import type { Position, Anchor } from "../../domain/template/primitives";
 import { useI18n } from "../../shared/i18n/i18nStore";
 import { NumberInput } from "./NumberInput";
@@ -21,6 +21,8 @@ export const PositionInspector: React.FC<PositionInspectorProps> = ({
   onAnchorChange,
 }) => {
   const { t } = useI18n();
+  const offsetXId = useId();
+  const offsetYId = useId();
 
   return (
     <div className="inspector-section">
@@ -35,6 +37,8 @@ export const PositionInspector: React.FC<PositionInspectorProps> = ({
                 type="button"
                 className={`anchor-grid-btn ${position.anchor === anchor ? "active" : ""}`}
                 title={t.inspector.anchors[anchor] ?? anchor}
+                aria-label={t.inspector.anchors[anchor] ?? anchor}
+                aria-pressed={position.anchor === anchor}
                 onClick={() => {
                   if (onAnchorChange) {
                     onAnchorChange(anchor);
@@ -49,16 +53,18 @@ export const PositionInspector: React.FC<PositionInspectorProps> = ({
       </div>
 
       <div className="field-row">
-        <span className="field-label">{t.inspector.offsetXLabel}</span>
+        <label htmlFor={offsetXId} className="field-label">{t.inspector.offsetXLabel}</label>
         <NumberInput
+          id={offsetXId}
           value={position.offsetX}
           onChange={(offsetX) => onChange({ ...position, offsetX })}
         />
       </div>
 
       <div className="field-row" style={{ marginTop: 8 }}>
-        <span className="field-label">{t.inspector.offsetYLabel}</span>
+        <label htmlFor={offsetYId} className="field-label">{t.inspector.offsetYLabel}</label>
         <NumberInput
+          id={offsetYId}
           value={position.offsetY}
           onChange={(offsetY) => onChange({ ...position, offsetY })}
         />

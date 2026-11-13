@@ -99,10 +99,9 @@ describe("FullYearPreview", () => {
     const doc = useDocumentStore.getState().document;
     useDocumentStore.getState().commitDocument({
       ...doc,
-      mainTemplate: {
-        ...doc.mainTemplate,
-        height: 3000,
-      },
+      pagePreview: { ...doc.pagePreview, layout: { ...doc.pagePreview.layout,
+        main: { ...doc.pagePreview.layout.main, height: 3000 },
+      } },
     });
 
     render(
@@ -117,7 +116,7 @@ describe("FullYearPreview", () => {
       expect(screen.getAllByText(/Missing holiday coverage for 2028/).length).toBeGreaterThan(0);
     });
 
-    expect(screen.getAllByText(/main-height-overflow/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/calendar-overflow/).length).toBeGreaterThan(0);
   });
 
   it("defaults to flow mode and persists mode changes in localStorage", async () => {

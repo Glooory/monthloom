@@ -38,19 +38,11 @@ export const AppShell: React.FC<AppShellProps> = ({
 
         {/* View 2: Full-Year Gallery & Page Settings */}
         <div
-          className="monthloom-view-pane"
-          style={{
-            display: activeView === "gallery" ? "flex" : "none",
-            flexDirection: "column",
-            height: "100%",
-            width: "100%",
-            overflow: "hidden",
-          }}
+          className="monthloom-view-pane monthloom-gallery-layout"
+          style={{ display: activeView === "gallery" ? "flex" : "none" }}
         >
-          {pageSettings}
-          <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
-            {preview}
-          </div>
+          <div className="monthloom-gallery-preview">{preview}</div>
+          <aside className="monthloom-page-sidebar">{pageSettings}</aside>
         </div>
 
         {/* View 3: Workspace, Persistence & Batch Export */}

@@ -1,6 +1,6 @@
 import type { MainTemplate } from "../../domain/template/mainTemplate";
 import type { MiniTemplate } from "../../domain/template/miniTemplate";
-import type { PagePreviewConfig } from "../../domain/pagePreview/types";
+import type { PagePreviewConfig, PageCalendar } from "../../domain/pagePreview/types";
 import type { FontCatalog } from "../../resources/fonts/types";
 import type { HolidayLayer } from "../../domain/template/holidayLayer";
 import type { HolidaySemanticId } from "./holidaySemanticId";
@@ -49,6 +49,8 @@ export type WeekdayResizeSession = Readonly<{
 }>;
 
 export type EditorUiState = {
+  pageSelection: PageCalendar | null;
+  setPageSelection: (selection: PageCalendar | null) => void;
   activeTemplate: "main" | "mini";
   selection: EditorSelection | null;
   hover: string | null;

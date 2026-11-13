@@ -288,3 +288,18 @@
   font-size: 14px;
 }
 
+
+.page-preview-selectable { cursor: pointer; }
+.page-preview-selectable:hover { outline: 1px solid var(--accent-cyan); }
+.page-preview-selectable.is-selected { outline: 2px solid var(--accent-cyan); }
+.page-preview-selectable:focus-visible { outline: 3px solid var(--accent-cyan); outline-offset: 3px; }
+.page-calendar-settings { display: flex; flex-direction: column; gap: 16px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-subtle); }
+.page-preview-settings-header { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; }
+.page-preview-background-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.page-preview-page-dimensions { display: flex; flex-direction: column; gap: 10px; }
+.page-calendar-settings > .field-row,
+.page-calendar-dimensions,
+.page-calendar-settings .inspector-section { width: 100%; }
+.page-calendar-settings select { min-width: 0; }
+.page-calendar-dimensions { display: flex; flex-direction: column; gap: 8px; }
+.page-calendar-settings .inspector-section { padding: 0; border: 0; margin: 0; }

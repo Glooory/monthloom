@@ -62,12 +62,12 @@ export function EditorPagePreview({ targetYear, month, holidayIndex, assetResolv
     const documents = await renderFullYearPreviewDocuments({ ...renderKey, fontEngine: renderKey.fontEngine });
     const definition = calendarSet.pages[0];
     const mainDocument = documents.main.get(`${definition.mainMonth.year}-${definition.mainMonth.month}`);
-    const previousMiniDocument = documents.mini.get(`${definition.previousMiniMonth.year}-${definition.previousMiniMonth.month}`);
-    const nextMiniDocument = documents.mini.get(`${definition.nextMiniMonth.year}-${definition.nextMiniMonth.month}`);
+    const previousMiniDocument = documents.previousMini.get(`${definition.previousMiniMonth.year}-${definition.previousMiniMonth.month}`);
+    const nextMiniDocument = documents.nextMini.get(`${definition.nextMiniMonth.year}-${definition.nextMiniMonth.month}`);
     if (!mainDocument || !previousMiniDocument || !nextMiniDocument) throw new Error(`Incomplete preview page: ${definition.label}`);
     return {
       definition, mainDocument, previousMiniDocument, nextMiniDocument,
-      geometry: calculatePageGeometry({ layout: renderKey.pageLayout, mainSize: renderKey.mainTemplate, miniSize: renderKey.miniTemplate }),
+      geometry: calculatePageGeometry({ layout: renderKey.pageLayout }),
       backgroundDataUri: renderKey.backgroundDataUri,
     };
   } });

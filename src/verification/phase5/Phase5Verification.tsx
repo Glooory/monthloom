@@ -89,8 +89,6 @@ export const Phase5Verification: React.FC = () => {
       <section>
         <PagePreviewSettings
           config={document.pagePreview}
-          mainSize={document.mainTemplate}
-          miniSize={document.miniTemplate}
           onChange={(next) => commitDocument({ ...document, pagePreview: next })}
           assetStore={memoryAssetStore}
         />

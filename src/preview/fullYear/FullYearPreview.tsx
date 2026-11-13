@@ -1,3 +1,4 @@
+import { useUiStore } from "../../editor/state/uiStore";
 import { formatHolidayDiagnostic } from "../../shared/i18n/holidayDiagnostic";
 import React, { useState, useMemo, useRef } from "react";
 import type { HolidayDiagnostic, HolidayIndex } from "../../domain/holiday/types";
@@ -85,25 +86,8 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
     load: () => resolveBackgroundDataUri(backgroundKey), retainPrevious: false });
 
   // 6. Page geometry shared by all 13 pages
-  const nextGeometry = useMemo(() => {
-    return calculatePageGeometry({
-      layout: document.pagePreview.layout,
-      mainSize: {
-        width: document.mainTemplate.width,
-        height: document.mainTemplate.height,
-      },
-      miniSize: {
-        width: document.miniTemplate.width,
-        height: document.miniTemplate.height,
-      },
-    });
-  }, [
-    document.pagePreview.layout,
-    document.mainTemplate.width,
-    document.mainTemplate.height,
-    document.miniTemplate.width,
-    document.miniTemplate.height,
-  ]);
+  const nextGeometry = useMemo(() => calculatePageGeometry({ layout: document.pagePreview.layout }),
+    [document.pagePreview.layout]);
 
   const previewKey = useMemo(() => ({ renderInputs, nextGeometry, backgroundDataUri: background.value,
     backgroundLoading: background.loading, backgroundError: background.error }),
@@ -203,7 +187,11 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
         </div>
       </div>
 
-      <div className="gallery-viewport">
+      <div className="gallery-viewport" onClick={(event) => {
+        if (!(event.target as Element).closest("button, input, select, a, [role='button']")) {
+          useUiStore.getState().setPageSelection(null);
+        }
+      }}>
         {/* Warning Banners */}
         {(geometry.warnings.length > 0 || coverageDiagnostics.length > 0) && (
           <div style={{ maxWidth: "1200px", margin: "0 auto 20px auto" }}>
@@ -240,8 +228,8 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
               const nextKey = `${pageDef.nextMiniMonth.year}-${pageDef.nextMiniMonth.month}` as const;
 
               const mainDoc = documents.main.get(mainKey);
-              const prevDoc = documents.mini.get(prevKey);
-              const nextDoc = documents.mini.get(nextKey);
+              const prevDoc = documents.previousMini.get(prevKey);
+              const nextDoc = documents.nextMini.get(nextKey);
 
               if (!mainDoc || !prevDoc || !nextDoc) return null;
 
@@ -284,8 +272,8 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
               const nextKey = `${pageDef.nextMiniMonth.year}-${pageDef.nextMiniMonth.month}` as const;
 
               const mainDoc = documents.main.get(mainKey);
-              const prevDoc = documents.mini.get(prevKey);
-              const nextDoc = documents.mini.get(nextKey);
+              const prevDoc = documents.previousMini.get(prevKey);
+              const nextDoc = documents.nextMini.get(nextKey);
 
               if (!mainDoc || !prevDoc || !nextDoc) return null;
 
@@ -355,8 +343,8 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
               const nextKey = `${pageDef.nextMiniMonth.year}-${pageDef.nextMiniMonth.month}` as const;
 
               const mainDoc = documents.main.get(mainKey);
-              const prevDoc = documents.mini.get(prevKey);
-              const nextDoc = documents.mini.get(nextKey);
+              const prevDoc = documents.previousMini.get(prevKey);
+              const nextDoc = documents.nextMini.get(nextKey);
 
               if (!mainDoc || !prevDoc || !nextDoc) return null;
 

@@ -4,6 +4,8 @@ import type { PageGeometry, Placement } from "../../domain/pagePreview/types";
 import type { SvgDocument } from "../../rendering/svg/document";
 import { SvgPreview } from "../../rendering/svg/SvgPreview";
 import "./full-year-preview.css";
+import { useUiStore } from "../../editor/state/uiStore";
+import { useI18n } from "../../shared/i18n/i18nStore";
 
 export interface PagePreviewProps {
   definition: FullYearPageDefinition;
@@ -38,12 +40,22 @@ export const PagePreview: React.FC<PagePreviewProps> = ({
   backgroundDataUri,
 }) => {
   const { page, main, previousMini, nextMini } = geometry;
+  const selected = useUiStore((state) => state.pageSelection);
+  const setSelected = useUiStore((state) => state.setPageSelection);
+  const { t } = useI18n();
 
   return (
     <div className="full-year-page-wrapper">
       <div className="full-year-page-label">{definition.label}</div>
       <div
         className="page-preview-canvas"
+        onClick={(event) => { event.stopPropagation(); setSelected(null); }}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            setSelected(null);
+            if (event.target instanceof HTMLElement) event.target.blur();
+          }
+        }}
         style={{
           aspectRatio: `${page.width} / ${page.height}`,
         }}
@@ -58,7 +70,22 @@ export const PagePreview: React.FC<PagePreviewProps> = ({
         )}
 
         <div
-          className="page-preview-slot"
+          className={`page-preview-slot page-preview-selectable ${selected === "main" ? "is-selected" : ""}`}
+          role="button"
+          tabIndex={0}
+          aria-label={t.pagePreview.mainLabel}
+          aria-pressed={selected === "main"}
+          onClick={(event) => {
+            event.stopPropagation();
+            setSelected("main");
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              event.stopPropagation();
+              setSelected("main");
+            }
+          }}
           data-slot="main"
           style={placementToStyle(main, page)}
         >
@@ -66,7 +93,22 @@ export const PagePreview: React.FC<PagePreviewProps> = ({
         </div>
 
         <div
-          className="page-preview-slot"
+          className={`page-preview-slot page-preview-selectable ${selected === "previousMini" ? "is-selected" : ""}`}
+          role="button"
+          tabIndex={0}
+          aria-label={t.pagePreview.previousMiniLabel}
+          aria-pressed={selected === "previousMini"}
+          onClick={(event) => {
+            event.stopPropagation();
+            setSelected("previousMini");
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              event.stopPropagation();
+              setSelected("previousMini");
+            }
+          }}
           data-slot="previous-mini"
           style={placementToStyle(previousMini, page)}
         >
@@ -74,7 +116,22 @@ export const PagePreview: React.FC<PagePreviewProps> = ({
         </div>
 
         <div
-          className="page-preview-slot"
+          className={`page-preview-slot page-preview-selectable ${selected === "nextMini" ? "is-selected" : ""}`}
+          role="button"
+          tabIndex={0}
+          aria-label={t.pagePreview.nextMiniLabel}
+          aria-pressed={selected === "nextMini"}
+          onClick={(event) => {
+            event.stopPropagation();
+            setSelected("nextMini");
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              event.stopPropagation();
+              setSelected("nextMini");
+            }
+          }}
           data-slot="next-mini"
           style={placementToStyle(nextMini, page)}
         >

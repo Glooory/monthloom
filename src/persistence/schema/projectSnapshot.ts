@@ -173,20 +173,17 @@ const holidayLayerSchema = z.object({
   }),
 });
 
+const calendarPlacementSchema = z.object({
+  width: z.number().positive(),
+  height: z.number().positive(),
+  position: positionOffsetSchema,
+});
 const pageLayoutConfigSchema = z.object({
-  width: z.number(),
-  height: z.number(),
-  padding: z.number(),
-  leftColumnRatio: z.number(),
-  mainWidth: z.number().positive().optional(),
-  mainHeight: z.number().positive().optional(),
-  miniWidth: z.number().positive().optional(),
-  miniHeight: z.number().positive().optional(),
-  columnGap: z.number(),
-  miniHeightRatio: z.number(),
-  miniGap: z.number(),
-  mainVerticalAlignment: z.enum(["top", "center", "bottom"]).optional(),
-  miniVerticalAlignment: z.enum(["top", "center", "bottom"]).optional(),
+  width: z.number().positive(),
+  height: z.number().positive(),
+  main: calendarPlacementSchema,
+  previousMini: calendarPlacementSchema,
+  nextMini: calendarPlacementSchema,
 });
 
 const pagePreviewConfigSchema = z.object({

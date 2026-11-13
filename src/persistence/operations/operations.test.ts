@@ -282,7 +282,7 @@ describe("Project and Template Operations", () => {
     miniTemplate: (document) => ({ ...document, miniTemplate: { ...document.miniTemplate, width: 281 } }),
     holidayLayers: (document) => ({ ...document, holidayLayers: document.holidayLayers.map((layer) => ({ ...layer, enabled: false })) }),
     fontCatalog: (document) => ({ ...document, fontCatalog: { ...document.fontCatalog, "default-sans": { ...document.fontCatalog["default-sans"], weight: 500 } } }),
-    pageLayout: (document) => ({ ...document, pagePreview: { ...document.pagePreview, layout: { ...document.pagePreview.layout, miniGap: 31 } } }),
+    pageLayout: (document) => ({ ...document, pagePreview: { ...document.pagePreview, layout: { ...document.pagePreview.layout, width: 1500 } } }),
     background: (document) => ({ ...document, pagePreview: { ...document.pagePreview, backgroundAssetId: "asset-test-background" } }),
   };
 

@@ -159,17 +159,13 @@ export interface TranslationDictionary {
     clearBackground: string;
     widthLabel: string;
     heightLabel: string;
-    paddingLabel: string;
-    mainWidthLabel: string;
-    mainHeightLabel: string;
-    miniWidthLabel: string;
-    miniHeightLabel: string;
-    miniGapLabel: string;
-    mainVerticalAlignmentLabel: string;
-    miniVerticalAlignmentLabel: string;
-    alignTop: string;
-    alignCenter: string;
-    alignBottom: string;
+    selectCalendarLabel: string;
+    calendarLabel: string;
+    mainLabel: string;
+    previousMiniLabel: string;
+    nextMiniLabel: string;
+    calendarWidthLabel: string;
+    calendarHeightLabel: string;
   };
   gallery: {
     viewModes: {

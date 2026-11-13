@@ -1,7 +1,8 @@
 import React, { useRef, useId } from "react";
-import type { PageLayout, PagePreviewConfig, VerticalAlignment } from "../../domain/pagePreview/types";
+import type { PageLayout, PagePreviewConfig, PageCalendar } from "../../domain/pagePreview/types";
 import { useI18n } from "../../shared/i18n/i18nStore";
-import { calculatePageGeometry } from "../../domain/pagePreview/pageLayout";
+import { PositionInspector } from "./PositionInspector";
+import { useUiStore } from "../state/uiStore";
 import { NumberInput } from "./NumberInput";
 
 export interface AssetStoreLike {
@@ -10,8 +11,6 @@ export interface AssetStoreLike {
 
 export interface PagePreviewSettingsProps {
   config: PagePreviewConfig;
-  mainSize: Readonly<{ width: number; height: number }>;
-  miniSize: Readonly<{ width: number; height: number }>;
   onChange: (next: PagePreviewConfig) => void;
   assetStore?: AssetStoreLike;
 }
@@ -43,20 +42,17 @@ const NumberField: React.FC<{
 
 export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
   config,
-  mainSize,
-  miniSize,
   onChange,
   assetStore,
 }) => {
   const { t } = useI18n();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const layout = config.layout;
-  const geometry = calculatePageGeometry({ layout, mainSize, miniSize });
-  const dimensions = {
-    mainWidth: geometry.main.width,
-    mainHeight: geometry.main.height,
-    miniWidth: geometry.previousMini.width,
-    miniHeight: geometry.previousMini.height,
+  const selected = useUiStore((state) => state.pageSelection);
+  const setSelected = useUiStore((state) => state.setPageSelection);
+  const calendar = selected ? layout[selected] : null;
+  const updateCalendar = (updates: Partial<PageLayout["main"]>) => {
+    if (selected && calendar) updateLayout({ [selected]: { ...calendar, ...updates } });
   };
 
   const updateLayout = (updates: Partial<PageLayout>) => {
@@ -98,11 +94,10 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
       style={{
         padding: "16px 20px",
         background: "var(--bg-surface)",
-        borderBottom: "1px solid var(--border-subtle)",
         color: "var(--text-primary)",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+      <div className="page-preview-settings-header">
         <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--accent-cyan)", display: "flex", alignItems: "center", gap: "8px" }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -112,7 +107,7 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
           {t.pagePreview.heading}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="page-preview-background-actions">
           <input
             ref={fileInputRef}
             type="file"
@@ -149,7 +144,7 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
         </div>
       </div>
 
-      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px 16px" }}>
+      <div className="page-preview-page-dimensions">
         <NumberField
           label={t.pagePreview.widthLabel}
           value={layout.width}
@@ -164,49 +159,29 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
           min={100}
           onChange={(height) => updateLayout({ height })}
         />
-        <NumberField
-          label={t.pagePreview.paddingLabel}
-          value={layout.padding}
-          step={5}
-          min={0}
-          onChange={(padding) => updateLayout({ padding })}
-        />
-        {(["mainWidth", "mainHeight", "miniWidth", "miniHeight"] as const).map((key) => (
-          <NumberField
-            key={key}
-            label={t.pagePreview[`${key}Label`]}
-            value={Number(dimensions[key].toFixed(2))}
-            step={10}
-            min={1}
-            onChange={(value) => updateLayout({ ...dimensions, [key]: value })}
-          />
-        ))}
-        {(["mainVerticalAlignment", "miniVerticalAlignment"] as const).map((key) => (
-          <label key={key} className="field-row" style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-            <span className="field-label" style={{ fontSize: "12px", color: "var(--text-secondary)", minWidth: 0, whiteSpace: "nowrap" }}>
-              {key === "mainVerticalAlignment" ? t.pagePreview.mainVerticalAlignmentLabel : t.pagePreview.miniVerticalAlignmentLabel}
-            </span>
-            <select
-              className="field-input"
-              style={{ width: "auto", flex: "none" }}
-              value={layout[key] ?? "top"}
-              onChange={(event) => updateLayout({ [key]: event.target.value as VerticalAlignment })}
-            >
-              <option value="top">{t.pagePreview.alignTop}</option>
-              <option value="center">{t.pagePreview.alignCenter}</option>
-              <option value="bottom">{t.pagePreview.alignBottom}</option>
-            </select>
-          </label>
-        ))}
-        <NumberField
-          label={t.pagePreview.miniGapLabel}
-          value={layout.miniGap}
-          step={2}
-          min={0}
-          onChange={(miniGap) => updateLayout({ miniGap })}
-        />
+      </div>
+      <div className="page-calendar-settings" key={selected ?? "none"}>
+        <label className="field-row">
+          <span className="field-label">{t.pagePreview.calendarLabel}</span>
+          <select className="field-input" value={selected ?? ""} onChange={(event) => setSelected(event.target.value ? event.target.value as PageCalendar : null)}>
+            <option value="">{t.pagePreview.selectCalendarLabel}</option>
+            <option value="main">{t.pagePreview.mainLabel}</option>
+            <option value="previousMini">{t.pagePreview.previousMiniLabel}</option>
+            <option value="nextMini">{t.pagePreview.nextMiniLabel}</option>
+          </select>
+        </label>
+        {calendar && (
+          <>
+            <div className="page-calendar-dimensions">
+              <NumberField label={t.pagePreview.calendarWidthLabel} value={calendar.width} min={1} step={10}
+                onChange={(width) => updateCalendar({ width })} />
+              <NumberField label={t.pagePreview.calendarHeightLabel} value={calendar.height} min={1} step={10}
+                onChange={(height) => updateCalendar({ height })} />
+            </div>
+            <PositionInspector position={calendar.position} onChange={(position) => updateCalendar({ position })} />
+          </>
+        )}
       </div>
     </div>
   );
 };
-

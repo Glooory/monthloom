@@ -156,7 +156,7 @@ describe("App Integration Smoke Test", () => {
         } },
       } : layer),
       pagePreview: { ...original.pagePreview, layout: {
-        ...original.pagePreview.layout, miniGap: original.pagePreview.layout.miniGap + 5,
+        ...original.pagePreview.layout, width: original.pagePreview.layout.width + 5,
       } },
     };
     const expectSaved = async (document: typeof original) => {
