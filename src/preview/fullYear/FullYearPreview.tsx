@@ -135,9 +135,32 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
   };
 
   const [focusPageIndex, setFocusPageIndex] = useState(0);
+  const [zoom, setZoomState] = useState(() => {
+    try {
+      const saved = Number(localStorage.getItem("monthloom_preview_zoom"));
+      if (Number.isFinite(saved) && saved >= 25 && saved <= 200) return saved;
+    } catch {
+      // Storage may be unavailable.
+    }
+    return 100;
+  });
+  const setZoom = (value: number) => {
+    const next = Math.max(25, Math.min(200, value));
+    setZoomState(next);
+    try {
+      localStorage.setItem("monthloom_preview_zoom", String(next));
+    } catch {
+      // Keep zoom usable when storage is unavailable.
+    }
+  };
 
   return (
-    <div className="full-year-preview-container full-year-preview-studio">
+    <div className="full-year-preview-container full-year-preview-studio" style={{
+      "--preview-flow-width": `${960 * zoom / 100}px`,
+      "--preview-focus-width": `${800 * zoom / 100}px`,
+      "--preview-card-width": `${320 * zoom / 100}px`,
+      "--preview-grid-width": `${1400 * zoom / 100}px`,
+    } as React.CSSProperties}>
       <PreviewStatusBanner error={error} issues={issues} loading={loading} retained={!!documents}
         retry={() => { retryFonts(); preview.retry(); background.retry(); }} />
       {/* Top View Mode Control Bar */}
@@ -181,6 +204,14 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
         </div>
 
         <div className="gallery-actions">
+          <div className="gallery-zoom-controls">
+            <button type="button" className="gallery-tab-btn" aria-label={t.toolbar.zoomOut}
+              disabled={zoom <= 25} onClick={() => setZoom(zoom - 10)}>−</button>
+            <button type="button" className="gallery-tab-btn gallery-zoom-reset" title={t.toolbar.zoomReset}
+              aria-label={`${zoom}%, ${t.toolbar.zoomReset}`} onClick={() => setZoom(100)}>{zoom}%</button>
+            <button type="button" className="gallery-tab-btn" aria-label={t.toolbar.zoomIn}
+              disabled={zoom >= 200} onClick={() => setZoom(zoom + 10)}>+</button>
+          </div>
           <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
             {t.gallery.yearSummary(targetYear)}
           </span>
@@ -304,7 +335,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
                     </button>
                   </div>
 
-                  <div style={{ width: "100%", maxWidth: "800px" }}>
+                  <div className="gallery-focus-page">
                     <PagePreview
                       definition={pageDef}
                       geometry={geometry}
