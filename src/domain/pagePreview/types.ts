@@ -7,11 +7,7 @@ export type Rect = Readonly<{
   height: number;
 }>;
 export type PageCalendar = "main" | "previousMini" | "nextMini";
-export type CalendarPlacement = Readonly<{
-  width: number;
-  height: number;
-  position: Position;
-}>;
+export type CalendarPlacement = Readonly<{ position: Position }>;
 export type PageLayout = Readonly<{
   width: number;
   height: number;

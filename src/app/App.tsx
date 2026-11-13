@@ -1,3 +1,4 @@
+import { setTemplateDimensions } from "../editor/model/templateBindings";
 import React, { useEffect, useMemo, useState } from "react";
 import { AppShell } from "./AppShell";
 import { TemplateEditor } from "../editor/components/TemplateEditor";
@@ -395,6 +396,9 @@ export const App: React.FC = () => {
   const pageSettings = (
     <PagePreviewSettings
       config={document.pagePreview}
+      mainSize={document.mainTemplate}
+      miniSize={document.miniTemplate}
+      onSizeChange={(target, dimensions) => commitDocument(setTemplateDimensions(document, target, dimensions))}
       onChange={(next) => commitDocument({ ...document, pagePreview: next })}
       assetStore={persistentAssetStore}
     />

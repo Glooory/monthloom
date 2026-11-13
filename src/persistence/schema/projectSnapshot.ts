@@ -174,8 +174,6 @@ const holidayLayerSchema = z.object({
 });
 
 const calendarPlacementSchema = z.object({
-  width: z.number().positive(),
-  height: z.number().positive(),
   position: positionOffsetSchema,
 });
 const pageLayoutConfigSchema = z.object({

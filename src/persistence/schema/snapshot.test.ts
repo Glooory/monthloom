@@ -11,17 +11,11 @@ import type { TemplateSnapshotV1 } from "./templateSnapshot";
 describe("Snapshot validation", () => {
   const defaultDoc = createDefaultEditorDocument();
 
-  it("preserves independent calendar placements and rejects invalid sizes and anchors", () => {
+  it("preserves independent positions without storing duplicate calendar sizes", () => {
     const doc = { ...defaultDoc, pagePreview: { ...defaultDoc.pagePreview, layout: { ...defaultDoc.pagePreview.layout,
-      previousMini: { width: 123, height: 234, position: { anchor: "center" as const, offsetX: -10, offsetY: 20 } } } } };
+      previousMini: { position: { anchor: "center" as const, offsetX: -10, offsetY: 20 } } } } };
     expect(editorDocumentSchema.parse(doc).pagePreview).toEqual(doc.pagePreview);
     for (const role of ["main", "previousMini", "nextMini"] as const) {
-      for (const field of ["width", "height"]) {
-        for (const value of [0, -1, Infinity, NaN]) {
-          const layout = { ...doc.pagePreview.layout, [role]: { ...doc.pagePreview.layout[role], [field]: value } };
-          expect(editorDocumentSchema.safeParse({ ...doc, pagePreview: { layout } }).success).toBe(false);
-        }
-      }
       const layout = { ...doc.pagePreview.layout, [role]: { ...doc.pagePreview.layout[role],
         position: { anchor: "invalid", offsetX: 0, offsetY: 0 } } };
       expect(editorDocumentSchema.safeParse({ ...doc, pagePreview: { layout } }).success).toBe(false);

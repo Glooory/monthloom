@@ -1,3 +1,4 @@
+import { setTemplateDimensions } from "../../editor/model/templateBindings";
 import React, { useState } from "react";
 import { TemplateEditor } from "../../editor/components/TemplateEditor";
 import { PagePreviewSettings } from "../../editor/components/PagePreviewSettings";
@@ -89,6 +90,9 @@ export const Phase5Verification: React.FC = () => {
       <section>
         <PagePreviewSettings
           config={document.pagePreview}
+          mainSize={document.mainTemplate}
+          miniSize={document.miniTemplate}
+          onSizeChange={(target, dimensions) => commitDocument(setTemplateDimensions(document, target, dimensions))}
           onChange={(next) => commitDocument({ ...document, pagePreview: next })}
           assetStore={memoryAssetStore}
         />

@@ -99,9 +99,7 @@ describe("FullYearPreview", () => {
     const doc = useDocumentStore.getState().document;
     useDocumentStore.getState().commitDocument({
       ...doc,
-      pagePreview: { ...doc.pagePreview, layout: { ...doc.pagePreview.layout,
-        main: { ...doc.pagePreview.layout.main, height: 3000 },
-      } },
+      mainTemplate: { ...doc.mainTemplate, height: 3000 },
     });
 
     render(

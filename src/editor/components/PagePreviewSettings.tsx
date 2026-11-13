@@ -11,6 +11,9 @@ export interface AssetStoreLike {
 
 export interface PagePreviewSettingsProps {
   config: PagePreviewConfig;
+  mainSize: Readonly<{ width: number; height: number }>;
+  miniSize: Readonly<{ width: number; height: number }>;
+  onSizeChange: (target: "main" | "mini", dimensions: { width?: number; height?: number }) => void;
   onChange: (next: PagePreviewConfig) => void;
   assetStore?: AssetStoreLike;
 }
@@ -42,6 +45,9 @@ const NumberField: React.FC<{
 
 export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
   config,
+  mainSize,
+  miniSize,
+  onSizeChange,
   onChange,
   assetStore,
 }) => {
@@ -51,6 +57,10 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
   const selected = useUiStore((state) => state.pageSelection);
   const setSelected = useUiStore((state) => state.setPageSelection);
   const calendar = selected ? layout[selected] : null;
+  const size = selected === "main" ? mainSize : miniSize;
+  const updateSize = (dimensions: { width?: number; height?: number }) => {
+    if (selected) onSizeChange(selected === "main" ? "main" : "mini", dimensions);
+  };
   const updateCalendar = (updates: Partial<PageLayout["main"]>) => {
     if (selected && calendar) updateLayout({ [selected]: { ...calendar, ...updates } });
   };
@@ -172,10 +182,10 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
         {calendar && (
           <>
             <div className="page-calendar-dimensions">
-              <NumberField label={t.pagePreview.calendarWidthLabel} value={calendar.width} min={1} step={10}
-                onChange={(width) => updateCalendar({ width })} />
-              <NumberField label={t.pagePreview.calendarHeightLabel} value={calendar.height} min={1} step={10}
-                onChange={(height) => updateCalendar({ height })} />
+              <NumberField label={t.pagePreview.calendarWidthLabel} value={size.width} min={50} max={10000} step={10}
+                onChange={(width) => updateSize({ width })} />
+              <NumberField label={t.pagePreview.calendarHeightLabel} value={size.height} min={50} max={10000} step={10}
+                onChange={(height) => updateSize({ height })} />
             </div>
             <PositionInspector position={calendar.position} onChange={(position) => updateCalendar({ position })} />
           </>

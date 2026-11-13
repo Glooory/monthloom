@@ -7,7 +7,6 @@ import { ResolvedFontEngine, type ResolvedFontFace } from "../../resources/fonts
 import type { MainTemplate } from "../../domain/template/mainTemplate";
 import type { MiniTemplate } from "../../domain/template/miniTemplate";
 import type { HolidayLayer } from "../../domain/template/holidayLayer";
-import { DEFAULT_PAGE_LAYOUT } from "../../domain/pagePreview/defaults";
 
 function createMockFontEngine(): ResolvedFontEngine {
   const face: ResolvedFontFace = {
@@ -144,21 +143,20 @@ describe("renderFullYearPreviewDocuments", () => {
     }
   });
 
-  it("reflows all three preview regions independently without changing source templates", async () => {
+  it("uses template dimensions for Main and both Mini placements", async () => {
     const args = { calendarSet: createFullYearCalendarSet({ targetYear: 2027 }),
       mainTemplate: testMainTemplate, miniTemplate: testMiniTemplate,
       fontEngine: createMockFontEngine(), assetResolver: mockAssetResolver };
-    const pageLayout = { ...DEFAULT_PAGE_LAYOUT,
-      main: { ...DEFAULT_PAGE_LAYOUT.main, width: 500, height: 700 },
-      previousMini: { ...DEFAULT_PAGE_LAYOUT.previousMini, width: 200, height: 300 },
-      nextMini: { ...DEFAULT_PAGE_LAYOUT.nextMini, width: 400, height: 150 } };
     const original = await renderFullYearPreviewDocuments(args);
-    const resized = await renderFullYearPreviewDocuments({ ...args, pageLayout });
+    const mainTemplate = { ...testMainTemplate, width: 500, height: 700 };
+    const miniTemplate = { ...testMiniTemplate, width: 200, height: 300 };
+    const resized = await renderFullYearPreviewDocuments({ ...args, mainTemplate, miniTemplate });
+    expect(resized.previousMini).toBe(resized.nextMini);
     for (const role of ["main", "previousMini", "nextMini"] as const) {
       const before = original[role].get("2027-1")!;
       const after = resized[role].get("2027-1")!;
-      expect(after.width).toBe(pageLayout[role].width);
-      expect(after.height).toBe(pageLayout[role].height);
+      expect(after.width).toBe(role === "main" ? mainTemplate.width : miniTemplate.width);
+      expect(after.height).toBe(role === "main" ? mainTemplate.height : miniTemplate.height);
       const paths = (doc: typeof after) => doc.children.filter((node) => node.kind === "path");
       expect(paths(after).length).toBeGreaterThan(0);
       expect(paths(after).map((node) => node.d)).toEqual(paths(before).map((node) => node.d));

@@ -67,7 +67,7 @@ export function EditorPagePreview({ targetYear, month, holidayIndex, assetResolv
     if (!mainDocument || !previousMiniDocument || !nextMiniDocument) throw new Error(`Incomplete preview page: ${definition.label}`);
     return {
       definition, mainDocument, previousMiniDocument, nextMiniDocument,
-      geometry: calculatePageGeometry({ layout: renderKey.pageLayout }),
+      geometry: calculatePageGeometry({ layout: renderKey.pageLayout, mainSize: renderKey.mainTemplate, miniSize: renderKey.miniTemplate }),
       backgroundDataUri: renderKey.backgroundDataUri,
     };
   } });

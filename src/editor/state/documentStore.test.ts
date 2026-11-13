@@ -1,3 +1,5 @@
+import { setTemplateDimensions } from "../model/templateBindings";
+import { calculatePageGeometry } from "../../domain/pagePreview/pageLayout";
 import { describe, it, expect, beforeEach } from "vitest";
 import {
   useDocumentStore,
@@ -108,6 +110,27 @@ describe("documentStore", () => {
     // Redo
     useDocumentStore.temporal.getState().redo();
     expect(useDocumentStore.getState().document.pagePreview.layout.width).toBe(1500);
+  });
+
+  it("shares template sizes with preview geometry through edits, undo and reload", () => {
+    const original = useDocumentStore.getState().document;
+    const geometry = () => {
+      const doc = useDocumentStore.getState().document;
+      return calculatePageGeometry({ layout: doc.pagePreview.layout, mainSize: doc.mainTemplate, miniSize: doc.miniTemplate });
+    };
+    const resized = setTemplateDimensions(setTemplateDimensions(original, "main", { width: 800, height: 600 }), "mini", { width: 320, height: 240 });
+    useDocumentStore.getState().commitDocument(resized);
+    expect(geometry().main).toMatchObject({ width: 800, height: 600 });
+    expect(geometry().previousMini).toMatchObject({ width: 320, height: 240 });
+    expect(geometry().nextMini).toMatchObject({ width: 320, height: 240 });
+    expect(resized.pagePreview).toBe(original.pagePreview);
+    useDocumentStore.temporal.getState().undo();
+    expect(geometry().previousMini.width).toBe(original.miniTemplate.width);
+    useDocumentStore.temporal.getState().redo();
+    expect(geometry().nextMini.width).toBe(320);
+    useDocumentStore.getState().replaceDocument(JSON.parse(JSON.stringify(resized)));
+    expect(geometry().main.width).toBe(800);
+    expect(geometry().nextMini.width).toBe(320);
   });
 
   it("replaceDocument replaces document and resets undo/redo history", () => {

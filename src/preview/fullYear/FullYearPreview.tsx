@@ -86,8 +86,8 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
     load: () => resolveBackgroundDataUri(backgroundKey), retainPrevious: false });
 
   // 6. Page geometry shared by all 13 pages
-  const nextGeometry = useMemo(() => calculatePageGeometry({ layout: document.pagePreview.layout }),
-    [document.pagePreview.layout]);
+  const nextGeometry = useMemo(() => calculatePageGeometry({ layout: document.pagePreview.layout, mainSize: document.mainTemplate, miniSize: document.miniTemplate }),
+    [document.pagePreview.layout, document.mainTemplate.width, document.mainTemplate.height, document.miniTemplate.width, document.miniTemplate.height]);
 
   const previewKey = useMemo(() => ({ renderInputs, nextGeometry, backgroundDataUri: background.value,
     backgroundLoading: background.loading, backgroundError: background.error }),
