@@ -5,7 +5,7 @@ import { createFormalExportZip } from "./createExportZip";
 import type { FormalRenderedDocuments } from "./types";
 
 describe("createFormalExportZip", () => {
-  it("packages exactly 28 SVG files into main/ and mini/ folders with mini/2028-2.svg present", async () => {
+  it("packages exactly 28 SVG files into main/ and mini/ folders with mini/2028_2.svg present", async () => {
     const mainDocs = new Map();
     for (let m = 1; m <= 12; m++) {
       mainDocs.set(`2027-${m}`, createSvgDocument(700, 500, []));
@@ -34,16 +34,16 @@ describe("createFormalExportZip", () => {
 
     // Verify 13 Main files
     for (let m = 1; m <= 12; m++) {
-      expect(zip.file(`main/2027-${m}.svg`)).not.toBeNull();
+      expect(zip.file(`main/2027_${m}.svg`)).not.toBeNull();
     }
-    expect(zip.file("main/2028-1.svg")).not.toBeNull();
+    expect(zip.file("main/2028_1.svg")).not.toBeNull();
 
     // Verify 15 Mini files
-    expect(zip.file("mini/2026-12.svg")).not.toBeNull();
+    expect(zip.file("mini/2026_12.svg")).not.toBeNull();
     for (let m = 1; m <= 12; m++) {
-      expect(zip.file(`mini/2027-${m}.svg`)).not.toBeNull();
+      expect(zip.file(`mini/2027_${m}.svg`)).not.toBeNull();
     }
-    expect(zip.file("mini/2028-1.svg")).not.toBeNull();
-    expect(zip.file("mini/2028-2.svg")).not.toBeNull();
+    expect(zip.file("mini/2028_1.svg")).not.toBeNull();
+    expect(zip.file("mini/2028_2.svg")).not.toBeNull();
   });
 });
