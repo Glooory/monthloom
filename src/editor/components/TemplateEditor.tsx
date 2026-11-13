@@ -248,8 +248,39 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   }, [canUndo, canRedo, drag, clearSelection]);
 
   const [zoom, setZoom] = useState(1);
-  const [showPagePreview, setShowPagePreview] = useState(false);
-  const [pagePreviewWidth, setPagePreviewWidth] = useState(38);
+  const [showPagePreview, setShowPagePreview] = useState(
+    () => new URLSearchParams(window.location.search).get("pagePreview") === "true",
+  );
+  useEffect(() => {
+    const handlePopState = () => {
+      setShowPagePreview(new URLSearchParams(window.location.search).get("pagePreview") === "true");
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+  const togglePagePreview = () => {
+    const shown = !showPagePreview;
+    const url = new URL(window.location.href);
+    url.searchParams.set("pagePreview", String(shown));
+    window.history.pushState(window.history.state, "", url);
+    setShowPagePreview(shown);
+  };
+  const [pagePreviewWidth, setPagePreviewWidth] = useState(() => {
+    try {
+      const saved = Number(window.localStorage.getItem("monthloom_page_preview_width"));
+      if (Number.isFinite(saved) && saved >= 20 && saved <= 70) return saved;
+    } catch {
+      // Storage may be unavailable; keep the default width.
+    }
+    return 38;
+  });
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("monthloom_page_preview_width", String(pagePreviewWidth));
+    } catch {
+      // Resizing remains available when preferences cannot be saved.
+    }
+  }, [pagePreviewWidth]);
   const previewResizeRef = useRef<{
     pointerId: number;
     clientX: number;
@@ -300,7 +331,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
       <EditorToolbar
         showPagePreview={showPagePreview}
-        onTogglePagePreview={pagePreview ? () => setShowPagePreview((shown) => !shown) : undefined}
+        onTogglePagePreview={pagePreview ? togglePagePreview : undefined}
         activeTemplate={activeTemplate}
         canUndo={canUndo}
         canRedo={canRedo}
