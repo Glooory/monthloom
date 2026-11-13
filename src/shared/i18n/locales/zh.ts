@@ -56,6 +56,7 @@ export const zh: TranslationDictionary = {
     canvasHeading: "画布与网格设置",
     canvasWidthLabel: "画布宽度 (px)",
     canvasHeightLabel: "画布高度 (px)",
+    monthRowHeightLabel: "月份行高 (px)",
     aspectRatioLabel: "宽高比",
     resetDefaultSize: "恢复默认尺寸",
     presetsLabel: "尺寸预设",

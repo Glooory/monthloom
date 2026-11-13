@@ -56,6 +56,7 @@ export const en: TranslationDictionary = {
     canvasHeading: "Canvas & Grid Settings",
     canvasWidthLabel: "Width (px)",
     canvasHeightLabel: "Height (px)",
+    monthRowHeightLabel: "Month Row Height (px)",
     aspectRatioLabel: "Aspect Ratio",
     resetDefaultSize: "Reset to Default",
     presetsLabel: "Presets",

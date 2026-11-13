@@ -138,6 +138,34 @@ export const Inspector: React.FC<InspectorProps> = ({
         <p className="inspector-subtitle">{t.inspector.currentSelection}{instanceKey}</p>
       </div>
 
+      {semanticId === "mini.monthLabel" && (
+        <div className="inspector-section">
+          <div className="section-heading">{t.layers.miniMonthLabel}</div>
+          <div className="field-row">
+            <label className="field-label" htmlFor="mini-month-row-height">
+              {t.inspector.monthRowHeightLabel}
+            </label>
+            <NumberInput
+              id="mini-month-row-height"
+              min={1}
+              max={Math.max(1, document.miniTemplate.height - document.miniTemplate.weekdayRow.height - 1)}
+              step={1}
+              value={document.miniTemplate.monthRow.height}
+              onChange={(height) => {
+                const current = getCurrentDocument();
+                onCommitDocument({
+                  ...current,
+                  miniTemplate: {
+                    ...current.miniTemplate,
+                    monthRow: { ...current.miniTemplate.monthRow, height },
+                  },
+                });
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Weekday Row Settings */}
       {isWeekday && weekdaySettings && (
         <WeekdayInspector

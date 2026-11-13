@@ -49,6 +49,7 @@ export interface TranslationDictionary {
     canvasHeading: string;
     canvasWidthLabel: string;
     canvasHeightLabel: string;
+    monthRowHeightLabel: string;
     aspectRatioLabel: string;
     resetDefaultSize: string;
     presetsLabel: string;
