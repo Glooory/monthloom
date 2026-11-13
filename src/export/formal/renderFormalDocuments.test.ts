@@ -6,6 +6,8 @@ import type { AssetResolver } from "../../resources/assets/types";
 import { ResolvedFontEngine, type ResolvedFontFace } from "../../resources/fonts/fontkitEngine";
 import type { MainTemplate } from "../../domain/template/mainTemplate";
 import type { MiniTemplate } from "../../domain/template/miniTemplate";
+import { createDefaultHolidayLayers } from "../../domain/template/holidayLayer";
+import { serializeSvg } from "../../rendering/svg/serializer";
 
 function createMockFontEngine(): ResolvedFontEngine {
   const face: ResolvedFontFace = {
@@ -135,4 +137,59 @@ describe("renderFormalDocuments", () => {
     expect(rendered.mini.has("2026-12")).toBe(true);
     expect(rendered.mini.has("2028-2")).toBe(true);
   });
+
+  it.each(["outlined", "editable"] as const)(
+    "embeds main and mini holiday images for SVG 1.1 and SVG 2 readers in %s mode",
+    async (mode) => {
+      const baseLayer = createDefaultHolidayLayers()[0];
+      const marker = {
+        enabled: true,
+        marker: {
+          type: "image" as const,
+          assetId: "holiday-badge",
+          position: { anchor: "top-right" as const, offsetX: -2, offsetY: 2 },
+          width: 16,
+          height: 16,
+          opacity: 1,
+        },
+      };
+      const layer = {
+        ...baseLayer,
+        main: { ...baseLayer.main, showName: false, holidayMarker: marker },
+        mini: { ...baseLayer.mini, holidayMarker: marker },
+      };
+      const calendarSet = createFormalExportCalendarSet({
+        targetYear: 2027,
+        holidayIndex: new Map([
+          ["2027-05-01", {
+            occurrences: [{
+              layerId: layer.id,
+              calendarId: layer.calendarId,
+              type: "holiday" as const,
+            }],
+          }],
+        ]),
+      });
+      const rendered = await renderFormalDocuments({
+        calendarSet,
+        mainTemplate: testMainTemplate,
+        miniTemplate: testMiniTemplate,
+        holidayLayers: [layer],
+        mode,
+        fontEngine: createMockFontEngine(),
+        assetResolver: mockAssetResolver,
+      });
+
+      for (const documents of [rendered.main, rendered.mini]) {
+        const svg = serializeSvg(documents.get("2027-5")!);
+        const xml = new DOMParser().parseFromString(svg, "image/svg+xml");
+        expect(xml.querySelector("parsererror")).toBeNull();
+        const image = xml.querySelector("image");
+        expect(image).not.toBeNull();
+        expect(image?.getAttribute("href")).toBe("data:image/png;base64,iVBORw==");
+        expect(image?.getAttributeNS("http://www.w3.org/1999/xlink", "href"))
+          .toBe("data:image/png;base64,iVBORw==");
+      }
+    },
+  );
 });

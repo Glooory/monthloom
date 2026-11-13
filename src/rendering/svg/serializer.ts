@@ -57,6 +57,8 @@ function serializeImage(node: SvgImageNode): string {
     `width="${node.width}"`,
     `height="${node.height}"`,
     `href="${escapeXmlAttr(node.href)}"`,
+    // SVG 1.1 readers require the namespaced image reference.
+    `xlink:href="${escapeXmlAttr(node.href)}"`,
     `opacity="${node.opacity}"`,
   ];
   return `<image ${attrs.join(" ")} />`;
@@ -130,6 +132,7 @@ function serializeNode(node: SvgNode): string {
 export function serializeSvg(document: SvgDocument): string {
   const rootAttrs = [
     `xmlns="http://www.w3.org/2000/svg"`,
+    `xmlns:xlink="http://www.w3.org/1999/xlink"`,
     `width="${document.width}"`,
     `height="${document.height}"`,
     `viewBox="${document.viewBox}"`,
