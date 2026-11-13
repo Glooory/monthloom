@@ -303,3 +303,5 @@
 .page-calendar-settings select { min-width: 0; }
 .page-calendar-dimensions { display: flex; flex-direction: column; gap: 8px; }
 .page-calendar-settings .inspector-section { padding: 0; border: 0; margin: 0; }
+
+.page-preview-settings { padding: 16px 20px; }

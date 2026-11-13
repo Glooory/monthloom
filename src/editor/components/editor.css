@@ -865,3 +865,80 @@
   outline: 2px solid var(--accent-cyan);
   outline-offset: -2px;
 }
+
+.editor-page-preview-settings {
+  container-type: inline-size;
+  margin-top: 24px;
+}
+
+.editor-page-preview-settings .page-preview-settings {
+  width: 100%;
+  max-width: 520px;
+  margin-inline: auto;
+  padding: 16px;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+}
+
+.editor-page-preview-settings .page-preview-settings-header {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.editor-page-preview-settings .page-preview-page-dimensions,
+.editor-page-preview-settings .page-calendar-dimensions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px 20px;
+}
+
+.editor-page-preview-settings .page-calendar-settings {
+  margin-top: 16px;
+  padding-top: 16px;
+  gap: 16px;
+}
+
+.editor-page-preview-settings .page-calendar-settings > .field-row {
+  justify-content: flex-start;
+}
+
+.editor-page-preview-settings .page-calendar-settings select {
+  flex: 0 1 200px;
+}
+
+.editor-page-preview-settings .inspector-section .field-input {
+  min-width: 0;
+  width: 80px;
+  flex: 0 1 80px;
+}
+
+@container (min-width: 420px) {
+  .editor-page-preview-settings .inspector-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 24px;
+    align-items: center;
+  }
+
+  .editor-page-preview-settings .inspector-section .section-heading {
+    grid-column: 1 / -1;
+  }
+
+  .editor-page-preview-settings .inspector-section > .field-row:nth-child(2) {
+    grid-column: 1;
+    grid-row: 2 / 4;
+    justify-content: flex-start;
+  }
+
+  .editor-page-preview-settings .inspector-section > .field-row:nth-child(n + 3) {
+    grid-column: 2;
+  }
+
+  .editor-page-preview-settings .inspector-section .field-label {
+    min-width: 0;
+  }
+}

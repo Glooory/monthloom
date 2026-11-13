@@ -92,7 +92,6 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
     <div
       className="page-preview-settings"
       style={{
-        padding: "16px 20px",
         background: "var(--bg-surface)",
         color: "var(--text-primary)",
       }}

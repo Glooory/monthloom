@@ -392,23 +392,6 @@ export const App: React.FC = () => {
     </>
   );
 
-  const editor = (
-    <TemplateEditor
-      key={currentProjectId ?? "unsaved"}
-      targetYear={targetYear}
-      calendar={editorCalendar}
-      pagePreview={
-        <EditorPagePreview
-          targetYear={targetYear}
-          month={editingMonth}
-          holidayIndex={holidayIndex}
-          assetResolver={persistentAssetStore}
-        />
-      }
-      assetResolver={persistentAssetStore}
-    />
-  );
-
   const pageSettings = (
     <PagePreviewSettings
       config={document.pagePreview}
@@ -416,6 +399,27 @@ export const App: React.FC = () => {
       assetStore={persistentAssetStore}
     />
   );
+
+  const editor = (
+    <TemplateEditor
+      key={currentProjectId ?? "unsaved"}
+      targetYear={targetYear}
+      calendar={editorCalendar}
+      pagePreview={
+        <>
+          <EditorPagePreview
+            targetYear={targetYear}
+            month={editingMonth}
+            holidayIndex={holidayIndex}
+            assetResolver={persistentAssetStore}
+          />
+          <div className="editor-page-preview-settings">{pageSettings}</div>
+        </>
+      }
+      assetResolver={persistentAssetStore}
+    />
+  );
+
 
   const preview = (
     <FullYearPreview
