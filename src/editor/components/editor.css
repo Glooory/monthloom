@@ -15,12 +15,19 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  overflow-x: auto;
   padding: 0 16px;
   background-color: var(--bg-header);
   border-bottom: 1px solid var(--border-subtle);
   height: 48px;
   flex-shrink: 0;
   box-sizing: border-box;
+}
+
+.editor-toolbar > .toolbar-group {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .toolbar-group {
@@ -795,3 +802,66 @@
 }
 
 
+
+/* Keep both panes scrollable without widening the surrounding editor. */
+.editor-canvas-area {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  container-type: inline-size;
+}
+
+.editor-canvas-area > .editor-canvas-container {
+  min-width: 0;
+}
+
+.editor-page-preview {
+  flex: 0 0 auto;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: auto;
+  padding: 16px;
+  border-left: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+.editor-page-preview-title {
+  margin-bottom: 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+@container (max-width: 640px) {
+  .editor-page-preview {
+    padding: 8px;
+  }
+}
+
+
+.editor-preview-divider {
+  flex: 0 0 8px;
+  cursor: col-resize;
+  touch-action: none;
+  background: var(--bg-surface);
+  position: relative;
+}
+
+.editor-preview-divider::after {
+  content: "";
+  position: absolute;
+  inset: 0 3px;
+  background: var(--border-medium);
+}
+
+.editor-preview-divider:hover::after,
+.editor-preview-divider:focus-visible::after {
+  background: var(--accent-cyan);
+}
+
+.editor-preview-divider:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: -2px;
+}

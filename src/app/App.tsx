@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { AppShell } from "./AppShell";
 import { TemplateEditor } from "../editor/components/TemplateEditor";
 import { PagePreviewSettings } from "../editor/components/PagePreviewSettings";
+import { EditorPagePreview } from "../preview/fullYear/EditorPagePreview";
 import { FullYearPreview } from "../preview/fullYear/FullYearPreview";
 import { useDocumentStore } from "../editor/state/documentStore";
 import { useUiStore } from "../editor/state/uiStore";
@@ -396,6 +397,14 @@ export const App: React.FC = () => {
       key={currentProjectId ?? "unsaved"}
       targetYear={targetYear}
       calendar={editorCalendar}
+      pagePreview={
+        <EditorPagePreview
+          targetYear={targetYear}
+          month={editingMonth}
+          holidayIndex={holidayIndex}
+          assetResolver={persistentAssetStore}
+        />
+      }
       assetResolver={persistentAssetStore}
     />
   );

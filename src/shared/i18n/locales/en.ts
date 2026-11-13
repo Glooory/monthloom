@@ -19,6 +19,8 @@ export const en: TranslationDictionary = {
   toolbar: {
     mainTemplate: "Main Calendar",
     miniTemplate: "Mini Calendar",
+    pagePreview: "Full-page preview",
+    resizePagePreview: "Resize preview (double-click to reset)",
     gridBorder: "Grid Lines",
     gridBorderTitle: "Set main calendar grid lines",
     zoomIn: "Zoom In",

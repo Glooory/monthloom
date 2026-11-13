@@ -19,6 +19,8 @@ export const zh: TranslationDictionary = {
   toolbar: {
     mainTemplate: "主日历",
     miniTemplate: "附日历 (Mini)",
+    pagePreview: "整页预览",
+    resizePagePreview: "调整预览宽度（双击恢复默认）",
     gridBorder: "网格线",
     gridBorderTitle: "设置主日历网格线",
     zoomIn: "放大",

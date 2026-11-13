@@ -8,6 +8,8 @@ export interface EditorToolbarProps {
   onSelectTemplate: (template: "main" | "mini") => void;
   onUndo: () => void;
   onRedo: () => void;
+  showPagePreview?: boolean;
+  onTogglePagePreview?: () => void;
   zoom?: number;
   onZoomChange?: (zoom: number) => void;
 }
@@ -19,6 +21,8 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   onSelectTemplate,
   onUndo,
   onRedo,
+  showPagePreview = false,
+  onTogglePagePreview,
   zoom = 1,
   onZoomChange,
 }) => {
@@ -53,6 +57,16 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
             {t.toolbar.miniTemplate}
           </button>
         </div>
+        {onTogglePagePreview && (
+          <button
+            type="button"
+            className={`toolbar-btn ${showPagePreview ? "active" : ""}`}
+            aria-pressed={showPagePreview}
+            onClick={onTogglePagePreview}
+          >
+            {t.toolbar.pagePreview}
+          </button>
+        )}
       </div>
 
       {/* Center Zoom Controls */}

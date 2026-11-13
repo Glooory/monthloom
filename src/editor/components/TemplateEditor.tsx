@@ -31,6 +31,7 @@ import "./editor.css";
 
 export interface TemplateEditorProps {
   calendar: CalendarMonth;
+  pagePreview?: React.ReactNode;
   targetYear?: number;
   weekdays?: readonly string[];
   fetchImpl?: typeof fetch;
@@ -39,6 +40,7 @@ export interface TemplateEditorProps {
 
 export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   calendar,
+  pagePreview,
   targetYear = calendar.year,
   weekdays,
   fetchImpl,
@@ -246,6 +248,17 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   }, [canUndo, canRedo, drag, clearSelection]);
 
   const [zoom, setZoom] = useState(1);
+  const [showPagePreview, setShowPagePreview] = useState(false);
+  const [pagePreviewWidth, setPagePreviewWidth] = useState(38);
+  const previewResizeRef = useRef<{
+    pointerId: number;
+    clientX: number;
+    containerWidth: number;
+    previewWidth: number;
+  } | null>(null);
+  const resizePagePreview = (width: number) => {
+    setPagePreviewWidth(Math.max(20, Math.min(70, width)));
+  };
 
   const mainLayers: Array<{ id: PositionableSemanticId | "main.grid"; label: string; key: string }> = [
     { id: "main.weekday", label: t.layers.mainWeekday, key: "main.weekday:default" },
@@ -286,6 +299,8 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         retained={!!svgDocument} retry={() => { retryFonts(); preview.retry(); }} />
 
       <EditorToolbar
+        showPagePreview={showPagePreview}
+        onTogglePagePreview={pagePreview ? () => setShowPagePreview((shown) => !shown) : undefined}
         activeTemplate={activeTemplate}
         canUndo={canUndo}
         canRedo={canRedo}
@@ -376,24 +391,80 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
           </div>
         </div>
 
-        {/* Center Canvas */}
-        <EditorCanvas
-          svgDocument={svgDocument}
-          scene={canvasScene}
-          interactive={!previewPending}
-          emptyMessage={previewError ? t.errors.fontPreviewUnavailable : undefined}
-          selection={selection}
-          activeTemplate={activeTemplate}
-          zoom={zoom}
-          onZoomChange={setZoom}
-          onSelect={setSelection}
-          onSelectAnchor={handleSelectAnchor}
-          onStartDrag={handleStartDrag}
-          onMoveDrag={handleMoveDrag}
-          onEndDrag={handleEndDrag}
-          onCancelDrag={handleCancelDrag}
-        />
+        {/* Center canvas and optional full-page preview */}
+        <div className="editor-canvas-area">
+          <EditorCanvas
+            svgDocument={svgDocument}
+            scene={canvasScene}
+            interactive={!previewPending}
+            emptyMessage={previewError ? t.errors.fontPreviewUnavailable : undefined}
+            selection={selection}
+            activeTemplate={activeTemplate}
+            zoom={zoom}
+            onZoomChange={setZoom}
+            onSelect={setSelection}
+            onSelectAnchor={handleSelectAnchor}
+            onStartDrag={handleStartDrag}
+            onMoveDrag={handleMoveDrag}
+            onEndDrag={handleEndDrag}
+            onCancelDrag={handleCancelDrag}
+          />
 
+          {showPagePreview && pagePreview && (
+            <>
+              <div
+                className="editor-preview-divider"
+                role="separator"
+                tabIndex={0}
+                aria-label={t.toolbar.resizePagePreview}
+                aria-orientation="vertical"
+                aria-valuemin={20}
+                aria-valuemax={70}
+                aria-valuenow={Math.round(pagePreviewWidth)}
+                title={t.toolbar.resizePagePreview}
+                onPointerDown={(e) => {
+                  if (e.button !== 0) return;
+                  const container = e.currentTarget.parentElement;
+                  if (!container) return;
+                  const containerWidth = container.getBoundingClientRect().width;
+                  if (containerWidth <= 0) return;
+                  e.preventDefault();
+                  e.currentTarget.focus();
+                  e.currentTarget.setPointerCapture(e.pointerId);
+                  previewResizeRef.current = {
+                    pointerId: e.pointerId,
+                    clientX: e.clientX,
+                    containerWidth,
+                    previewWidth: pagePreviewWidth,
+                  };
+                }}
+                onPointerMove={(e) => {
+                  const resize = previewResizeRef.current;
+                  if (!resize || resize.pointerId !== e.pointerId) return;
+                  resizePagePreview(resize.previewWidth - (e.clientX - resize.clientX) / resize.containerWidth * 100);
+                }}
+                onPointerUp={() => { previewResizeRef.current = null; }}
+                onPointerCancel={() => { previewResizeRef.current = null; }}
+                onLostPointerCapture={() => { previewResizeRef.current = null; }}
+                onDoubleClick={() => resizePagePreview(38)}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+                    e.preventDefault();
+                    resizePagePreview(pagePreviewWidth + (e.key === "ArrowLeft" ? 2 : -2));
+                  } else if (e.key === "Home" || e.key === "End") {
+                    e.preventDefault();
+                    resizePagePreview(e.key === "Home" ? 20 : 70);
+                  }
+                }}
+              />
+              <aside className="editor-page-preview" aria-label={t.toolbar.pagePreview}
+                style={{ flexBasis: `${pagePreviewWidth}%` }}>
+                <div className="editor-page-preview-title">{t.toolbar.pagePreview}</div>
+                {pagePreview}
+              </aside>
+            </>
+          )}
+        </div>
         {/* Right Inspector */}
         <Inspector
           key={selection?.semanticId ?? "canvas"}

@@ -19,6 +19,8 @@ export interface TranslationDictionary {
   toolbar: {
     mainTemplate: string;
     miniTemplate: string;
+    pagePreview: string;
+    resizePagePreview: string;
     gridBorder: string;
     gridBorderTitle: string;
     zoomIn: string;
