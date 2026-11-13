@@ -24,7 +24,7 @@ export async function createFormalExportZip(args: {
   // 2. Add 15 Mini files (including 2028-2)
   for (const [key, doc] of documents.mini) {
     const svgContent = serializeSvg(doc);
-    miniFolder.file(`${key.replace("-", "_")}.svg`, svgContent);
+    miniFolder.file(`${key.replace("-", "_")}_mini.svg`, svgContent);
   }
 
   return await zip.generateAsync({ type: "blob" });
