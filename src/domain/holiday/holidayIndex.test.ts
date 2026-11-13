@@ -9,6 +9,24 @@ import {
 } from "./testFixtures";
 
 describe("resolveHolidayIndex", () => {
+  it.each(["春分の日振替休日", "こどもの日 振替休日", "振替休日"])(
+    "shortens substitute holiday label %s without changing stored records",
+    (name) => {
+      const [, jpLayer] = createDefaultHolidayLayers();
+      const library = fixtureLibrary({
+        baseRecords: [base(jpLayer.calendarId, "2027-03-22", "holiday", name)],
+      });
+
+      const index = resolveHolidayIndex({ library, layers: [jpLayer] });
+
+      expect(index.get("2027-03-22")?.occurrences[0]).toMatchObject({
+        name: "振替休日",
+        type: "holiday",
+      });
+      expect(library.baseRecords[0].name).toBe(name);
+    },
+  );
+
   it("resolves multi-layer occurrences and later layer date text color override", () => {
     const [cnLayer, jpLayer] = createDefaultHolidayLayers();
     const library = fixtureLibrary({

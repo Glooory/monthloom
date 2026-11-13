@@ -71,12 +71,13 @@ export function resolveHolidayIndex(args: {
     for (const isoDate of dates) {
       if (deletedDates.has(isoDate)) continue;
       const record = effectiveRecords.get(isoDate);
-      const name =
+      const rawName =
         record && (!isChinese || record.provenance !== "source")
           ? record.type === "holiday"
             ? record.name
             : undefined
           : festivals.get(isoDate);
+      const name = rawName?.endsWith("振替休日") ? "振替休日" : rawName;
       let entry = resultMap.get(isoDate);
       if (!entry) {
         entry = { occurrences: [] };
