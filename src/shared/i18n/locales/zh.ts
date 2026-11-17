@@ -349,6 +349,8 @@ export const zh: TranslationDictionary = {
       namePlaceholder: "例如：元旦、春假",
       invalidDate: "日期格式无效，请使用 YYYY-MM-DD。",
       invalidDateRange: "开始或结束日期格式无效，请使用 YYYY-MM-DD。",
+      openDatePicker: "打开日历",
+      datePickerUnavailable: "无法打开日历。请选择年、月或日后，使用数字键输入。",
       cancelBtn: "取消",
       saveBtn: "保存",
     },

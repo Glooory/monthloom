@@ -349,6 +349,9 @@ export const en: TranslationDictionary = {
       namePlaceholder: "e.g. New Year's Day",
       invalidDate: "Invalid date. Use YYYY-MM-DD.",
       invalidDateRange: "Invalid start or end date. Use YYYY-MM-DD.",
+      openDatePicker: "Open calendar",
+      datePickerUnavailable:
+        "The calendar could not be opened. Select the year, month, or day and type its value using the number keys.",
       cancelBtn: "Cancel",
       saveBtn: "Save",
     },

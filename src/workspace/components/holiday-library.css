@@ -307,6 +307,43 @@
   font-size: 0.875rem;
 }
 
+.holiday-date-field {
+  display: flex;
+  gap: 8px;
+}
+
+.holiday-date-field input {
+  flex: 1;
+  min-width: 0;
+  color-scheme: dark;
+}
+
+.holiday-date-field input::-webkit-calendar-picker-indicator {
+  display: none;
+}
+
+.holiday-date-picker-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  flex-shrink: 0;
+  border: 1px solid var(--border-color, #334155);
+  border-radius: 4px;
+  background: var(--bg-header, #0f172a);
+  color: var(--text-primary, #f8fafc);
+  cursor: pointer;
+}
+
+.holiday-date-picker-button:hover {
+  background: var(--bg-surface-raised, #182234);
+}
+
+.holiday-date-picker-button:focus-visible {
+  outline: 2px solid var(--border-focus, #6366f1);
+  outline-offset: 2px;
+}
+
 .holiday-dialog-actions {
   display: flex;
   justify-content: flex-end;

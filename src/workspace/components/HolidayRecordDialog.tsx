@@ -1,8 +1,63 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { parseISODate, toISODate } from "../../domain/date/date";
 import type { LocalDate } from "../../domain/date/types";
 import type { HolidayRecordType } from "../../domain/holiday/types";
 import { useI18n } from "../../shared/i18n/i18nStore";
+
+const HolidayDateInput = ({
+  id,
+  value,
+  onChange,
+  onPickerError,
+}: {
+  id: string;
+  value: string;
+  onChange: (value: string) => void;
+  onPickerError: (message: string) => void;
+}) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { t } = useI18n();
+
+  return (
+    <div className="holiday-date-field">
+      <input
+        ref={inputRef}
+        id={id}
+        type="date"
+        required
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+      <button
+        type="button"
+        className="holiday-date-picker-button"
+        aria-label={t.holidayLibrary.dialog.openDatePicker}
+        aria-controls={id}
+        title={t.holidayLibrary.dialog.openDatePicker}
+        onClick={() => {
+          try {
+            inputRef.current?.showPicker();
+          } catch {
+            onPickerError(t.holidayLibrary.dialog.datePickerUnavailable);
+          }
+        }}
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          aria-hidden="true"
+        >
+          <rect x="3" y="5" width="18" height="16" rx="2" />
+          <path d="M16 3v4M8 3v4M3 11h18" />
+        </svg>
+      </button>
+    </div>
+  );
+};
 
 export type HolidayRecordDialogProps = {
   isOpen: boolean;
@@ -147,12 +202,11 @@ export const HolidayRecordDialog: React.FC<HolidayRecordDialogProps> = ({
               <label htmlFor="holiday-date-input">
                 {t.holidayLibrary.dialog.dateLabel}
               </label>
-              <input
+              <HolidayDateInput
                 id="holiday-date-input"
-                type="date"
-                required
                 value={dateStr}
-                onChange={(e) => setDateStr(e.target.value)}
+                onChange={setDateStr}
+                onPickerError={setError}
               />
             </div>
           ) : (
@@ -161,24 +215,22 @@ export const HolidayRecordDialog: React.FC<HolidayRecordDialogProps> = ({
                 <label htmlFor="holiday-start-date-input">
                   {t.holidayLibrary.dialog.startDateLabel}
                 </label>
-                <input
+                <HolidayDateInput
                   id="holiday-start-date-input"
-                  type="date"
-                  required
                   value={startDateStr}
-                  onChange={(e) => setStartDateStr(e.target.value)}
+                  onChange={setStartDateStr}
+                  onPickerError={setError}
                 />
               </div>
               <div className="holiday-form-group">
                 <label htmlFor="holiday-end-date-input">
                   {t.holidayLibrary.dialog.endDateLabel}
                 </label>
-                <input
+                <HolidayDateInput
                   id="holiday-end-date-input"
-                  type="date"
-                  required
                   value={endDateStr}
-                  onChange={(e) => setEndDateStr(e.target.value)}
+                  onChange={setEndDateStr}
+                  onPickerError={setError}
                 />
               </div>
             </>
@@ -217,6 +269,7 @@ export const HolidayRecordDialog: React.FC<HolidayRecordDialogProps> = ({
 
           {error && (
             <div
+              role="alert"
               style={{
                 color: "#f87171",
                 fontSize: "0.8rem",

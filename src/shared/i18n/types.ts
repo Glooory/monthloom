@@ -328,6 +328,8 @@ export interface TranslationDictionary {
       namePlaceholder: string;
       invalidDate: string;
       invalidDateRange: string;
+      openDatePicker: string;
+      datePickerUnavailable: string;
       cancelBtn: string;
       saveBtn: string;
     };
