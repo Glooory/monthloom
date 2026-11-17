@@ -9,6 +9,7 @@ import type {
   SvgTextNode,
 } from "./ast";
 import type { SvgDocument } from "./document";
+import { inlineSvgImage } from "./inlineSvgImage";
 
 function escapeXmlText(text: string): string {
   return text
@@ -102,24 +103,24 @@ function serializeCircle(node: SvgCircleNode): string {
   return `<circle ${attrs.join(" ")} />`;
 }
 
-function serializeGroup(node: SvgGroupNode): string {
+function serializeGroup(node: SvgGroupNode, context: { imageIndex: number }): string {
   const attrs: string[] = [];
   if (node.opacity !== undefined) attrs.push(`opacity="${node.opacity}"`);
   const attrStr = attrs.length > 0 ? ` ${attrs.join(" ")}` : "";
-  const childrenStr = node.children.map(serializeNode).join("\n  ");
+  const childrenStr = node.children.map((child) => serializeNode(child, context)).join("\n  ");
   return `<g${attrStr}>\n  ${childrenStr}\n</g>`;
 }
 
-function serializeNode(node: SvgNode): string {
+function serializeNode(node: SvgNode, context: { imageIndex: number }): string {
   switch (node.kind) {
     case "viewport":
-      return `<svg x="${node.x}" y="${node.y}" width="${node.width}" height="${node.height}" viewBox="${escapeXmlAttr(node.viewBox)}" overflow="hidden">\n${node.children.map(serializeNode).join("\n")}\n</svg>`;
+      return `<svg x="${node.x}" y="${node.y}" width="${node.width}" height="${node.height}" viewBox="${escapeXmlAttr(node.viewBox)}" overflow="hidden">\n${node.children.map((child) => serializeNode(child, context)).join("\n")}\n</svg>`;
     case "path":
       return serializePath(node);
     case "text":
       return serializeText(node);
     case "image":
-      return serializeImage(node);
+      return inlineSvgImage(node, `svg-image-${context.imageIndex++}`) ?? serializeImage(node);
     case "line":
       return serializeLine(node);
     case "rect":
@@ -127,7 +128,7 @@ function serializeNode(node: SvgNode): string {
     case "circle":
       return serializeCircle(node);
     case "group":
-      return serializeGroup(node);
+      return serializeGroup(node, context);
   }
 }
 
@@ -140,6 +141,7 @@ export function serializeSvg(document: SvgDocument): string {
     `viewBox="${document.viewBox}"`,
   ];
 
-  const body = document.children.map(serializeNode).join("\n  ");
+  const context = { imageIndex: 0 };
+  const body = document.children.map((node) => serializeNode(node, context)).join("\n  ");
   return `<svg ${rootAttrs.join(" ")}>\n  ${body}\n</svg>`;
 }

@@ -43,3 +43,5 @@ Monthloom exports **41 SVG files**:
 - **13 Full-Page SVGs**: `full/<Year>_1_full.svg` through `full/<Year>_12_full.svg`, plus `full/<Year+1>_1_full.svg`. Each page uses the preview's layout dimensions, Main and adjacent Mini calendar positions, and a transparent page background. The preview background image is excluded from SVG exports. Both outlined and editable text modes apply to all three sets.
 - **13 Main Month SVGs**: `main/<Year>_1.svg` through `main/<Year>_12.svg`, plus `main/<Year+1>_1.svg`.
 - **15 Mini Month SVGs**: `mini/<Year-1>_12_mini.svg`, `mini/<Year>_1_mini.svg` through `mini/<Year>_12_mini.svg`, `mini/<Year+1>_1_mini.svg`, and `mini/<Year+1>_2_mini.svg`.
+
+SVG badge assets are embedded as vector shapes in the exported files. Raster badges remain embedded images.
