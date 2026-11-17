@@ -57,7 +57,9 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
 }) => {
   const { t } = useI18n();
   const layout = config.layout;
-  const selected = useUiStore((state) => state.pageSelection);
+  const pageSelection = useUiStore((state) => state.pageSelection);
+  const selected = pageSelection && pageSelection !== "main" && layout[pageSelection].visible === false
+    ? null : pageSelection;
   const setSelected = useUiStore((state) => state.setPageSelection);
   const calendar = selected ? layout[selected] : null;
   const size = selected === "main" ? mainSize : miniSize;
@@ -116,14 +118,30 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
           onChange={(height) => updateLayout({ height })}
         />
       </div>
+      <div className="page-mini-visibility">
+        <span className="field-label">{t.pagePreview.miniVisibilityLabel}</span>
+        {(["previousMini", "nextMini"] as const).map((role) => (
+          <label key={role}>
+            <input
+              type="checkbox"
+              checked={layout[role].visible !== false}
+              onChange={(event) => {
+                updateLayout({ [role]: { ...layout[role], visible: event.target.checked } });
+                if (!event.target.checked && selected === role) setSelected(null);
+              }}
+            />
+            {role === "previousMini" ? t.pagePreview.previousMiniLabel : t.pagePreview.nextMiniLabel}
+          </label>
+        ))}
+      </div>
       <div className="page-calendar-settings" key={selected ?? "none"}>
         <label className="field-row">
           <span className="field-label">{t.pagePreview.calendarLabel}</span>
           <select className="field-input" value={selected ?? ""} onChange={(event) => setSelected(event.target.value ? event.target.value as PageCalendar : null)}>
             <option value="">{t.pagePreview.selectCalendarLabel}</option>
             <option value="main">{t.pagePreview.mainLabel}</option>
-            <option value="previousMini">{t.pagePreview.previousMiniLabel}</option>
-            <option value="nextMini">{t.pagePreview.nextMiniLabel}</option>
+            {layout.previousMini.visible !== false && <option value="previousMini">{t.pagePreview.previousMiniLabel}</option>}
+            {layout.nextMini.visible !== false && <option value="nextMini">{t.pagePreview.nextMiniLabel}</option>}
           </select>
         </label>
         {calendar && (

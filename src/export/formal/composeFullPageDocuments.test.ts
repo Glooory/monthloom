@@ -29,6 +29,32 @@ const pagePreview = { layout: {
 } };
 
 describe("composeFullPageDocuments", () => {
+  it.each([[false, false], [false, true], [true, false], [true, true]])(
+    "exports only visible Mini calendars (%s, %s) on every full page",
+    async (previousVisible, nextVisible) => {
+      const full = await composeFullPageDocuments({ targetYear: 2027, documents,
+        pagePreview: { layout: { ...pagePreview.layout,
+          previousMini: { ...pagePreview.layout.previousMini, visible: previousVisible },
+          nextMini: { ...pagePreview.layout.nextMini, visible: nextVisible },
+        } },
+      });
+      expect(full.size).toBe(13);
+      for (const [key, page] of full) {
+        const [year, month] = key.split("-").map(Number);
+        const adjacentKey = (delta: number) => {
+          const ordinal = year * 12 + month - 1 + delta;
+          return `${Math.floor(ordinal / 12)}-${ordinal % 12 + 1}`;
+        };
+        const expected = [documents.main.get(key)!.children];
+        if (previousVisible) expected.push(documents.mini.get(adjacentKey(-1))!.children);
+        if (nextVisible) expected.push(documents.mini.get(adjacentKey(1))!.children);
+        expect(page.children.map((node) => node.kind === "viewport" ? node.children : null)).toEqual(expected);
+      }
+      expect(documents.main.size).toBe(13);
+      expect(documents.mini.size).toBe(15);
+    },
+  );
+
   it("preserves preview dimensions, anchors, clipping and adjacent months across years", async () => {
     const full = await composeFullPageDocuments({ targetYear: 2027, documents, pagePreview });
     expect(full.size).toBe(13);

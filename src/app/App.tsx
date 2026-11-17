@@ -1,6 +1,7 @@
 import { setTemplateDimensions } from "../editor/model/templateBindings";
 import React, { useEffect, useMemo, useState } from "react";
 import { AppShell } from "./AppShell";
+import { GettingStartedGuide } from "./GettingStartedGuide";
 import { TemplateEditor } from "../editor/components/TemplateEditor";
 import { PagePreviewSettings } from "../editor/components/PagePreviewSettings";
 import { EditorPagePreview } from "../preview/fullYear/EditorPagePreview";
@@ -293,6 +294,7 @@ export const App: React.FC = () => {
 
       {/* Right Action Bar */}
       <div className="monthloom-header-right">
+        <GettingStartedGuide onNavigate={setActiveView} />
         {activeView === "editor" && (
           <label
             style={{

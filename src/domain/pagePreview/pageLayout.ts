@@ -24,8 +24,8 @@ export function calculatePageGeometry(args: {
   return {
     page,
     main: place(layout.main, mainSize, "Main calendar"),
-    previousMini: place(layout.previousMini, miniSize, "Previous month mini calendar"),
-    nextMini: place(layout.nextMini, miniSize, "Next month mini calendar"),
+    previousMini: layout.previousMini.visible === false ? null : place(layout.previousMini, miniSize, "Previous month mini calendar"),
+    nextMini: layout.nextMini.visible === false ? null : place(layout.nextMini, miniSize, "Next month mini calendar"),
     warnings,
   };
 }

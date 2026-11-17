@@ -1,6 +1,38 @@
 import type { TranslationDictionary } from "../types";
 
 export const en: TranslationDictionary = {
+  guide: {
+    button: "Getting started",
+    close: "Close guide",
+    startDesign: "Start designing",
+    sections: [
+      {
+        title: "What problem does Monthloom solve?",
+        description: "Making calendars month by month means repeatedly arranging dates, checking weekdays and keeping the design consistent.",
+        detail: "Monthloom generates monthly dates for your chosen year. Design one shared template, add backgrounds and arrange the pages, then export the full set.",
+      },
+      {
+        title: "Design a shared template",
+        description: "Set the name and year in the top bar. In Template Design, select a layer on the left and adjust its font, color and position on the right.",
+        detail: "Template edits apply across months. Use Preview Month to check the design with different dates.",
+      },
+      {
+        title: "Add holidays (optional)",
+        description: "Open the holiday library in Project & Export to sync data or add custom dates. In Template Design, add the calendar under Holiday Layers and set its colors, labels and markers.",
+        detail: "Skip this if you only need a date grid. If using holidays, check coverage for your chosen year before exporting.",
+      },
+      {
+        title: "Arrange and preview",
+        description: "Enable Full-page preview. In page settings, add monthly backgrounds and adjust calendar sizes and positions. Mini calendars show neighboring months; turn both off to keep only the large grid.",
+        detail: "Use Calendar Overview to check all 13 pages: January through December, plus January of the following year.",
+      },
+      {
+        title: "Export and back up",
+        description: "In Project & Export, choose Outlined Text for consistent appearance or Editable Text for further editing. Set the PNG scale and export the ZIP. SVGs are separate calendar assets; full-page PNGs include backgrounds and layout.",
+        detail: "Changes are saved in this browser. Export Bundle saves a .monthloom backup you can import to continue in another browser.",
+      },
+    ],
+  },
   nav: {
     brandSubtitle: "Studio",
     loadingApp: "Loading project…",
@@ -202,6 +234,7 @@ export const en: TranslationDictionary = {
     calendarLabel: "Calendar",
     mainLabel: "Main calendar",
     previousMiniLabel: "Previous month Mini",
+    miniVisibilityLabel: "Show Mini calendars on all pages",
     nextMiniLabel: "Next month Mini",
     calendarWidthLabel: "Width (px)",
     calendarHeightLabel: "Height (px)",

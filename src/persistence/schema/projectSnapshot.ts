@@ -176,12 +176,15 @@ const holidayLayerSchema = z.object({
 const calendarPlacementSchema = z.object({
   position: positionOffsetSchema,
 });
+const miniCalendarPlacementSchema = calendarPlacementSchema.extend({
+  visible: z.boolean().optional(),
+});
 const pageLayoutConfigSchema = z.object({
   width: z.number().positive(),
   height: z.number().positive(),
   main: calendarPlacementSchema,
-  previousMini: calendarPlacementSchema,
-  nextMini: calendarPlacementSchema,
+  previousMini: miniCalendarPlacementSchema,
+  nextMini: miniCalendarPlacementSchema,
 });
 
 const pagePreviewConfigSchema = z.object({

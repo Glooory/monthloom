@@ -1,6 +1,38 @@
 import type { TranslationDictionary } from "../types";
 
 export const zh: TranslationDictionary = {
+  guide: {
+    button: "入门指南",
+    close: "关闭指南",
+    startDesign: "开始设计",
+    sections: [
+      {
+        title: "Monthloom 是解决什么问题的",
+        description: "逐月制作日历，需要反复排列日期、核对星期，还要保持样式一致。",
+        detail: "Monthloom 根据年份自动排出每月日期。你只需设计一套共用模板，再搭配背景和布局，就能批量导出全年日历。",
+      },
+      {
+        title: "设计共用模板",
+        description: "在顶部设置名称和年份。进入「模板设计」，在左侧选择图层，在右侧调整字体、颜色和位置。",
+        detail: "模板修改会应用到所有月份。用「预览月份」检查不同月份的效果。",
+      },
+      {
+        title: "添加节假日（可选）",
+        description: "在「项目与导出」打开节假日库，同步数据或添加自定义日期。再到「模板设计」的节假日图层中添加对应日历，设置颜色、名称和标记。",
+        detail: "只需要普通日期网格，可以跳过。使用节假日时，导出前请检查目标年份的数据覆盖情况。",
+      },
+      {
+        title: "排版与预览",
+        description: "开启「整页预览」，在页面设置中为每月添加背景，调整日历尺寸和位置。附日历用于显示相邻月份；关闭两个附日历，即可只保留大月历。",
+        detail: "在「日历总览」检查全部 13 页：当年 1 至 12 月，以及次年 1 月。",
+      },
+      {
+        title: "导出与备份",
+        description: "在「项目与导出」选择「文字转曲」保持外观一致，或「保留文字」方便继续编辑，设置 PNG 倍率后导出 ZIP。SVG 可作为独立日历素材，整页 PNG 包含背景与布局。",
+        detail: "修改保存在当前浏览器中。用「导出项目包」保存 .monthloom 备份，换浏览器后导入即可继续制作。",
+      },
+    ],
+  },
   nav: {
     brandSubtitle: "Studio",
     loadingApp: "正在加载项目…",
@@ -202,6 +234,7 @@ export const zh: TranslationDictionary = {
     calendarLabel: "日历区域",
     mainLabel: "大日历",
     previousMiniLabel: "上月 Mini",
+    miniVisibilityLabel: "在所有页面显示附日历",
     nextMiniLabel: "下月 Mini",
     calendarWidthLabel: "宽度（px）",
     calendarHeightLabel: "高度（px）",

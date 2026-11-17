@@ -125,12 +125,12 @@ describe("documentStore", () => {
     expect(geometry().nextMini).toMatchObject({ width: 320, height: 240 });
     expect(resized.pagePreview).toBe(original.pagePreview);
     useDocumentStore.temporal.getState().undo();
-    expect(geometry().previousMini.width).toBe(original.miniTemplate.width);
+    expect(geometry().previousMini?.width).toBe(original.miniTemplate.width);
     useDocumentStore.temporal.getState().redo();
-    expect(geometry().nextMini.width).toBe(320);
+    expect(geometry().nextMini?.width).toBe(320);
     useDocumentStore.getState().replaceDocument(JSON.parse(JSON.stringify(resized)));
     expect(geometry().main.width).toBe(800);
-    expect(geometry().nextMini.width).toBe(320);
+    expect(geometry().nextMini?.width).toBe(320);
   });
 
   it("replaceDocument replaces document and resets undo/redo history", () => {

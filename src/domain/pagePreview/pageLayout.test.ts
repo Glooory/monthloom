@@ -9,6 +9,31 @@ const calculatePageGeometry = (args: { layout: typeof DEFAULT_PAGE_LAYOUT; mainS
   calculate({ mainSize, miniSize, ...args });
 
 describe("page layout", () => {
+  it.each([[false, false], [false, true], [true, false], [true, true]])(
+    "applies independent Mini visibility (%s, %s) without moving the main calendar",
+    (previousVisible, nextVisible) => {
+      const before = calculatePageGeometry({ layout: DEFAULT_PAGE_LAYOUT });
+      const layout = { ...DEFAULT_PAGE_LAYOUT,
+        previousMini: { ...DEFAULT_PAGE_LAYOUT.previousMini, visible: previousVisible },
+        nextMini: { ...DEFAULT_PAGE_LAYOUT.nextMini, visible: nextVisible },
+      };
+      const geometry = calculatePageGeometry({ layout });
+      expect(geometry.main).toEqual(before.main);
+      expect(geometry.previousMini).toEqual(previousVisible ? before.previousMini : null);
+      expect(geometry.nextMini).toEqual(nextVisible ? before.nextMini : null);
+    },
+  );
+
+  it("does not warn for hidden off-page Mini calendars and preserves their saved positions", () => {
+    const layout = { ...DEFAULT_PAGE_LAYOUT,
+      previousMini: { visible: false, position: { anchor: "top-left" as const, offsetX: -500, offsetY: -500 } },
+    };
+    expect(calculatePageGeometry({ layout }).warnings).toEqual([]);
+    const restored = calculatePageGeometry({ layout: { ...layout, previousMini: { ...layout.previousMini, visible: true } } });
+    expect(restored.previousMini).toMatchObject({ x: -500, y: -500 });
+    expect(restored.warnings).toHaveLength(1);
+  });
+
   it.each([
     ["top-left", 0, 0], ["top-center", 400, 0], ["top-right", 800, 0],
     ["center-left", 0, 250], ["center", 400, 250], ["center-right", 800, 250],

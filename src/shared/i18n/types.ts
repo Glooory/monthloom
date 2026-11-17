@@ -1,6 +1,12 @@
 export type Locale = "zh" | "en";
 
 export interface TranslationDictionary {
+  guide: {
+    button: string;
+    close: string;
+    startDesign: string;
+    sections: { title: string; description: string; detail: string }[];
+  };
   nav: {
     brandSubtitle: string;
     loadingApp: string;
@@ -177,6 +183,7 @@ export interface TranslationDictionary {
     calendarLabel: string;
     mainLabel: string;
     previousMiniLabel: string;
+    miniVisibilityLabel: string;
     nextMiniLabel: string;
     calendarWidthLabel: string;
     calendarHeightLabel: string;

@@ -100,7 +100,7 @@ export const PagePreview: React.FC<PagePreviewProps> = ({
           <SvgPreview document={mainDocument} className="page-preview-svg" />
         </div>
 
-        <div
+        {previousMini && <div
           className={`page-preview-slot page-preview-selectable ${selected === "previousMini" ? "is-selected" : ""}`}
           role="button"
           tabIndex={0}
@@ -121,9 +121,9 @@ export const PagePreview: React.FC<PagePreviewProps> = ({
           style={placementToStyle(previousMini, page)}
         >
           <SvgPreview document={previousMiniDocument} className="page-preview-svg" />
-        </div>
+        </div>}
 
-        <div
+        {nextMini && <div
           className={`page-preview-slot page-preview-selectable ${selected === "nextMini" ? "is-selected" : ""}`}
           role="button"
           tabIndex={0}
@@ -144,7 +144,7 @@ export const PagePreview: React.FC<PagePreviewProps> = ({
           style={placementToStyle(nextMini, page)}
         >
           <SvgPreview document={nextMiniDocument} className="page-preview-svg" />
-        </div>
+        </div>}
       </div>
     </div>
   );

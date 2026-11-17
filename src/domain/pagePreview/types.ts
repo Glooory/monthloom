@@ -8,12 +8,13 @@ export type Rect = Readonly<{
 }>;
 export type PageCalendar = "main" | "previousMini" | "nextMini";
 export type CalendarPlacement = Readonly<{ position: Position }>;
+export type MiniCalendarPlacement = CalendarPlacement & Readonly<{ visible?: boolean }>;
 export type PageLayout = Readonly<{
   width: number;
   height: number;
   main: CalendarPlacement;
-  previousMini: CalendarPlacement;
-  nextMini: CalendarPlacement;
+  previousMini: MiniCalendarPlacement;
+  nextMini: MiniCalendarPlacement;
 }>;
 export type PageBackground = Readonly<{
   assetId: string;
@@ -33,7 +34,7 @@ export type PageLayoutWarning = Readonly<{
 export type PageGeometry = Readonly<{
   page: Rect;
   main: Placement;
-  previousMini: Placement;
-  nextMini: Placement;
+  previousMini: Placement | null;
+  nextMini: Placement | null;
   warnings: readonly PageLayoutWarning[];
 }>;

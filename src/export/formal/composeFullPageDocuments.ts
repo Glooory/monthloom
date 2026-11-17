@@ -51,8 +51,8 @@ export async function composeFullPageDocuments(args: {
     const children: SvgNode[] = [
       ...backgroundNodes,
       place(main, geometry.main),
-      place(previousMini, geometry.previousMini),
-      place(nextMini, geometry.nextMini),
+      ...(geometry.previousMini ? [place(previousMini, geometry.previousMini)] : []),
+      ...(geometry.nextMini ? [place(nextMini, geometry.nextMini)] : []),
     ];
     full.set(definition.label, createSvgDocument(width, height, children));
   }
