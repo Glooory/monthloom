@@ -34,10 +34,12 @@ Monthloom is a client-side web application for creating and batch-exporting prod
 
 7. **Export Formal SVGs**
    - Under **Formal Batch Export**, select **Outlined (Production Default)** or **Editable**.
-   - Click **Export 28 SVGs (ZIP)** to download `Monthloom-<Year>.zip`.
+   - Click **Export 41 SVGs** to download `Monthloom_<Year>.zip`. All three sets are included automatically.
 
 ## Output Scope
 
-Monthloom exports exactly **28 standalone SVG files**:
-- **13 Main Month SVGs**: `main/<Year>-1.svg` through `main/<Year>-12.svg`, plus `main/<Year+1>-1.svg`.
-- **15 Mini Month SVGs**: `mini/<Year-1>-12.svg`, `mini/<Year>-1.svg` through `mini/<Year>-12.svg`, `mini/<Year+1>-1.svg`, and `mini/<Year+1>-2.svg`.
+Monthloom exports **41 SVG files**:
+
+- **13 Full-Page SVGs**: `full/<Year>_1_full.svg` through `full/<Year>_12_full.svg`, plus `full/<Year+1>_1_full.svg`. Each page uses the preview's layout dimensions, Main and adjacent Mini calendar positions, and a transparent page background. The preview background image is excluded from SVG exports. Both outlined and editable text modes apply to all three sets.
+- **13 Main Month SVGs**: `main/<Year>_1.svg` through `main/<Year>_12.svg`, plus `main/<Year+1>_1.svg`.
+- **15 Mini Month SVGs**: `mini/<Year-1>_12_mini.svg`, `mini/<Year>_1_mini.svg` through `mini/<Year>_12_mini.svg`, `mini/<Year+1>_1_mini.svg`, and `mini/<Year+1>_2_mini.svg`.

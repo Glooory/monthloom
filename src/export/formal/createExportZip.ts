@@ -1,18 +1,25 @@
 import JSZip from "jszip";
 import { serializeSvg } from "../../rendering/svg/serializer";
 import type { FormalRenderedDocuments } from "./types";
+import type { SvgDocument } from "../../rendering/svg/document";
 
 export async function createFormalExportZip(args: {
   documents: FormalRenderedDocuments;
+  fullDocuments: ReadonlyMap<string, SvgDocument>;
 }): Promise<Blob> {
   const { documents } = args;
   const zip = new JSZip();
 
   const mainFolder = zip.folder("main");
   const miniFolder = zip.folder("mini");
+  const fullFolder = zip.folder("full");
 
-  if (!mainFolder || !miniFolder) {
+  if (!mainFolder || !miniFolder || !fullFolder) {
     throw new Error("Failed to create folders in export ZIP");
+  }
+
+  for (const [key, doc] of args.fullDocuments) {
+    fullFolder.file(`${key.replace("-", "_")}_full.svg`, serializeSvg(doc));
   }
 
   // 1. Add 13 Main files

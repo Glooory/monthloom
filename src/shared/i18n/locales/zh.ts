@@ -266,10 +266,10 @@ export const zh: TranslationDictionary = {
     outlinedDesc: "文字转为路径，无需字体，适合印刷。",
     editableTitle: "保留文字",
     editableDesc: "保留文字，便于在 Illustrator 或 Figma 中编辑。",
-    exportBtnNormal: "导出 28 个 SVG",
+    exportBtnNormal: "导出 41 个 SVG",
     exportBtnLoading: "正在导出…",
     exportFailed: (err) => `导出失败：${err}`,
-    summaryNotice: (year) => `目标年份：${year}（13 个主日历 + 15 个附日历）`,
+    summaryNotice: (year) => `目标年份：${year}（13 个整页 + 13 个主日历 + 15 个附日历）`,
   },
   errors: {
     appErrorTitle: "应用出错",

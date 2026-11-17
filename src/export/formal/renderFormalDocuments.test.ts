@@ -8,6 +8,8 @@ import type { MainTemplate } from "../../domain/template/mainTemplate";
 import type { MiniTemplate } from "../../domain/template/miniTemplate";
 import { createDefaultHolidayLayers } from "../../domain/template/holidayLayer";
 import { serializeSvg } from "../../rendering/svg/serializer";
+import { composeFullPageDocuments } from "./composeFullPageDocuments";
+import { DEFAULT_PAGE_PREVIEW_CONFIG } from "../../domain/pagePreview/defaults";
 
 function createMockFontEngine(): ResolvedFontEngine {
   const face: ResolvedFontFace = {
@@ -180,7 +182,11 @@ describe("renderFormalDocuments", () => {
         assetResolver: mockAssetResolver,
       });
 
-      for (const documents of [rendered.main, rendered.mini]) {
+      const full = await composeFullPageDocuments({
+        targetYear: 2027, documents: rendered,
+        pagePreview: DEFAULT_PAGE_PREVIEW_CONFIG,
+      });
+      for (const documents of [rendered.main, rendered.mini, full]) {
         const svg = serializeSvg(documents.get("2027-5")!);
         const xml = new DOMParser().parseFromString(svg, "image/svg+xml");
         expect(xml.querySelector("parsererror")).toBeNull();
@@ -189,6 +195,7 @@ describe("renderFormalDocuments", () => {
         expect(image?.getAttribute("href")).toBe("data:image/png;base64,iVBORw==");
         expect(image?.getAttributeNS("http://www.w3.org/1999/xlink", "href"))
           .toBe("data:image/png;base64,iVBORw==");
+        expect(xml.querySelector("text") !== null).toBe(mode === "editable");
       }
     },
   );

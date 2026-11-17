@@ -266,10 +266,10 @@ export const en: TranslationDictionary = {
     outlinedDesc: "Converts text to paths. No fonts needed; ideal for printing.",
     editableTitle: "Editable Text",
     editableDesc: "Keeps text editable in Illustrator or Figma.",
-    exportBtnNormal: "Export 28 SVGs",
+    exportBtnNormal: "Export 41 SVGs",
     exportBtnLoading: "Exporting…",
     exportFailed: (err) => `Export failed: ${err}`,
-    summaryNotice: (year) => `Target Year: ${year} (13 Main + 15 Mini SVGs)`,
+    summaryNotice: (year) => `Target Year: ${year} (13 Full Pages + 13 Main + 15 Mini SVGs)`,
   },
   errors: {
     appErrorTitle: "Application Error",

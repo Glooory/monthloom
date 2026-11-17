@@ -2,10 +2,12 @@ import { describe, it, expect } from "vitest";
 import JSZip from "jszip";
 import { createSvgDocument } from "../../rendering/svg/document";
 import { createFormalExportZip } from "./createExportZip";
+import { composeFullPageDocuments } from "./composeFullPageDocuments";
+import { DEFAULT_PAGE_PREVIEW_CONFIG } from "../../domain/pagePreview/defaults";
 import type { FormalRenderedDocuments } from "./types";
 
 describe("createFormalExportZip", () => {
-  it("packages exactly 28 SVG files into main/ and mini/ folders with mini/2028_2_mini.svg present", async () => {
+  it("packages exactly 41 SVG files into full/, main/ and mini/ folders with mini/2028_2_mini.svg present", async () => {
     const mainDocs = new Map();
     for (let m = 1; m <= 12; m++) {
       mainDocs.set(`2027-${m}`, createSvgDocument(700, 500, []));
@@ -25,12 +27,21 @@ describe("createFormalExportZip", () => {
       mini: miniDocs,
     };
 
-    const zipBlob = await createFormalExportZip({ documents });
+    const fullDocuments = await composeFullPageDocuments({
+      targetYear: 2027, documents, pagePreview: DEFAULT_PAGE_PREVIEW_CONFIG,
+    });
+    const zipBlob = await createFormalExportZip({ documents, fullDocuments });
     const zip = await JSZip.loadAsync(zipBlob);
 
     // List all non-directory entries
     const files = Object.keys(zip.files).filter((path) => !zip.files[path].dir);
-    expect(files).toHaveLength(28);
+    expect(files).toHaveLength(41);
+
+    expect(files.filter((path) => path.startsWith("full/"))).toHaveLength(13);
+    expect(zip.file("full/2027_1_full.svg")).not.toBeNull();
+    expect(zip.file("full/2028_1_full.svg")).not.toBeNull();
+    const fullSvg = await zip.file("full/2028_1_full.svg")!.async("string");
+    expect(fullSvg).toContain('width="1400" height="900" viewBox="0 0 1400 900"');
 
     // Verify 13 Main files
     for (let m = 1; m <= 12; m++) {

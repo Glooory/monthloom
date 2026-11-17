@@ -71,6 +71,7 @@ export type SvgGroupNode = Readonly<{
 }>;
 
 export type SvgNode =
+  | SvgViewportNode
   | SvgPathNode
   | SvgTextNode
   | SvgImageNode
@@ -78,3 +79,13 @@ export type SvgNode =
   | SvgRectNode
   | SvgCircleNode
   | SvgGroupNode;
+
+export type SvgViewportNode = Readonly<{
+  kind: "viewport";
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  viewBox: string;
+  children: readonly SvgNode[];
+}>;

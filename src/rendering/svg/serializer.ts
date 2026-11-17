@@ -112,6 +112,8 @@ function serializeGroup(node: SvgGroupNode): string {
 
 function serializeNode(node: SvgNode): string {
   switch (node.kind) {
+    case "viewport":
+      return `<svg x="${node.x}" y="${node.y}" width="${node.width}" height="${node.height}" viewBox="${escapeXmlAttr(node.viewBox)}" overflow="hidden">\n${node.children.map(serializeNode).join("\n")}\n</svg>`;
     case "path":
       return serializePath(node);
     case "text":

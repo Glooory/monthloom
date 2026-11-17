@@ -3,6 +3,13 @@ import type { SvgNode } from "./ast";
 
 function renderNode(node: SvgNode, key: number | string): React.ReactNode {
   switch (node.kind) {
+    case "viewport":
+      return (
+        <svg key={key} x={node.x} y={node.y} width={node.width} height={node.height}
+          viewBox={node.viewBox} overflow="hidden">
+          {node.children.map((child, idx) => renderNode(child, idx))}
+        </svg>
+      );
     case "path":
       return (
         <path

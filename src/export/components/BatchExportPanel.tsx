@@ -14,6 +14,7 @@ import {
 import { persistentAssetStore } from "../../editor/assets/persistentAssetStore";
 import { useI18n } from "../../shared/i18n/i18nStore";
 import type { ExportMode } from "../formal/types";
+import { composeFullPageDocuments } from "../formal/composeFullPageDocuments";
 
 export const BatchExportPanel: React.FC = () => {
   const { t } = useI18n();
@@ -72,8 +73,14 @@ export const BatchExportPanel: React.FC = () => {
         assetResolver: persistentAssetStore,
       });
 
-      // 6. Package and download ZIP
-      const zipBlob = await createFormalExportZip({ documents: renderedDocs });
+      const fullDocuments = await composeFullPageDocuments({
+        targetYear,
+        documents: renderedDocs,
+        pagePreview: document.pagePreview,
+      });
+
+      // 6. Package all three sets and download ZIP
+      const zipBlob = await createFormalExportZip({ documents: renderedDocs, fullDocuments });
       downloadExportZip(zipBlob, targetYear);
     } catch (err) {
       console.error(err);
