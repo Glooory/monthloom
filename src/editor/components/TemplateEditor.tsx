@@ -230,10 +230,10 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
       } else if ((e.metaKey || e.ctrlKey) && !shouldIgnoreKeyboardShortcut(e.target)) {
         if (e.key === "=" || e.key === "+") {
           e.preventDefault();
-          setZoom((z) => Math.min(4.0, Math.round((z + 0.25) * 100) / 100));
+          setZoom((z) => Math.min(4.0, Math.round((z + 0.1) * 100) / 100));
         } else if (e.key === "-" || e.key === "_") {
           e.preventDefault();
-          setZoom((z) => Math.max(0.25, Math.round((z - 0.25) * 100) / 100));
+          setZoom((z) => Math.max(0.25, Math.round((z - 0.1) * 100) / 100));
         } else if (e.key === "0") {
           e.preventDefault();
           setZoom(1);

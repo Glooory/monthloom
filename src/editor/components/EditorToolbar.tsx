@@ -76,7 +76,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
             <button
               type="button"
               className="toolbar-btn"
-              onClick={() => onZoomChange(Math.max(0.25, Math.round((zoom - 0.25) * 100) / 100))}
+              onClick={() => onZoomChange(Math.max(0.25, Math.round((zoom - 0.1) * 100) / 100))}
               title={t.toolbar.zoomOut}
             >
               −
@@ -87,7 +87,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
             <button
               type="button"
               className="toolbar-btn"
-              onClick={() => onZoomChange(Math.min(4.0, Math.round((zoom + 0.25) * 100) / 100))}
+              onClick={() => onZoomChange(Math.min(4.0, Math.round((zoom + 0.1) * 100) / 100))}
               title={t.toolbar.zoomIn}
             >
               +
