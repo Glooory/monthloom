@@ -79,7 +79,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
 
   if (!svgDocument || !scene) {
     return (
-      <div className="editor-canvas-container">
+      <div ref={containerRef} className="editor-canvas-container">
         <div role="status" style={{ color: "var(--text-muted)", fontSize: "13px" }}>{emptyMessage ?? t.errors.previewLoading}</div>
       </div>
     );
