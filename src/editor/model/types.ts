@@ -49,6 +49,10 @@ export type WeekdayResizeSession = Readonly<{
 }>;
 
 export type EditorUiState = {
+  backgroundMonth: string | null;
+  editingBackground: boolean;
+  setBackgroundMonth: (month: string) => void;
+  setEditingBackground: (editing: boolean) => void;
   pageSelection: PageCalendar | null;
   setPageSelection: (selection: PageCalendar | null) => void;
   activeTemplate: "main" | "mini";

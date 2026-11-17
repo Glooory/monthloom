@@ -187,6 +187,11 @@ const pageLayoutConfigSchema = z.object({
 const pagePreviewConfigSchema = z.object({
   layout: pageLayoutConfigSchema,
   backgroundAssetId: z.string().optional(),
+  backgrounds: z.record(z.string(), z.object({
+    assetId: z.string(),
+    rect: z.object({ x: z.number().finite(), y: z.number().finite(),
+      width: z.number().finite().positive(), height: z.number().finite().positive() }).optional(),
+  }).nullable()).optional(),
 });
 
 export const editorDocumentSchema = z

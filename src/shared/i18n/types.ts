@@ -154,6 +154,19 @@ export interface TranslationDictionary {
     columnPlaceholder: (index: number) => string;
   };
   pagePreview: {
+    backgroundMonth: string;
+    editBackground: string;
+    finishBackground: string;
+    coverBackground: string;
+    containBackground: string;
+    resetBackgroundSize: string;
+    applyBackgroundAll: string;
+    applyBackgroundConfirm: string;
+    loadingBackground: string;
+    retryBackground: string;
+    uploadInterrupted: string;
+    resizeBackground: string;
+
     heading: string;
     uploadBackground: string;
     replaceBackground: string;
@@ -240,6 +253,7 @@ export interface TranslationDictionary {
     deleteBtn: string;
   };
   export: {
+    pngScale: string;
     heading: string;
     outlinedTitle: string;
     outlinedDesc: string;

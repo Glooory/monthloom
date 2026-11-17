@@ -4,7 +4,6 @@ import type { HolidayIndex } from "../../domain/holiday/types";
 import { calculatePageGeometry } from "../../domain/pagePreview/pageLayout";
 import { useDocumentStore } from "../../editor/state/documentStore";
 import type { AssetResolver } from "../../resources/assets/types";
-import { binaryAssetToDataUri } from "../../resources/assets/dataUri";
 import { usePreviewFonts } from "../../resources/fonts/usePreviewFonts";
 import { usePreviewResource } from "../../shared/react/usePreviewResource";
 import { PreviewStatusBanner } from "../../shared/react/PreviewStatusBanner";
@@ -45,20 +44,14 @@ export function EditorPagePreview({ targetYear, month, holidayIndex, assetResolv
     holidayLayers: document.holidayLayers,
   }), [calendarSet, document.mainTemplate, document.miniTemplate, document.holidayLayers]);
   const fonts = usePreviewFonts({ catalog: document.fontCatalog, requirements, assetResolver });
-  const backgroundKey = useMemo(() => ({ assetId: document.pagePreview.backgroundAssetId, assetResolver }),
-    [document.pagePreview.backgroundAssetId, assetResolver]);
-  const background = usePreviewResource({ resourceKey: backgroundKey, retainPrevious: false,
-    load: async () => backgroundKey.assetId
-      ? binaryAssetToDataUri(await assetResolver.resolve(backgroundKey.assetId)) : null });
   const renderKey = useMemo(() => ({
     calendarSet, mainTemplate: document.mainTemplate, miniTemplate: document.miniTemplate,
     holidayLayers: document.holidayLayers, pageLayout: document.pagePreview.layout,
     fontEngine: fonts.fontEngine, assetResolver,
-    backgroundDataUri: background.value, backgroundLoading: background.loading, backgroundError: background.error,
   }), [calendarSet, document.mainTemplate, document.miniTemplate, document.holidayLayers,
-    document.pagePreview.layout, fonts.fontEngine, assetResolver, background.value, background.loading, background.error]);
+    document.pagePreview.layout, fonts.fontEngine, assetResolver]);
   const preview = usePreviewResource({ resourceKey: renderKey, load: async () => {
-    if (!renderKey.fontEngine || renderKey.backgroundLoading || renderKey.backgroundError) return null;
+    if (!renderKey.fontEngine) return null;
     const documents = await renderFullYearPreviewDocuments({ ...renderKey, fontEngine: renderKey.fontEngine });
     const definition = calendarSet.pages[0];
     const mainDocument = documents.main.get(`${definition.mainMonth.year}-${definition.mainMonth.month}`);
@@ -68,11 +61,10 @@ export function EditorPagePreview({ targetYear, month, holidayIndex, assetResolv
     return {
       definition, mainDocument, previousMiniDocument, nextMiniDocument,
       geometry: calculatePageGeometry({ layout: renderKey.pageLayout, mainSize: renderKey.mainTemplate, miniSize: renderKey.miniTemplate }),
-      backgroundDataUri: renderKey.backgroundDataUri,
     };
   } });
-  const loading = fonts.loading || background.loading || preview.loading;
-  const error = fonts.error ?? background.error ?? preview.error;
+  const loading = fonts.loading || preview.loading;
+  const error = fonts.error ?? preview.error;
   const lastPreview = useRef<NonNullable<typeof preview.value> | null>(null);
   if (preview.value) lastPreview.current = preview.value;
   // Keep a complete page during font loading, but never show a different month.
@@ -80,8 +72,8 @@ export function EditorPagePreview({ targetYear, month, holidayIndex, assetResolv
   return (
     <>
       <PreviewStatusBanner error={error} issues={fonts.issues} loading={loading} retained={!!displayed}
-        retry={() => { fonts.retry(); background.retry(); preview.retry(); }} />
-      {displayed && <PagePreview {...displayed} />}
+        retry={() => { fonts.retry(); preview.retry(); }} />
+      {displayed && <PagePreview {...displayed} assetResolver={assetResolver} />}
       {!displayed && !error && <div role="status">{t.gallery.loadingText}</div>}
     </>
   );

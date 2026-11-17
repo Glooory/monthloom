@@ -47,5 +47,9 @@ export function collectReferencedAssetIds(
     assetIds.add(document.pagePreview.backgroundAssetId);
   }
 
+  for (const background of Object.values(document.pagePreview.backgrounds ?? {})) {
+    if (background) assetIds.add(background.assetId);
+  }
+
   return Array.from(assetIds);
 }

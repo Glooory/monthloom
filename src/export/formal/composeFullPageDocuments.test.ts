@@ -1,9 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { getMainMonths, getMiniMonths } from "../../domain/calendar/monthSequence";
 import { DEFAULT_PAGE_LAYOUT } from "../../domain/pagePreview/defaults";
 import { createSvgDocument } from "../../rendering/svg/document";
 import { serializeSvg } from "../../rendering/svg/serializer";
 import { composeFullPageDocuments } from "./composeFullPageDocuments";
+
+vi.mock("../../resources/assets/loadImage", () => ({
+  loadImage: async () => ({ naturalWidth: 200, naturalHeight: 100 }),
+}));
+
+const assetResolver = { resolve: async () => ({ bytes: new Uint8Array([1, 2]).buffer, mimeType: "image/png" }) };
 
 const documents = {
   main: new Map(getMainMonths(2027).map(({ year, month }) => [
@@ -42,14 +48,27 @@ describe("composeFullPageDocuments", () => {
     expect(xml.querySelector('path[transform="scale(2)"]')).not.toBeNull();
   });
 
-  it("excludes the preview background image while preserving the page layout", async () => {
-    const full = await composeFullPageDocuments({ targetYear: 2027, documents,
-      pagePreview: { ...pagePreview, backgroundAssetId: "missing-background" } });
-    const withoutBackground = await composeFullPageDocuments({ targetYear: 2027, documents, pagePreview });
-    expect(full).toEqual(withoutBackground);
+  it("embeds each month's background behind calendars, including legacy cover and explicit clearing", async () => {
+    const rect = { x: -20, y: 30, width: 2000, height: 1000 };
+    const full = await composeFullPageDocuments({ targetYear: 2027, documents, assetResolver,
+      pagePreview: { ...pagePreview, backgroundAssetId: "shared", backgrounds: {
+        "2027-1": { assetId: "january", rect }, "2027-2": null,
+        "2028-1": { assetId: "next-january", rect: { ...rect, x: 40 } },
+      } } });
+    expect(full.get("2027-1")!.children[0]).toMatchObject({ kind: "image", ...rect });
+    expect(full.get("2027-2")!.children).toHaveLength(3);
+    expect(full.get("2027-3")!.children[0]).toMatchObject({ kind: "image", x: -200, y: 0, width: 2000, height: 1000 });
+    expect(full.get("2028-1")!.children[0]).toMatchObject({ kind: "image", x: 40 });
+    expect(documents.main.get("2027-1")!.children.every((node) => node.kind !== "image")).toBe(true);
     const xml = new DOMParser().parseFromString(serializeSvg(full.get("2027-1")!), "image/svg+xml");
-    expect(xml.querySelector("image")).toBeNull();
-    expect(xml.querySelector("rect")).toBeNull();
+    expect(xml.querySelector("image")?.getAttribute("href")).toMatch(/^data:image\/png;base64,/);
+  });
+
+  it("rejects missing backgrounds instead of silently omitting them", async () => {
+    await expect(composeFullPageDocuments({ targetYear: 2027, documents,
+      pagePreview: { ...pagePreview, backgroundAssetId: "missing" },
+      assetResolver: { resolve: async () => { throw new Error("Missing asset"); } },
+    })).rejects.toThrow("Failed to load background missing");
   });
 
   it("rejects missing calendar documents", async () => {

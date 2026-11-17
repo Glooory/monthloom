@@ -1,4 +1,5 @@
-import React, { useRef, useId } from "react";
+import { BackgroundSettings } from "./BackgroundSettings";
+import React, { useId } from "react";
 import type { PageLayout, PagePreviewConfig, PageCalendar } from "../../domain/pagePreview/types";
 import { useI18n } from "../../shared/i18n/i18nStore";
 import { PositionInspector } from "./PositionInspector";
@@ -6,6 +7,7 @@ import { useUiStore } from "../state/uiStore";
 import { NumberInput } from "./NumberInput";
 
 export interface AssetStoreLike {
+  resolve?: import("../../resources/assets/types").AssetResolver["resolve"];
   addImage(file: File | Blob): Promise<string>;
 }
 
@@ -16,6 +18,7 @@ export interface PagePreviewSettingsProps {
   onSizeChange: (target: "main" | "mini", dimensions: { width?: number; height?: number }) => void;
   onChange: (next: PagePreviewConfig) => void;
   assetStore?: AssetStoreLike;
+  onBackgroundMonthChange?: (month: string) => void;
 }
 
 const NumberField: React.FC<{
@@ -50,9 +53,9 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
   onSizeChange,
   onChange,
   assetStore,
+  onBackgroundMonthChange,
 }) => {
   const { t } = useI18n();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const layout = config.layout;
   const selected = useUiStore((state) => state.pageSelection);
   const setSelected = useUiStore((state) => state.setPageSelection);
@@ -75,29 +78,6 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
     });
   };
 
-  const handleUploadBackground = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !assetStore) return;
-    try {
-      const assetId = await assetStore.addImage(file);
-      onChange({
-        ...config,
-        backgroundAssetId: assetId,
-      });
-    } finally {
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    }
-  };
-
-  const handleClearBackground = () => {
-    onChange({
-      ...config,
-      backgroundAssetId: undefined,
-    });
-  };
-
   return (
     <div
       className="page-preview-settings"
@@ -116,43 +96,10 @@ export const PagePreviewSettings: React.FC<PagePreviewSettingsProps> = ({
           {t.pagePreview.heading}
         </div>
 
-        <div className="page-preview-background-actions">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            style={{ display: "none" }}
-            onChange={handleUploadBackground}
-          />
-          <button
-            type="button"
-            className="studio-btn studio-btn-secondary"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" y1="3" x2="12" y2="15" />
-            </svg>
-            {config.backgroundAssetId ? t.pagePreview.replaceBackground : t.pagePreview.uploadBackground}
-          </button>
-          {config.backgroundAssetId && (
-            <button
-              type="button"
-              className="studio-btn"
-              style={{
-                background: "rgba(244, 63, 94, 0.15)",
-                color: "var(--accent-rose)",
-                borderColor: "rgba(244, 63, 94, 0.3)",
-              }}
-              onClick={handleClearBackground}
-            >
-              {t.pagePreview.clearBackground}
-            </button>
-          )}
-        </div>
+
       </div>
 
+      <BackgroundSettings config={config} onChange={onChange} assetStore={assetStore} onMonthChange={onBackgroundMonthChange} />
       <div className="page-preview-page-dimensions">
         <NumberField
           label={t.pagePreview.widthLabel}

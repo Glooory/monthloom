@@ -19,6 +19,7 @@ import { composeFullPageDocuments } from "../formal/composeFullPageDocuments";
 export const BatchExportPanel: React.FC = () => {
   const { t } = useI18n();
   const [exportMode, setExportMode] = useState<ExportMode>("outlined");
+  const [pngScale, setPngScale] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -73,14 +74,20 @@ export const BatchExportPanel: React.FC = () => {
         assetResolver: persistentAssetStore,
       });
 
+      // PNG text is always outlined so browser font availability cannot change the output.
+      const fullRenderedDocs = exportMode === "outlined" ? renderedDocs : await renderFormalDocuments({
+        calendarSet, mainTemplate: document.mainTemplate, miniTemplate: document.miniTemplate,
+        holidayLayers: document.holidayLayers, mode: "outlined", fontEngine, assetResolver: persistentAssetStore,
+      });
       const fullDocuments = await composeFullPageDocuments({
         targetYear,
-        documents: renderedDocs,
+        documents: fullRenderedDocs,
         pagePreview: document.pagePreview,
+        assetResolver: persistentAssetStore,
       });
 
       // 6. Package all three sets and download ZIP
-      const zipBlob = await createFormalExportZip({ documents: renderedDocs, fullDocuments });
+      const zipBlob = await createFormalExportZip({ documents: renderedDocs, fullDocuments, pngScale });
       downloadExportZip(zipBlob, targetYear);
     } catch (err) {
       console.error(err);
@@ -126,6 +133,12 @@ export const BatchExportPanel: React.FC = () => {
         </svg>
         {t.export.heading}
       </div>
+
+      <label className="field-row"><span className="field-label">{t.export.pngScale}</span>
+        <select className="field-input" value={pngScale} disabled={isExporting} onChange={(e) => setPngScale(Number(e.target.value))}>
+          {[1, 2, 3].map((scale) => <option key={scale} value={scale}>{scale}× · {Math.round(document.pagePreview.layout.width * scale)} × {Math.round(document.pagePreview.layout.height * scale)} px</option>)}
+        </select>
+      </label>
 
       <div
         style={{

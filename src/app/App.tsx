@@ -86,6 +86,12 @@ export const App: React.FC = () => {
     month: 5,
   });
 
+  useEffect(() => {
+    const first = targetYear * 12;
+    const ordinal = Math.max(first, Math.min(first + 12, editingMonth.year * 12 + editingMonth.month - 1));
+    useUiStore.getState().setBackgroundMonth(`${Math.floor(ordinal / 12)}-${ordinal % 12 + 1}`);
+  }, [editingMonth.year, editingMonth.month, targetYear]);
+
   const document = useDocumentStore((s) => s.document);
   const commitDocument = useDocumentStore((s) => s.commitDocument);
   const holidayLibrary = useHolidayLibraryStore((s) => s.snapshot);
@@ -401,6 +407,10 @@ export const App: React.FC = () => {
       onSizeChange={(target, dimensions) => commitDocument(setTemplateDimensions(document, target, dimensions))}
       onChange={(next) => commitDocument({ ...document, pagePreview: next })}
       assetStore={persistentAssetStore}
+      onBackgroundMonthChange={(month) => {
+        const [year, monthNumber] = month.split("-").map(Number);
+        setEditingMonth({ year, month: monthNumber });
+      }}
     />
   );
 

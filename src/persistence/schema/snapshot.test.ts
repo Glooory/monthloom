@@ -11,6 +11,19 @@ import type { TemplateSnapshotV1 } from "./templateSnapshot";
 describe("Snapshot validation", () => {
   const defaultDoc = createDefaultEditorDocument();
 
+  it("preserves monthly background placement and rejects invalid dimensions", () => {
+    const rect = { x: -20, y: 30, width: 2000, height: 1000 };
+    const doc = { ...defaultDoc, pagePreview: { ...defaultDoc.pagePreview, backgrounds: {
+      "2027-1": { assetId: "background", rect }, "2028-1": null,
+    } } };
+    expect(editorDocumentSchema.parse(doc)).toEqual(doc);
+    for (const width of [0, -1, NaN, Infinity]) {
+      expect(editorDocumentSchema.safeParse({ ...doc, pagePreview: { ...doc.pagePreview,
+        backgrounds: { "2027-1": { assetId: "background", rect: { ...rect, width } } },
+      } }).success).toBe(false);
+    }
+  });
+
   it("preserves independent positions without storing duplicate calendar sizes", () => {
     const doc = { ...defaultDoc, pagePreview: { ...defaultDoc.pagePreview, layout: { ...defaultDoc.pagePreview.layout,
       previousMini: { position: { anchor: "center" as const, offsetX: -10, offsetY: 20 } } } } };

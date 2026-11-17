@@ -1,3 +1,6 @@
+import { getPageBackground, fitBackground } from "../../domain/pagePreview/background";
+import { loadBackground } from "../../resources/assets/loadBackground";
+import type { AssetResolver } from "../../resources/assets/types";
 import type { YearMonth } from "../../domain/calendar/types";
 import { getFullYearPageDefinitions } from "../../domain/pagePreview/fullYearPages";
 import { calculatePageGeometry } from "../../domain/pagePreview/pageLayout";
@@ -10,6 +13,7 @@ export async function composeFullPageDocuments(args: {
   targetYear: number;
   documents: FormalRenderedDocuments;
   pagePreview: PagePreviewConfig;
+  assetResolver?: AssetResolver;
 }): Promise<ReadonlyMap<string, SvgDocument>> {
   const { targetYear, documents, pagePreview } = args;
   const full = new Map<string, SvgDocument>();
@@ -36,7 +40,16 @@ export async function composeFullPageDocuments(args: {
       miniSize: previousMini,
     });
     const { width, height } = geometry.page;
+    const background = getPageBackground(pagePreview, definition.label);
+    const backgroundNodes: SvgNode[] = [];
+    if (background) {
+      if (!args.assetResolver) throw new Error("An asset resolver is required to export backgrounds");
+      const loaded = await loadBackground(background, args.assetResolver);
+      if (loaded) backgroundNodes.push({ kind: "image", href: loaded.uri, opacity: 1,
+        ...(background.rect ?? fitBackground(geometry.page, loaded)) });
+    }
     const children: SvgNode[] = [
+      ...backgroundNodes,
       place(main, geometry.main),
       place(previousMini, geometry.previousMini),
       place(nextMini, geometry.nextMini),

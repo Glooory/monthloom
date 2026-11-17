@@ -5,15 +5,6 @@ export async function resolveBackgroundDataUri(args: {
   assetId?: string;
   assetResolver: AssetResolver;
 }): Promise<string | null> {
-  const { assetId, assetResolver } = args;
-  if (!assetId) {
-    return null;
-  }
-
-  try {
-    const asset = await assetResolver.resolve(assetId);
-    return binaryAssetToDataUri(asset);
-  } catch {
-    return null;
-  }
+  if (!args.assetId) return null;
+  return binaryAssetToDataUri(await args.assetResolver.resolve(args.assetId));
 }

@@ -45,6 +45,7 @@ describe("Referenced assets and remapping", () => {
       pagePreview: {
         ...doc.pagePreview,
         backgroundAssetId: "old-bg-id",
+        backgrounds: { "2027-1": { assetId: "month-bg", rect: { x: -10, y: 0, width: 200, height: 100 } }, "2028-1": null },
       },
     };
 
@@ -52,12 +53,14 @@ describe("Referenced assets and remapping", () => {
     expect(referenced).toContain("old-marker-id");
     expect(referenced).toContain("old-font-id");
     expect(referenced).toContain("old-bg-id");
-    expect(referenced).toHaveLength(3);
+    expect(referenced).toContain("month-bg");
+    expect(referenced).toHaveLength(4);
 
     const map = new Map<string, string>([
       ["old-marker-id", "new-marker-id"],
       ["old-font-id", "new-font-id"],
       ["old-bg-id", "new-bg-id"],
+      ["month-bg", "remapped-month-bg"],
     ]);
 
     const remapped = remapDocumentAssetIds(docWithAssets, map);
@@ -69,5 +72,8 @@ describe("Referenced assets and remapping", () => {
       postscriptName: "MyFont-Bold",
     });
     expect(remapped.pagePreview.backgroundAssetId).toBe("new-bg-id");
+    expect(remapped.pagePreview.backgrounds).toEqual({ "2027-1": {
+      assetId: "remapped-month-bg", rect: { x: -10, y: 0, width: 200, height: 100 },
+    }, "2028-1": null });
   });
 });

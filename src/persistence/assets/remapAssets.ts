@@ -79,6 +79,11 @@ export function remapDocumentAssetIds(
     pagePreview: {
       ...document.pagePreview,
       backgroundAssetId,
+      backgrounds: document.pagePreview.backgrounds && Object.fromEntries(
+        Object.entries(document.pagePreview.backgrounds).map(([month, background]) => [
+          month, background ? { ...background, assetId: getMappedId(background.assetId) } : null,
+        ]),
+      ),
     },
   };
 }

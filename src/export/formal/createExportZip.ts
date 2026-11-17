@@ -1,3 +1,4 @@
+import { rasterizePng } from "./rasterizePng";
 import JSZip from "jszip";
 import { serializeSvg } from "../../rendering/svg/serializer";
 import type { FormalRenderedDocuments } from "./types";
@@ -6,6 +7,8 @@ import type { SvgDocument } from "../../rendering/svg/document";
 export async function createFormalExportZip(args: {
   documents: FormalRenderedDocuments;
   fullDocuments: ReadonlyMap<string, SvgDocument>;
+  pngScale?: number;
+  rasterize?: typeof rasterizePng;
 }): Promise<Blob> {
   const { documents } = args;
   const zip = new JSZip();
@@ -19,7 +22,8 @@ export async function createFormalExportZip(args: {
   }
 
   for (const [key, doc] of args.fullDocuments) {
-    fullFolder.file(`${key.replace("-", "_")}_full.svg`, serializeSvg(doc));
+    const png = await (args.rasterize ?? rasterizePng)(doc, args.pngScale ?? 1);
+    fullFolder.file(`${key.replace("-", "_")}_full.png`, png);
   }
 
   // 1. Add 13 Main files

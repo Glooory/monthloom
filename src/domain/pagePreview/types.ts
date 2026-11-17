@@ -15,9 +15,15 @@ export type PageLayout = Readonly<{
   previousMini: CalendarPlacement;
   nextMini: CalendarPlacement;
 }>;
+export type PageBackground = Readonly<{
+  assetId: string;
+  rect?: Rect;
+}>;
+
 export type PagePreviewConfig = Readonly<{
   layout: PageLayout;
   backgroundAssetId?: string;
+  backgrounds?: Readonly<Record<string, PageBackground | null>>;
 }>;
 export type Placement = Rect;
 export type PageLayoutWarning = Readonly<{

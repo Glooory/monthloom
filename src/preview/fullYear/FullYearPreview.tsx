@@ -5,7 +5,6 @@ import type { HolidayDiagnostic, HolidayIndex } from "../../domain/holiday/types
 import { calculatePageGeometry } from "../../domain/pagePreview/pageLayout";
 import { useDocumentStore } from "../../editor/state/documentStore";
 import type { AssetResolver } from "../../resources/assets/types";
-import { resolveBackgroundDataUri } from "./background";
 import { createFullYearCalendarSet } from "./calendarSet";
 import { collectFullYearPreviewFontRequirements } from "./fontRequirements";
 import { PagePreview } from "./PagePreview";
@@ -80,22 +79,15 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
     fontEngine,
     assetResolver,
   ]);
-  const backgroundKey = useMemo(() => ({ assetId: document.pagePreview.backgroundAssetId, assetResolver }),
-    [document.pagePreview.backgroundAssetId, assetResolver]);
-  const background = usePreviewResource({ resourceKey: backgroundKey,
-    load: () => resolveBackgroundDataUri(backgroundKey), retainPrevious: false });
-
   // 6. Page geometry shared by all 13 pages
   const nextGeometry = useMemo(() => calculatePageGeometry({ layout: document.pagePreview.layout, mainSize: document.mainTemplate, miniSize: document.miniTemplate }),
     [document.pagePreview.layout, document.mainTemplate.width, document.mainTemplate.height, document.miniTemplate.width, document.miniTemplate.height]);
 
-  const previewKey = useMemo(() => ({ renderInputs, nextGeometry, backgroundDataUri: background.value,
-    backgroundLoading: background.loading, backgroundError: background.error }),
-    [renderInputs, nextGeometry, background.value, background.loading, background.error]);
+  const previewKey = useMemo(() => ({ renderInputs, nextGeometry }), [renderInputs, nextGeometry]);
   const preview = usePreviewResource({ resourceKey: previewKey, load: async () => {
-    if (!fontEngine || background.loading || background.error) return null;
+    if (!fontEngine) return null;
     const documents = await renderFullYearPreviewDocuments({ ...renderInputs, fontEngine });
-    return { documents, calendarSet, geometry: nextGeometry, backgroundDataUri: background.value, targetYear };
+    return { documents, calendarSet, geometry: nextGeometry, targetYear };
   } });
   const lastPreview = useRef<NonNullable<typeof preview.value> | null>(null);
   if (preview.value) lastPreview.current = preview.value;
@@ -103,9 +95,8 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
   const documents = displayed?.documents ?? null;
   const displayedCalendarSet = displayed?.calendarSet ?? calendarSet;
   const geometry = displayed?.geometry ?? nextGeometry;
-  const backgroundDataUri = displayed?.backgroundDataUri ?? null;
-  const loading = fontLoading || preview.loading || background.loading;
-  const error = fontError ?? preview.error ?? background.error;
+  const loading = fontLoading || preview.loading;
+  const error = fontError ?? preview.error;
 
   const STORAGE_KEY = "monthloom_preview_mode";
 
@@ -162,7 +153,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
       "--preview-grid-width": `${1400 * zoom / 100}px`,
     } as React.CSSProperties}>
       <PreviewStatusBanner error={error} issues={issues} loading={loading} retained={!!documents}
-        retry={() => { retryFonts(); preview.retry(); background.retry(); }} />
+        retry={() => { retryFonts(); preview.retry(); }} />
       {/* Top View Mode Control Bar */}
       <div className="gallery-control-bar">
         <div className="gallery-mode-switch">
@@ -285,7 +276,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
                     mainDocument={mainDoc}
                     previousMiniDocument={prevDoc}
                     nextMiniDocument={nextDoc}
-                    backgroundDataUri={backgroundDataUri}
+                    assetResolver={assetResolver}
                   />
                 </div>
               );
@@ -342,7 +333,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
                       mainDocument={mainDoc}
                       previousMiniDocument={prevDoc}
                       nextMiniDocument={nextDoc}
-                      backgroundDataUri={backgroundDataUri}
+                      assetResolver={assetResolver}
                     />
                   </div>
 
@@ -387,7 +378,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
                   mainDocument={mainDoc}
                   previousMiniDocument={prevDoc}
                   nextMiniDocument={nextDoc}
-                  backgroundDataUri={backgroundDataUri}
+                  assetResolver={assetResolver}
                 />
               );
             })}

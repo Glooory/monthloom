@@ -340,3 +340,123 @@
 .page-calendar-settings .inspector-section { padding: 0; border: 0; margin: 0; }
 
 .page-preview-settings { padding: 16px 20px; }
+
+.background-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 0;
+}
+
+.background-settings-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.background-settings .studio-btn {
+  min-height: 28px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.background-settings .studio-btn:focus-visible,
+.full-year-page-label .studio-btn:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 2px;
+}
+
+.background-month-field {
+  flex: 1 1 150px;
+  min-width: 0;
+}
+
+.background-settings .field-label {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.background-month-field select {
+  min-width: 0;
+}
+
+.background-dimensions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr));
+  gap: 8px 12px;
+}
+
+.background-dimensions .field-input {
+  min-width: 0;
+  width: 76px;
+}
+
+.background-fit-actions {
+  gap: 0;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg-input);
+}
+
+.background-fit-actions .studio-btn {
+  flex: 1 1 auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.background-fit-actions .studio-btn + .studio-btn {
+  border-left: 1px solid var(--border-subtle);
+}
+
+.background-settings .background-edit-button[aria-pressed="true"] {
+  color: var(--accent-cyan);
+  background: var(--accent-primary-light);
+  border-color: var(--accent-cyan);
+}
+
+.background-settings .background-clear-button:hover:not(:disabled) {
+  color: var(--accent-rose);
+}
+
+.full-year-page-label .studio-btn {
+  padding: 4px 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.background-edit-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  cursor: move;
+  touch-action: none;
+}
+
+.background-edit-outline {
+  position: absolute;
+  border: 2px solid var(--accent-cyan);
+  pointer-events: none;
+}
+
+.background-resize-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--accent-cyan);
+  background: var(--bg-surface);
+  touch-action: none;
+}
+
+.background-load-status,
+.background-error {
+  position: absolute;
+  z-index: 6;
+  background: var(--bg-surface);
+  color: var(--accent-rose);
+  line-height: 1.5;
+}

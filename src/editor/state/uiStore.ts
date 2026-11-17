@@ -2,6 +2,10 @@ import { create } from "zustand";
 import type { EditorUiState, EditorSelection, DragSession, WeekdayResizeSession } from "../model/types";
 
 export const useUiStore = create<EditorUiState>((set) => ({
+  backgroundMonth: null,
+  editingBackground: false,
+  setBackgroundMonth: (backgroundMonth) => set({ backgroundMonth }),
+  setEditingBackground: (editingBackground) => set({ editingBackground }),
   pageSelection: null,
   setPageSelection: (pageSelection) => set({ pageSelection }),
   activeTemplate: "main",

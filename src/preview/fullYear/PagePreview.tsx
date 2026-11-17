@@ -1,3 +1,5 @@
+import { BackgroundLayer } from "./BackgroundLayer";
+import type { AssetResolver } from "../../resources/assets/types";
 import React from "react";
 import type { FullYearPageDefinition } from "../../domain/pagePreview/fullYearPages";
 import type { PageGeometry, Placement } from "../../domain/pagePreview/types";
@@ -13,7 +15,8 @@ export interface PagePreviewProps {
   mainDocument: SvgDocument;
   previousMiniDocument: SvgDocument;
   nextMiniDocument: SvgDocument;
-  backgroundDataUri: string | null;
+  backgroundDataUri?: string | null;
+  assetResolver?: AssetResolver;
 }
 
 function placementToStyle(placement: Placement, page: { width: number; height: number }): React.CSSProperties {
@@ -38,6 +41,7 @@ export const PagePreview: React.FC<PagePreviewProps> = ({
   previousMiniDocument,
   nextMiniDocument,
   backgroundDataUri,
+  assetResolver,
 }) => {
   const { page, main, previousMini, nextMini } = geometry;
   const selected = useUiStore((state) => state.pageSelection);
@@ -46,7 +50,10 @@ export const PagePreview: React.FC<PagePreviewProps> = ({
 
   return (
     <div className="full-year-page-wrapper">
-      <div className="full-year-page-label">{definition.label}</div>
+      <div className="full-year-page-label"><button type="button" className="studio-btn studio-btn-secondary" onClick={() => {
+        useUiStore.getState().setBackgroundMonth(definition.label);
+        useUiStore.getState().setEditingBackground(true);
+      }}><span>{definition.label}</span> · {t.pagePreview.editBackground}</button></div>
       <div
         className="page-preview-canvas"
         onClick={(event) => { event.stopPropagation(); setSelected(null); }}
@@ -60,6 +67,7 @@ export const PagePreview: React.FC<PagePreviewProps> = ({
           aspectRatio: `${page.width} / ${page.height}`,
         }}
       >
+        {!backgroundDataUri && <BackgroundLayer month={definition.label} page={page} assetResolver={assetResolver} />}
         {backgroundDataUri && (
           <img
             src={backgroundDataUri}

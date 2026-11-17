@@ -7,7 +7,7 @@ import { DEFAULT_PAGE_PREVIEW_CONFIG } from "../../domain/pagePreview/defaults";
 import type { FormalRenderedDocuments } from "./types";
 
 describe("createFormalExportZip", () => {
-  it("packages exactly 41 SVG files into full/, main/ and mini/ folders with mini/2028_2_mini.svg present", async () => {
+  it("packages exactly 28 SVG and 13 PNG files into full/, main/ and mini/ folders with mini/2028_2_mini.svg present", async () => {
     const mainDocs = new Map();
     for (let m = 1; m <= 12; m++) {
       mainDocs.set(`2027-${m}`, createSvgDocument(700, 500, []));
@@ -30,7 +30,11 @@ describe("createFormalExportZip", () => {
     const fullDocuments = await composeFullPageDocuments({
       targetYear: 2027, documents, pagePreview: DEFAULT_PAGE_PREVIEW_CONFIG,
     });
-    const zipBlob = await createFormalExportZip({ documents, fullDocuments });
+    const png = Uint8Array.from(atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg=="), (c) => c.charCodeAt(0));
+    const renderedSizes: number[][] = [];
+    const zipBlob = await createFormalExportZip({ documents, fullDocuments, pngScale: 2,
+      rasterize: async (doc, scale) => { renderedSizes.push([doc.width, doc.height, scale]); return png; },
+    });
     const zip = await JSZip.loadAsync(zipBlob);
 
     // List all non-directory entries
@@ -38,10 +42,11 @@ describe("createFormalExportZip", () => {
     expect(files).toHaveLength(41);
 
     expect(files.filter((path) => path.startsWith("full/"))).toHaveLength(13);
-    expect(zip.file("full/2027_1_full.svg")).not.toBeNull();
-    expect(zip.file("full/2028_1_full.svg")).not.toBeNull();
-    const fullSvg = await zip.file("full/2028_1_full.svg")!.async("string");
-    expect(fullSvg).toContain('width="1400" height="900" viewBox="0 0 1400 900"');
+    expect(zip.file("full/2027_1_full.png")).not.toBeNull();
+    expect(zip.file("full/2028_1_full.png")).not.toBeNull();
+    expect(await zip.file("full/2028_1_full.png")!.async("uint8array")).toEqual(png);
+    expect(renderedSizes).toEqual(Array.from({ length: 13 }, () => [1400, 900, 2]));
+    expect(files.filter((path) => path.endsWith(".svg"))).toHaveLength(28);
 
     // Verify 13 Main files
     for (let m = 1; m <= 12; m++) {

@@ -40,9 +40,18 @@ describe(".monthloom Bundle Roundtrip", () => {
       createdAt: new Date().toISOString(),
     });
 
+    const backgroundBytes = new Uint8Array([50, 60, 70]);
+    await assetRepo.save({ id: "source-background", mimeType: "image/png", data: backgroundBytes,
+      createdAt: new Date().toISOString() });
+
     const defaultDoc = createDefaultEditorDocument();
     const docWithAsset = {
       ...defaultDoc,
+      pagePreview: { ...defaultDoc.pagePreview, backgrounds: {
+        "2027-1": { assetId: "source-background", rect: { x: -20, y: 30, width: 2000, height: 1000 } },
+        "2027-2": null,
+        "2028-1": { assetId: "source-background" },
+      } },
       holidayLayers: defaultDoc.holidayLayers.map((l, i) =>
         i === 0
           ? {
@@ -108,6 +117,14 @@ describe(".monthloom Bundle Roundtrip", () => {
     const targetAssetRepo = new AssetRepository(targetDb);
     const remappedAsset = await targetAssetRepo.getById(newAssetId!);
     expect(remappedAsset).not.toBeNull();
+    const monthly = loaded!.document.pagePreview.backgrounds!;
+    expect(monthly["2027-1"]).toMatchObject({ rect: { x: -20, y: 30, width: 2000, height: 1000 } });
+    expect(monthly["2027-2"]).toBeNull();
+    expect(monthly["2028-1"]?.assetId).toBe(monthly["2027-1"]?.assetId);
+    expect(monthly["2027-1"]?.assetId).not.toBe("source-background");
+    const remappedBackground = await targetAssetRepo.getById(monthly["2027-1"]!.assetId);
+    expect(Array.from(remappedBackground!.data)).toEqual(Array.from(backgroundBytes));
+
     expect(Array.from(remappedAsset?.data ?? [])).toEqual(
       Array.from(assetBytes),
     );
