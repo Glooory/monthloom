@@ -55,7 +55,7 @@ describe("App Integration Smoke Test", () => {
 
     // Section 3: Batch Export
     expect(screen.getAllByText("导出日历")[0]).toBeDefined();
-    expect(screen.getByText("导出 13 个 PNG + 28 个 SVG")).toBeDefined();
+    expect(screen.getByText("导出 ZIP")).toBeDefined();
 
     // Language switcher toggle
     const langBtn = screen.getByTestId("language-toggle-btn");
@@ -64,7 +64,7 @@ describe("App Integration Smoke Test", () => {
 
     // Should switch to English
     expect(screen.getByText("Save Project")).toBeDefined();
-    expect(screen.getByText("Export 13 PNGs + 28 SVGs")).toBeDefined();
+    expect(screen.getByText("Export ZIP")).toBeDefined();
 
     // Switch back to editor tab in English
     const editorTabBtn = screen.getByRole("button", {

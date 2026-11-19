@@ -262,6 +262,9 @@ export interface TranslationDictionary {
   export: {
     pngScale: string;
     heading: string;
+    contents: string;
+    outputLabels: { main: string; mini: string; fullSvg: string; fullPng: string };
+    selectAtLeastOne: string;
     outlinedTitle: string;
     outlinedDesc: string;
     editableTitle: string;

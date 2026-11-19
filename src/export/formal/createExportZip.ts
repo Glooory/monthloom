@@ -5,37 +5,30 @@ import type { FormalRenderedDocuments } from "./types";
 import type { SvgDocument } from "../../rendering/svg/document";
 
 export async function createFormalExportZip(args: {
-  documents: FormalRenderedDocuments;
-  fullDocuments: ReadonlyMap<string, SvgDocument>;
+  documents: Partial<FormalRenderedDocuments>;
+  fullDocuments?: ReadonlyMap<string, SvgDocument>;
+  fullSvgDocuments?: ReadonlyMap<string, SvgDocument>;
   pngScale?: number;
   rasterize?: typeof rasterizePng;
 }): Promise<Blob> {
   const { documents } = args;
   const zip = new JSZip();
 
-  const mainFolder = zip.folder("main");
-  const miniFolder = zip.folder("mini");
-  const fullFolder = zip.folder("full");
-
-  if (!mainFolder || !miniFolder || !fullFolder) {
-    throw new Error("Failed to create folders in export ZIP");
-  }
-
-  for (const [key, doc] of args.fullDocuments) {
+  for (const [key, doc] of args.fullDocuments ?? []) {
     const png = await (args.rasterize ?? rasterizePng)(doc, args.pngScale ?? 1);
-    fullFolder.file(`${key.replace("-", "_")}_full.png`, png);
+    zip.file(`full/${key.replace("-", "_")}_full.png`, png);
   }
 
-  // 1. Add 13 Main files
-  for (const [key, doc] of documents.main) {
-    const svgContent = serializeSvg(doc);
-    mainFolder.file(`${key.replace("-", "_")}.svg`, svgContent);
+  for (const [key, doc] of args.fullSvgDocuments ?? []) {
+    zip.file(`full-svg/${key.replace("-", "_")}_full.svg`, serializeSvg(doc));
   }
 
-  // 2. Add 15 Mini files (including 2028-2)
-  for (const [key, doc] of documents.mini) {
-    const svgContent = serializeSvg(doc);
-    miniFolder.file(`${key.replace("-", "_")}_mini.svg`, svgContent);
+  for (const [key, doc] of documents.main ?? []) {
+    zip.file(`main/${key.replace("-", "_")}.svg`, serializeSvg(doc));
+  }
+
+  for (const [key, doc] of documents.mini ?? []) {
+    zip.file(`mini/${key.replace("-", "_")}_mini.svg`, serializeSvg(doc));
   }
 
   return await zip.generateAsync({ type: "blob" });

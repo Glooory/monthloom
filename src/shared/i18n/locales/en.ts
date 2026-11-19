@@ -28,7 +28,7 @@ export const en: TranslationDictionary = {
       },
       {
         title: "Export and back up",
-        description: "In Project & Export, choose Outlined Text for consistent appearance or Editable Text for further editing. Set the PNG scale and export the ZIP. SVGs are separate calendar assets; full-page PNGs include backgrounds and layout.",
+        description: "In Project & Export, select the files you want in the ZIP. Full-page PNGs include any background images you’ve added. Full-page SVGs export the calendar layout with a transparent background. For any SVG, choose Outlined Text or Editable Text.",
         detail: "Changes are saved in this browser. Export Bundle saves a .monthloom backup you can import to continue in another browser.",
       },
     ],
@@ -309,14 +309,22 @@ export const en: TranslationDictionary = {
   export: {
     pngScale: "Full-page PNG scale",
     heading: "Export calendars",
+    contents: "Files to export",
+    outputLabels: {
+      main: "Main calendars (13 SVGs)",
+      mini: "Mini calendars (15 SVGs)",
+      fullSvg: "Full-page layouts (13 SVGs, no backgrounds)",
+      fullPng: "Full-page previews (13 PNGs, with backgrounds)",
+    },
+    selectAtLeastOne: "Select at least one type of file to export.",
     outlinedTitle: "Outlined Text",
     outlinedDesc: "Converts text to paths. No fonts needed; ideal for printing.",
     editableTitle: "Editable Text",
     editableDesc: "Keeps text editable in Illustrator or Figma.",
-    exportBtnNormal: "Export 13 PNGs + 28 SVGs",
+    exportBtnNormal: "Export ZIP",
     exportBtnLoading: "Exporting…",
     exportFailed: (err) => `Export failed: ${err}`,
-    summaryNotice: (year) => `Target Year: ${year} (13 Full Pages + 13 Main + 15 Mini SVGs)`,
+    summaryNotice: (year) => `Target year: ${year}`,
   },
   errors: {
     appErrorTitle: "Application Error",

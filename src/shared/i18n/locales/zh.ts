@@ -28,7 +28,7 @@ export const zh: TranslationDictionary = {
       },
       {
         title: "导出与备份",
-        description: "在「项目与导出」选择「文字转曲」保持外观一致，或「保留文字」方便继续编辑，设置 PNG 倍率后导出 ZIP。SVG 可作为独立日历素材，整页 PNG 包含背景与布局。",
+        description: "在「项目与导出」勾选要打包到 ZIP 的文件。整页 PNG 包含已设置的背景图，可设置导出倍率。整页 SVG 保留日历排版，背景透明。所有 SVG 均可选择「文字转曲」或「保留文字」。",
         detail: "修改保存在当前浏览器中。用「导出项目包」保存 .monthloom 备份，换浏览器后导入即可继续制作。",
       },
     ],
@@ -309,14 +309,22 @@ export const zh: TranslationDictionary = {
   export: {
     pngScale: "整页 PNG 导出倍率",
     heading: "导出日历",
+    contents: "导出内容",
+    outputLabels: {
+      main: "主日历（13 个 SVG）",
+      mini: "附日历（15 个 SVG）",
+      fullSvg: "整页排版（13 个 SVG，无背景图）",
+      fullPng: "整页预览（13 个 PNG，含背景图）",
+    },
+    selectAtLeastOne: "请至少选择一种导出内容。",
     outlinedTitle: "文字转曲",
     outlinedDesc: "文字转为路径，无需字体，适合印刷。",
     editableTitle: "保留文字",
     editableDesc: "保留文字，便于在 Illustrator 或 Figma 中编辑。",
-    exportBtnNormal: "导出 13 个 PNG + 28 个 SVG",
+    exportBtnNormal: "导出 ZIP",
     exportBtnLoading: "正在导出…",
     exportFailed: (err) => `导出失败：${err}`,
-    summaryNotice: (year) => `目标年份：${year}（13 个整页 + 13 个主日历 + 15 个附日历）`,
+    summaryNotice: (year) => `目标年份：${year}`,
   },
   errors: {
     appErrorTitle: "应用出错",

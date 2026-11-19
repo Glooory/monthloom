@@ -14,8 +14,9 @@ export async function composeFullPageDocuments(args: {
   documents: FormalRenderedDocuments;
   pagePreview: PagePreviewConfig;
   assetResolver?: AssetResolver;
+  includeBackground?: boolean;
 }): Promise<ReadonlyMap<string, SvgDocument>> {
-  const { targetYear, documents, pagePreview } = args;
+  const { targetYear, documents, pagePreview, includeBackground = true } = args;
   const full = new Map<string, SvgDocument>();
   const requireDocument = (docs: ReadonlyMap<string, SvgDocument>, month: YearMonth) => {
     const key = `${month.year}-${month.month}`;
@@ -40,7 +41,7 @@ export async function composeFullPageDocuments(args: {
       miniSize: previousMini,
     });
     const { width, height } = geometry.page;
-    const background = getPageBackground(pagePreview, definition.label);
+    const background = includeBackground ? getPageBackground(pagePreview, definition.label) : null;
     const backgroundNodes: SvgNode[] = [];
     if (background) {
       if (!args.assetResolver) throw new Error("An asset resolver is required to export backgrounds");

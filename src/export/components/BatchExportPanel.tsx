@@ -18,6 +18,7 @@ import { composeFullPageDocuments } from "../formal/composeFullPageDocuments";
 
 export const BatchExportPanel: React.FC = () => {
   const { t } = useI18n();
+  const [included, setIncluded] = useState({ main: true, mini: true, fullSvg: true, fullPng: true });
   const [exportMode, setExportMode] = useState<ExportMode>("outlined");
   const [pngScale, setPngScale] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
@@ -26,9 +27,12 @@ export const BatchExportPanel: React.FC = () => {
   const { targetYear } = useWorkspaceStore();
   const { document } = useDocumentStore();
   const holidayLibrary = useHolidayLibraryStore((s) => s.snapshot);
+  const includesSvg = included.main || included.mini || included.fullSvg;
+  const includesFullPage = included.fullSvg || included.fullPng;
+  const canExport = included.fullPng || includesSvg;
 
   const handleExport = async () => {
-    if (isExporting) return;
+    if (isExporting || !canExport) return;
     setIsExporting(true);
     setErrorMsg(null);
 
@@ -48,9 +52,14 @@ export const BatchExportPanel: React.FC = () => {
         miniStartOfWeek: document.miniTemplate.weekdayRow.startOfWeek ?? 0,
       });
 
-      // 3. Collect merged font requirements across all 28 calendars
+      const svgCalendarSet = included.fullSvg ? calendarSet : {
+        mainCalendars: included.main ? calendarSet.mainCalendars : new Map(),
+        miniCalendars: included.mini ? calendarSet.miniCalendars : new Map(),
+      };
+
+      // Full-page composition uses both calendars, even if their SVGs are omitted.
       const requirements = collectFormalExportFontRequirements({
-        calendarSet,
+        calendarSet: includesFullPage ? calendarSet : svgCalendarSet,
         mainTemplate: document.mainTemplate,
         miniTemplate: document.miniTemplate,
         holidayLayers: document.holidayLayers,
@@ -63,31 +72,53 @@ export const BatchExportPanel: React.FC = () => {
         assetResolver: persistentAssetStore,
       });
 
-      // 5. Render 28 formal documents
-      const renderedDocs = await renderFormalDocuments({
-        calendarSet,
+      const renderOptions = {
         mainTemplate: document.mainTemplate,
         miniTemplate: document.miniTemplate,
         holidayLayers: document.holidayLayers,
-        mode: exportMode,
         fontEngine,
         assetResolver: persistentAssetStore,
-      });
+      };
 
       // PNG text is always outlined so browser font availability cannot change the output.
-      const fullRenderedDocs = exportMode === "outlined" ? renderedDocs : await renderFormalDocuments({
-        calendarSet, mainTemplate: document.mainTemplate, miniTemplate: document.miniTemplate,
-        holidayLayers: document.holidayLayers, mode: "outlined", fontEngine, assetResolver: persistentAssetStore,
-      });
-      const fullDocuments = await composeFullPageDocuments({
-        targetYear,
-        documents: fullRenderedDocs,
-        pagePreview: document.pagePreview,
-        assetResolver: persistentAssetStore,
-      });
+      const pngCalendarDocuments = included.fullPng
+        ? await renderFormalDocuments({ ...renderOptions, calendarSet, mode: "outlined" })
+        : undefined;
+      const fullPngDocuments = pngCalendarDocuments
+        ? await composeFullPageDocuments({
+            targetYear,
+            documents: pngCalendarDocuments,
+            pagePreview: document.pagePreview,
+            assetResolver: persistentAssetStore,
+          })
+        : undefined;
+      let svgDocuments = exportMode === "outlined" ? pngCalendarDocuments : undefined;
+      if (includesSvg && !svgDocuments) {
+        svgDocuments = await renderFormalDocuments({
+          ...renderOptions,
+          calendarSet: svgCalendarSet,
+          mode: exportMode,
+        });
+      }
 
-      // 6. Package all three sets and download ZIP
-      const zipBlob = await createFormalExportZip({ documents: renderedDocs, fullDocuments, pngScale });
+      const fullSvgDocuments = included.fullSvg && svgDocuments
+        ? await composeFullPageDocuments({
+            targetYear,
+            documents: svgDocuments,
+            pagePreview: document.pagePreview,
+            includeBackground: false,
+          })
+        : undefined;
+
+      const zipBlob = await createFormalExportZip({
+        documents: {
+          main: included.main ? svgDocuments?.main : undefined,
+          mini: included.mini ? svgDocuments?.mini : undefined,
+        },
+        fullDocuments: fullPngDocuments,
+        fullSvgDocuments,
+        pngScale,
+      });
       downloadExportZip(zipBlob, targetYear);
     } catch (err) {
       console.error(err);
@@ -134,19 +165,32 @@ export const BatchExportPanel: React.FC = () => {
         {t.export.heading}
       </div>
 
-      <label className="field-row"><span className="field-label">{t.export.pngScale}</span>
-        <select className="field-input" value={pngScale} disabled={isExporting} onChange={(e) => setPngScale(Number(e.target.value))}>
-          {[1, 2, 3].map((scale) => <option key={scale} value={scale}>{scale}× · {Math.round(document.pagePreview.layout.width * scale)} × {Math.round(document.pagePreview.layout.height * scale)} px</option>)}
-        </select>
-      </label>
+      <fieldset className="export-contents" disabled={isExporting}>
+        <legend className="field-label">{t.export.contents}</legend>
+        {(["main", "mini", "fullSvg", "fullPng"] as const).map((kind) => (
+          <label key={kind}>
+            <input
+              type="checkbox"
+              checked={included[kind]}
+              onChange={(event) => {
+                const checked = event.target.checked;
+                setIncluded((current) => ({ ...current, [kind]: checked }));
+              }}
+            />
+            {t.export.outputLabels[kind]}
+          </label>
+        ))}
+      </fieldset>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "10px",
-        }}
-      >
+      {included.fullPng && (
+        <label className="field-row"><span className="field-label">{t.export.pngScale}</span>
+          <select className="field-input" value={pngScale} disabled={isExporting} onChange={(e) => setPngScale(Number(e.target.value))}>
+            {[1, 2, 3].map((scale) => <option key={scale} value={scale}>{scale}× · {Math.round(document.pagePreview.layout.width * scale)} × {Math.round(document.pagePreview.layout.height * scale)} px</option>)}
+          </select>
+        </label>
+      )}
+
+      <div className="export-svg-options" hidden={!includesSvg}>
         <label
           style={{
             display: "flex",
@@ -170,6 +214,7 @@ export const BatchExportPanel: React.FC = () => {
             name="exportMode"
             value="outlined"
             checked={exportMode === "outlined"}
+            disabled={isExporting}
             onChange={() => setExportMode("outlined")}
             style={{ marginTop: "2px" }}
           />
@@ -210,6 +255,7 @@ export const BatchExportPanel: React.FC = () => {
             name="exportMode"
             value="editable"
             checked={exportMode === "editable"}
+            disabled={isExporting}
             onChange={() => setExportMode("editable")}
             style={{ marginTop: "2px" }}
           />
@@ -244,7 +290,7 @@ export const BatchExportPanel: React.FC = () => {
 
       <button
         type="button"
-        disabled={isExporting}
+        disabled={isExporting || !canExport}
         onClick={handleExport}
         className="studio-btn studio-btn-accent"
         style={{
@@ -294,7 +340,7 @@ export const BatchExportPanel: React.FC = () => {
           textAlign: "center",
         }}
       >
-        {t.export.summaryNotice(targetYear)}
+        {canExport ? t.export.summaryNotice(targetYear) : t.export.selectAtLeastOne}
       </div>
     </div>
   );

@@ -97,6 +97,24 @@ describe("composeFullPageDocuments", () => {
     })).rejects.toThrow("Failed to load background missing");
   });
 
+  it("keeps the full-page layout without resolving configured background images", async () => {
+    const resolve = vi.fn(assetResolver.resolve);
+    const full = await composeFullPageDocuments({
+      targetYear: 2027,
+      documents,
+      pagePreview: {
+        ...pagePreview,
+        backgroundAssetId: "shared",
+        backgrounds: { "2027-1": { assetId: "january" } },
+      },
+      assetResolver: { resolve },
+      includeBackground: false,
+    });
+
+    expect(resolve).not.toHaveBeenCalled();
+    expect(full).toEqual(await composeFullPageDocuments({ targetYear: 2027, documents, pagePreview }));
+  });
+
   it("rejects missing calendar documents", async () => {
     await expect(composeFullPageDocuments({ targetYear: 2027,
       documents: { ...documents, mini: new Map() }, pagePreview,
