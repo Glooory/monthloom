@@ -28,6 +28,9 @@ export interface TranslationDictionary {
     enableMiniCalendars: string;
     pagePreview: string;
     resizePagePreview: string;
+    resizeLayers: string;
+    resizeInspector: string;
+    resizePageSettings: string;
     gridBorder: string;
     gridBorderTitle: string;
     zoomIn: string;

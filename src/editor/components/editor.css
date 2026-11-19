@@ -149,13 +149,13 @@
 
 /* Left Layers / Elements Sidebar */
 .editor-layers-sidebar {
-  width: 220px;
   background-color: var(--bg-surface);
   border-right: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   overflow-y: auto;
+  overflow-wrap: anywhere;
   z-index: 10;
 }
 
@@ -365,15 +365,28 @@
 
 /* Right Inspector Sidebar */
 .editor-inspector {
-  width: 320px;
+  width: var(--editor-inspector-width, 320px);
   background-color: var(--bg-surface);
   border-left: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   overflow-y: auto;
+  overflow-wrap: anywhere;
   box-sizing: border-box;
   z-index: 10;
+}
+
+.editor-inspector .field-input {
+  min-width: 0;
+}
+
+.editor-inspector .weekday-inputs-grid {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.editor-inspector .weekday-col-header {
+  white-space: normal;
 }
 
 .inspector-header {
@@ -890,31 +903,6 @@
   }
 }
 
-
-.editor-preview-divider {
-  flex: 0 0 8px;
-  cursor: col-resize;
-  touch-action: none;
-  background: var(--bg-surface);
-  position: relative;
-}
-
-.editor-preview-divider::after {
-  content: "";
-  position: absolute;
-  inset: 0 3px;
-  background: var(--border-medium);
-}
-
-.editor-preview-divider:hover::after,
-.editor-preview-divider:focus-visible::after {
-  background: var(--accent-cyan);
-}
-
-.editor-preview-divider:focus-visible {
-  outline: 2px solid var(--accent-cyan);
-  outline-offset: -2px;
-}
 
 .editor-page-preview-settings {
   container-type: inline-size;

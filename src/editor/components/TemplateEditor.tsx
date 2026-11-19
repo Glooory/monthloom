@@ -26,6 +26,7 @@ import { useHolidayLibraryStore } from "../../workspace/state/holidayLibraryStor
 import { useI18n } from "../../shared/i18n/i18nStore";
 import { usePreviewResource } from "../../shared/react/usePreviewResource";
 import { PreviewStatusBanner } from "../../shared/react/PreviewStatusBanner";
+import { PanelDivider, usePanelWidth } from "../../shared/react/PanelDivider";
 import { FontSelectionContext, usePreparedFontSelection } from "../fonts/FontSelectionContext";
 import "./editor.css";
 
@@ -37,6 +38,10 @@ export interface TemplateEditorProps {
   fetchImpl?: typeof fetch;
   assetResolver?: BinaryAssetResolver;
 }
+
+const MIN_LAYERS_WIDTH = 150;
+const MIN_INSPECTOR_WIDTH = 248;
+const EDITOR_DIVIDERS_WIDTH = 16;
 
 export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   calendar,
@@ -269,31 +274,47 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     window.history.pushState(window.history.state, "", url);
     setShowPagePreview(shown);
   };
-  const [pagePreviewWidth, setPagePreviewWidth] = useState(() => {
-    try {
-      const saved = Number(window.localStorage.getItem("monthloom_page_preview_width"));
-      if (Number.isFinite(saved) && saved >= 20 && saved <= 70) return saved;
-    } catch {
-      // Storage may be unavailable; keep the default width.
-    }
-    return 38;
-  });
+  const editorBodyRef = useRef<HTMLDivElement>(null);
+  const [editorWidth, setEditorWidth] = useState(() => window.innerWidth);
   useEffect(() => {
-    try {
-      window.localStorage.setItem("monthloom_page_preview_width", String(pagePreviewWidth));
-    } catch {
-      // Resizing remains available when preferences cannot be saved.
+    const body = editorBodyRef.current;
+    if (!body) return;
+    const measure = () => {
+      if (body.clientWidth > 0) setEditorWidth(body.clientWidth);
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", measure);
+      return () => window.removeEventListener("resize", measure);
     }
-  }, [pagePreviewWidth]);
-  const previewResizeRef = useRef<{
-    pointerId: number;
-    clientX: number;
-    containerWidth: number;
-    previewWidth: number;
-  } | null>(null);
-  const resizePagePreview = (width: number) => {
-    setPagePreviewWidth(Math.max(20, Math.min(70, width)));
-  };
+    const observer = new ResizeObserver(measure);
+    observer.observe(body);
+    return () => observer.disconnect();
+  }, []);
+
+  // Give each sidebar a share of the spare width so dragging one never pushes the other.
+  const canvasReserve = Math.min(240, editorWidth * 0.22);
+  const spareWidth = Math.max(0, editorWidth - canvasReserve - EDITOR_DIVIDERS_WIDTH - MIN_LAYERS_WIDTH - MIN_INSPECTOR_WIDTH);
+  const layersPanel = usePanelWidth({
+    storageKey: "monthloom_layers_width",
+    defaultWidth: 220,
+    minWidth: MIN_LAYERS_WIDTH,
+    maxWidth: 360,
+    availableWidth: MIN_LAYERS_WIDTH + Math.floor(spareWidth * 0.4),
+  });
+  const inspectorPanel = usePanelWidth({
+    storageKey: "monthloom_inspector_width",
+    defaultWidth: 320,
+    minWidth: MIN_INSPECTOR_WIDTH,
+    maxWidth: 480,
+    availableWidth: MIN_INSPECTOR_WIDTH + Math.floor(spareWidth * 0.6),
+  });
+  const pagePreviewPanel = usePanelWidth({
+    storageKey: "monthloom_page_preview_width",
+    defaultWidth: 38,
+    minWidth: 20,
+    maxWidth: 70,
+  });
 
   const mainLayers: Array<{ id: PositionableSemanticId | "main.grid"; label: string; key: string }> = [
     { id: "main.weekday", label: t.layers.mainWeekday, key: "main.weekday:default" },
@@ -346,10 +367,15 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         onZoomChange={editorEnabled ? setZoom : undefined}
       />
 
-      <div className="editor-body">
+      <div
+        className="editor-body"
+        ref={editorBodyRef}
+        style={{ "--editor-inspector-width": `${inspectorPanel.width}px` } as React.CSSProperties}
+      >
         {/* Left Layers / Elements Sidebar */}
         <div
           className="editor-layers-sidebar"
+          style={{ width: layersPanel.width }}
           onPointerDown={(e) => {
             if (e.target === e.currentTarget) {
               setSelection(null);
@@ -456,6 +482,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
         {editorEnabled && (
           <>
+            <PanelDivider {...layersPanel} label={t.toolbar.resizeLayers} side="left" />
             {/* Center canvas and optional full-page preview */}
             <div className="editor-canvas-area">
               <EditorCanvas
@@ -477,59 +504,16 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
               {showPagePreview && pagePreview && (
                 <>
-                  <div
-                    className="editor-preview-divider"
-                    role="separator"
-                    tabIndex={0}
-                    aria-label={t.toolbar.resizePagePreview}
-                    aria-orientation="vertical"
-                    aria-valuemin={20}
-                    aria-valuemax={70}
-                    aria-valuenow={Math.round(pagePreviewWidth)}
-                    title={t.toolbar.resizePagePreview}
-                    onPointerDown={(e) => {
-                      if (e.button !== 0) return;
-                      const container = e.currentTarget.parentElement;
-                      if (!container) return;
-                      const containerWidth = container.getBoundingClientRect().width;
-                      if (containerWidth <= 0) return;
-                      e.preventDefault();
-                      e.currentTarget.focus();
-                      e.currentTarget.setPointerCapture(e.pointerId);
-                      previewResizeRef.current = {
-                        pointerId: e.pointerId,
-                        clientX: e.clientX,
-                        containerWidth,
-                        previewWidth: pagePreviewWidth,
-                      };
-                    }}
-                    onPointerMove={(e) => {
-                      const resize = previewResizeRef.current;
-                      if (!resize || resize.pointerId !== e.pointerId) return;
-                      resizePagePreview(resize.previewWidth - (e.clientX - resize.clientX) / resize.containerWidth * 100);
-                    }}
-                    onPointerUp={() => { previewResizeRef.current = null; }}
-                    onPointerCancel={() => { previewResizeRef.current = null; }}
-                    onLostPointerCapture={() => { previewResizeRef.current = null; }}
-                    onDoubleClick={() => resizePagePreview(38)}
-                    onKeyDown={(e) => {
-                      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
-                        e.preventDefault();
-                        resizePagePreview(pagePreviewWidth + (e.key === "ArrowLeft" ? 2 : -2));
-                      } else if (e.key === "Home" || e.key === "End") {
-                        e.preventDefault();
-                        resizePagePreview(e.key === "Home" ? 20 : 70);
-                      }
-                    }}
-                  />
+                  <PanelDivider {...pagePreviewPanel} label={t.toolbar.resizePagePreview} side="right" percentage />
                   <aside className="editor-page-preview" aria-label={t.toolbar.pagePreview}
-                    style={{ flexBasis: `${pagePreviewWidth}%` }}>
+                    style={{ flexBasis: `${pagePreviewPanel.width}%` }}>
                     <div className="editor-page-preview-title">{t.toolbar.pagePreview}</div>
                     {pagePreview}
                   </aside>
                 </>
               )}
             </div>
+            <PanelDivider {...inspectorPanel} label={t.toolbar.resizeInspector} side="right" />
             {/* Right Inspector */}
             <Inspector
               key={selection?.semanticId ?? "canvas"}

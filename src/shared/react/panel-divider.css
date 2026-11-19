@@ -1,0 +1,24 @@
+.panel-divider {
+  flex: 0 0 8px;
+  cursor: col-resize;
+  touch-action: none;
+  background: var(--bg-surface);
+  position: relative;
+}
+
+.panel-divider::after {
+  content: "";
+  position: absolute;
+  inset: 0 3px;
+  background: var(--border-medium);
+}
+
+.panel-divider:hover::after,
+.panel-divider:focus-visible::after {
+  background: var(--accent-cyan);
+}
+
+.panel-divider:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: -2px;
+}

@@ -1,4 +1,6 @@
 import React, { ReactNode } from "react";
+import { useI18n } from "../shared/i18n/i18nStore";
+import { PanelDivider, usePanelWidth } from "../shared/react/PanelDivider";
 import "./app.css";
 
 export interface AppShellProps {
@@ -18,6 +20,14 @@ export const AppShell: React.FC<AppShellProps> = ({
   pageSettings,
   preview,
 }) => {
+  const { t } = useI18n();
+  const settingsPanel = usePanelWidth({
+    storageKey: "monthloom_gallery_settings_width",
+    defaultWidth: 300,
+    minWidth: 240,
+    maxWidth: 460,
+  });
+
   return (
     <div className="monthloom-app">
       <header className="monthloom-header">{header}</header>
@@ -42,7 +52,18 @@ export const AppShell: React.FC<AppShellProps> = ({
           style={{ display: activeView === "gallery" ? "flex" : "none" }}
         >
           <div className="monthloom-gallery-preview">{preview}</div>
-          <aside className="monthloom-page-sidebar">{pageSettings}</aside>
+          <PanelDivider
+            {...settingsPanel}
+            className="monthloom-gallery-divider"
+            label={t.toolbar.resizePageSettings}
+            side="right"
+          />
+          <aside
+            className="monthloom-page-sidebar"
+            style={{ "--gallery-settings-width": `${settingsPanel.width}px` } as React.CSSProperties}
+          >
+            {pageSettings}
+          </aside>
         </div>
 
         {/* View 3: Workspace, Persistence & Batch Export */}

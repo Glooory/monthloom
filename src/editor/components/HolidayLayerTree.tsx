@@ -313,46 +313,64 @@ export const HolidayLayerTree: React.FC<HolidayLayerTreeProps> = ({
                       title={t.holidayLayersUI.toggleLayerTitle}
                     />
 
-                    <span
+                    <div
                       style={{
                         flex: 1,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        color: layer.enabled ? "#f8fafc" : "#64748b",
-                        fontWeight: 500,
+                        minWidth: 0,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-start",
+                        gap: "2px",
                       }}
                     >
-                      {calendar ? calendar.name : t.holidayLayersUI.missingCalendar(layer.calendarId)}
-                    </span>
-
-                    {!isMissingCalendar && !hasDataForYear && (
                       <span
                         style={{
-                          fontSize: "0.65rem",
-                          background: "rgba(148, 163, 184, 0.15)",
-                          color: "#94a3b8",
-                          padding: "1px 4px",
-                          borderRadius: "2px",
+                          maxWidth: "100%",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          color: layer.enabled ? "#f8fafc" : "#64748b",
+                          fontWeight: 500,
                         }}
                       >
-                        {t.holidayLayersUI.noDataForCurrentYear}
+                        {calendar ? calendar.name : t.holidayLayersUI.missingCalendar(layer.calendarId)}
                       </span>
-                    )}
 
-                    {isMissingCalendar && (
-                      <span
-                        style={{
-                          fontSize: "0.65rem",
-                          background: "rgba(239, 68, 68, 0.2)",
-                          color: "#f87171",
-                          padding: "1px 4px",
-                          borderRadius: "2px",
-                        }}
-                      >
-                        {t.holidayLayersUI.missingCalendarBadge}
-                      </span>
-                    )}
+                      {!isMissingCalendar && !hasDataForYear && (
+                        <span
+                          title={t.holidayLayersUI.noDataForCurrentYear}
+                          style={{
+                            boxSizing: "border-box",
+                            maxWidth: "100%",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            fontSize: "0.65rem",
+                            background: "rgba(148, 163, 184, 0.15)",
+                            color: "#94a3b8",
+                            padding: "1px 4px",
+                            borderRadius: "2px",
+                          }}
+                        >
+                          {t.holidayLayersUI.noDataForCurrentYear}
+                        </span>
+                      )}
+
+                      {isMissingCalendar && (
+                        <span
+                          style={{
+                            fontSize: "0.65rem",
+                            background: "rgba(239, 68, 68, 0.2)",
+                            color: "#f87171",
+                            padding: "1px 4px",
+                            borderRadius: "2px",
+                            overflowWrap: "anywhere",
+                          }}
+                        >
+                          {t.holidayLayersUI.missingCalendarBadge}
+                        </span>
+                      )}
+                    </div>
 
                     {/* Move buttons */}
                     <button

@@ -554,16 +554,24 @@ body {
 }
 
 .monthloom-page-sidebar {
-  flex: 0 0 300px;
+  flex: 0 0 auto;
+  width: var(--gallery-settings-width, 300px);
   overflow-y: auto;
+  overflow-wrap: anywhere;
   border-left: 1px solid var(--border-subtle);
   background: var(--bg-surface);
 }
 
+.monthloom-page-sidebar .field-input {
+  min-width: 0;
+}
+
 @media (max-width: 720px) {
   .monthloom-gallery-layout { flex-direction: column; }
+  .monthloom-gallery-divider { display: none; }
   .monthloom-page-sidebar {
     flex: 0 1 auto;
+    width: auto;
     max-height: 40%;
     border-left: 0;
     border-top: 1px solid var(--border-subtle);
