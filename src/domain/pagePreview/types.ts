@@ -8,13 +8,13 @@ export type Rect = Readonly<{
 }>;
 export type PageCalendar = "main" | "previousMini" | "nextMini";
 export type CalendarPlacement = Readonly<{ position: Position }>;
-export type MiniCalendarPlacement = CalendarPlacement & Readonly<{ visible?: boolean }>;
 export type PageLayout = Readonly<{
   width: number;
   height: number;
   main: CalendarPlacement;
-  previousMini: MiniCalendarPlacement;
-  nextMini: MiniCalendarPlacement;
+  miniEnabled: boolean;
+  previousMini: CalendarPlacement;
+  nextMini: CalendarPlacement;
 }>;
 export type PageBackground = Readonly<{
   assetId: string;

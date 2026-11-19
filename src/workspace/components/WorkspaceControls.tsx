@@ -26,6 +26,8 @@ export const WorkspaceControls: React.FC = () => {
     targetYear,
     library: holidayLibrary,
     layers: document.holidayLayers ?? [],
+    includeMini: document.pagePreview.layout.miniEnabled,
+    mainStartOfWeek: document.mainTemplate.weekdayRow.startOfWeek,
   });
 
   return (

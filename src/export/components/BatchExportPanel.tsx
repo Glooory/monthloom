@@ -27,7 +27,9 @@ export const BatchExportPanel: React.FC = () => {
   const { targetYear } = useWorkspaceStore();
   const { document } = useDocumentStore();
   const holidayLibrary = useHolidayLibraryStore((s) => s.snapshot);
-  const includesSvg = included.main || included.mini || included.fullSvg;
+  const miniEnabled = document.pagePreview.layout.miniEnabled;
+  const includesMiniSvg = miniEnabled && included.mini;
+  const includesSvg = included.main || includesMiniSvg || included.fullSvg;
   const includesFullPage = included.fullSvg || included.fullPng;
   const canExport = included.fullPng || includesSvg;
 
@@ -44,20 +46,21 @@ export const BatchExportPanel: React.FC = () => {
         layers: document.holidayLayers ?? [],
       });
 
-      // 2. Create 13 Main + 15 Mini formal calendars
+      // 2. Create 13 Main and, when enabled, 15 Mini calendars
       const calendarSet = createFormalExportCalendarSet({
         targetYear,
         holidayIndex,
         mainStartOfWeek: document.mainTemplate.weekdayRow.startOfWeek ?? 0,
+        includeMini: miniEnabled,
         miniStartOfWeek: document.miniTemplate.weekdayRow.startOfWeek ?? 0,
       });
 
       const svgCalendarSet = included.fullSvg ? calendarSet : {
         mainCalendars: included.main ? calendarSet.mainCalendars : new Map(),
-        miniCalendars: included.mini ? calendarSet.miniCalendars : new Map(),
+        miniCalendars: includesMiniSvg ? calendarSet.miniCalendars : new Map(),
       };
 
-      // Full-page composition uses both calendars, even if their SVGs are omitted.
+      // Full pages include all enabled calendars, independent of standalone SVG selection.
       const requirements = collectFormalExportFontRequirements({
         calendarSet: includesFullPage ? calendarSet : svgCalendarSet,
         mainTemplate: document.mainTemplate,
@@ -113,7 +116,7 @@ export const BatchExportPanel: React.FC = () => {
       const zipBlob = await createFormalExportZip({
         documents: {
           main: included.main ? svgDocuments?.main : undefined,
-          mini: included.mini ? svgDocuments?.mini : undefined,
+          mini: includesMiniSvg ? svgDocuments?.mini : undefined,
         },
         fullDocuments: fullPngDocuments,
         fullSvgDocuments,
@@ -167,7 +170,7 @@ export const BatchExportPanel: React.FC = () => {
 
       <fieldset className="export-contents" disabled={isExporting}>
         <legend className="field-label">{t.export.contents}</legend>
-        {(["main", "mini", "fullSvg", "fullPng"] as const).map((kind) => (
+        {(["main", "mini", "fullSvg", "fullPng"] as const).filter((kind) => kind !== "mini" || miniEnabled).map((kind) => (
           <label key={kind}>
             <input
               type="checkbox"

@@ -85,6 +85,7 @@ export function usePreparedFontSelection(args: {
             targetYear: args.targetYear,
             holidayIndex,
             mainStartOfWeek: next.document.mainTemplate.weekdayRow.startOfWeek,
+            includeMini: next.document.pagePreview.layout.miniEnabled,
             miniStartOfWeek: next.document.miniTemplate.weekdayRow.startOfWeek,
           });
           const requirements = collectFormalExportFontRequirements({

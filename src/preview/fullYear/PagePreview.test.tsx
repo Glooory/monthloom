@@ -16,7 +16,7 @@ describe("PagePreview", () => {
   };
 
   const geometry = calculatePageGeometry({
-    layout: DEFAULT_PAGE_LAYOUT,
+    layout: { ...DEFAULT_PAGE_LAYOUT, miniEnabled: true },
     mainSize: { width: 700, height: 500 },
     miniSize: { width: 280, height: 210 },
   });

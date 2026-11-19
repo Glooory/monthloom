@@ -38,14 +38,18 @@ export const Phase6Verification: React.FC = () => {
     [targetYear, holidayLibrary, document.holidayLayers],
   );
 
+  const miniEnabled = document.pagePreview.layout.miniEnabled;
+  const mainStartOfWeek = document.mainTemplate.weekdayRow.startOfWeek;
   const diagnostics = useMemo(
     () =>
       getWorkspaceHolidayDiagnostics({
         targetYear,
         library: holidayLibrary,
         layers: document.holidayLayers ?? [],
+        includeMini: miniEnabled,
+        mainStartOfWeek,
       }),
-    [targetYear, holidayLibrary, document.holidayLayers],
+    [targetYear, holidayLibrary, document.holidayLayers, miniEnabled, mainStartOfWeek],
   );
 
   const editorCalendar = generateCalendarMonth(

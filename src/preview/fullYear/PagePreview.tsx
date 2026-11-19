@@ -13,8 +13,8 @@ export interface PagePreviewProps {
   definition: FullYearPageDefinition;
   geometry: PageGeometry;
   mainDocument: SvgDocument;
-  previousMiniDocument: SvgDocument;
-  nextMiniDocument: SvgDocument;
+  previousMiniDocument?: SvgDocument;
+  nextMiniDocument?: SvgDocument;
   backgroundDataUri?: string | null;
   assetResolver?: AssetResolver;
 }
@@ -100,7 +100,7 @@ export const PagePreview: React.FC<PagePreviewProps> = ({
           <SvgPreview document={mainDocument} className="page-preview-svg" />
         </div>
 
-        {previousMini && <div
+        {previousMini && previousMiniDocument && <div
           className={`page-preview-slot page-preview-selectable ${selected === "previousMini" ? "is-selected" : ""}`}
           role="button"
           tabIndex={0}
@@ -123,7 +123,7 @@ export const PagePreview: React.FC<PagePreviewProps> = ({
           <SvgPreview document={previousMiniDocument} className="page-preview-svg" />
         </div>}
 
-        {nextMini && <div
+        {nextMini && nextMiniDocument && <div
           className={`page-preview-slot page-preview-selectable ${selected === "nextMini" ? "is-selected" : ""}`}
           role="button"
           tabIndex={0}

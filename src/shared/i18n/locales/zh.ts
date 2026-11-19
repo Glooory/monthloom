@@ -23,7 +23,7 @@ export const zh: TranslationDictionary = {
       },
       {
         title: "排版与预览",
-        description: "开启「整页预览」，在页面设置中为每月添加背景，调整日历尺寸和位置。迷你日历用于显示相邻月份。关闭上月和下月的迷你日历，即可只保留主日历。",
+        description: "开启「整页预览」，在页面设置中为每月添加背景，调整日历尺寸和位置。如果要显示相邻月份，请在「迷你日历」标签页打开「启用迷你日历」。",
         detail: "在「日历总览」检查全部 13 页：当年 1 至 12 月，以及次年 1 月。",
       },
       {
@@ -51,6 +51,7 @@ export const zh: TranslationDictionary = {
   toolbar: {
     mainTemplate: "主日历",
     miniTemplate: "迷你日历",
+    enableMiniCalendars: "启用迷你日历",
     pagePreview: "整页预览",
     resizePagePreview: "调整预览宽度（双击恢复默认）",
     gridBorder: "网格线",
@@ -234,7 +235,6 @@ export const zh: TranslationDictionary = {
     calendarLabel: "日历区域",
     mainLabel: "主日历",
     previousMiniLabel: "上月迷你日历",
-    miniVisibilityLabel: "在所有页面显示迷你日历",
     nextMiniLabel: "下月迷你日历",
     calendarWidthLabel: "宽度（px）",
     calendarHeightLabel: "高度（px）",

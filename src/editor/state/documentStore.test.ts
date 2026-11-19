@@ -113,7 +113,9 @@ describe("documentStore", () => {
   });
 
   it("shares template sizes with preview geometry through edits, undo and reload", () => {
-    const original = useDocumentStore.getState().document;
+    const initial = useDocumentStore.getState().document;
+    const original = { ...initial, pagePreview: { ...initial.pagePreview, layout: { ...initial.pagePreview.layout, miniEnabled: true } } };
+    useDocumentStore.getState().replaceDocument(original);
     const geometry = () => {
       const doc = useDocumentStore.getState().document;
       return calculatePageGeometry({ layout: doc.pagePreview.layout, mainSize: doc.mainTemplate, miniSize: doc.miniTemplate });

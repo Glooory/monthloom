@@ -19,8 +19,9 @@ export function createFullYearCalendarSet(args: {
   holidayIndex?: HolidayIndex;
   mainStartOfWeek?: 0 | 1;
   miniStartOfWeek?: 0 | 1;
+  includeMini?: boolean;
 }): FullYearCalendarSet {
-  const { targetYear, holidayIndex, mainStartOfWeek = 0, miniStartOfWeek = 0 } = args;
+  const { targetYear, holidayIndex, mainStartOfWeek = 0, miniStartOfWeek = 0, includeMini = true } = args;
   const pages = getFullYearPageDefinitions(targetYear);
 
   const mainCalendars = new Map<CalendarKey, CalendarMonth>();
@@ -34,6 +35,8 @@ export function createFullYearCalendarSet(args: {
         generateCalendarMonth(page.mainMonth.year, page.mainMonth.month, holidayIndex, mainStartOfWeek),
       );
     }
+
+    if (!includeMini) continue;
 
     const prevKey: CalendarKey = `${page.previousMiniMonth.year}-${page.previousMiniMonth.month}`;
     if (!miniCalendars.has(prevKey)) {

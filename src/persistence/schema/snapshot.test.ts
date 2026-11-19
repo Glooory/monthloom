@@ -11,17 +11,22 @@ import type { TemplateSnapshotV1 } from "./templateSnapshot";
 describe("Snapshot validation", () => {
   const defaultDoc = createDefaultEditorDocument();
 
-  it("preserves independent Mini visibility and accepts legacy layouts without visibility", () => {
-    const doc = { ...defaultDoc, pagePreview: { ...defaultDoc.pagePreview, layout: {
-      ...defaultDoc.pagePreview.layout,
-      previousMini: { ...defaultDoc.pagePreview.layout.previousMini, visible: false },
-      nextMini: { ...defaultDoc.pagePreview.layout.nextMini, visible: true },
-    } } };
-    expect(editorDocumentSchema.parse(doc).pagePreview).toEqual(doc.pagePreview);
-    expect(editorDocumentSchema.parse(defaultDoc).pagePreview).toEqual(defaultDoc.pagePreview);
-    expect(editorDocumentSchema.safeParse({ ...doc, pagePreview: { ...doc.pagePreview, layout: {
-      ...doc.pagePreview.layout, previousMini: { ...doc.pagePreview.layout.previousMini, visible: "false" },
-    } } }).success).toBe(false);
+  it("persists the Mini switch and defaults older layouts to off while preserving their placements", () => {
+    const { miniEnabled, ...legacyLayout } = defaultDoc.pagePreview.layout;
+    expect(miniEnabled).toBe(false);
+    const previousMini = { position: { anchor: "center" as const, offsetX: -10, offsetY: 20 } };
+    const legacy = {
+      ...defaultDoc,
+      pagePreview: { layout: { ...legacyLayout, previousMini: { ...previousMini, visible: true } } },
+    };
+    expect(editorDocumentSchema.parse(legacy).pagePreview.layout).toEqual({
+      ...legacyLayout, previousMini, miniEnabled: false,
+    });
+    const enabled = { ...defaultDoc, pagePreview: { layout: { ...legacyLayout, miniEnabled: true } } };
+    expect(editorDocumentSchema.parse(enabled).pagePreview).toEqual(enabled.pagePreview);
+    expect(editorDocumentSchema.safeParse({
+      ...defaultDoc, pagePreview: { layout: { ...legacyLayout, miniEnabled: "false" } },
+    }).success).toBe(false);
   });
 
   it("preserves monthly background placement and rejects invalid dimensions", () => {

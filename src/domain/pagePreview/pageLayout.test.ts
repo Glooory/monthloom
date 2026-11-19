@@ -9,27 +9,22 @@ const calculatePageGeometry = (args: { layout: typeof DEFAULT_PAGE_LAYOUT; mainS
   calculate({ mainSize, miniSize, ...args });
 
 describe("page layout", () => {
-  it.each([[false, false], [false, true], [true, false], [true, true]])(
-    "applies independent Mini visibility (%s, %s) without moving the main calendar",
-    (previousVisible, nextVisible) => {
-      const before = calculatePageGeometry({ layout: DEFAULT_PAGE_LAYOUT });
-      const layout = { ...DEFAULT_PAGE_LAYOUT,
-        previousMini: { ...DEFAULT_PAGE_LAYOUT.previousMini, visible: previousVisible },
-        nextMini: { ...DEFAULT_PAGE_LAYOUT.nextMini, visible: nextVisible },
-      };
-      const geometry = calculatePageGeometry({ layout });
-      expect(geometry.main).toEqual(before.main);
-      expect(geometry.previousMini).toEqual(previousVisible ? before.previousMini : null);
-      expect(geometry.nextMini).toEqual(nextVisible ? before.nextMini : null);
-    },
-  );
+  it("hides both Mini calendars by default and shows both when enabled", () => {
+    const disabled = calculatePageGeometry({ layout: DEFAULT_PAGE_LAYOUT });
+    const enabled = calculatePageGeometry({ layout: { ...DEFAULT_PAGE_LAYOUT, miniEnabled: true } });
+    expect(disabled.main).toEqual(enabled.main);
+    expect(disabled.previousMini).toBeNull();
+    expect(disabled.nextMini).toBeNull();
+    expect(enabled.previousMini).not.toBeNull();
+    expect(enabled.nextMini).not.toBeNull();
+  });
 
   it("does not warn for hidden off-page Mini calendars and preserves their saved positions", () => {
     const layout = { ...DEFAULT_PAGE_LAYOUT,
-      previousMini: { visible: false, position: { anchor: "top-left" as const, offsetX: -500, offsetY: -500 } },
+      previousMini: { position: { anchor: "top-left" as const, offsetX: -500, offsetY: -500 } },
     };
     expect(calculatePageGeometry({ layout }).warnings).toEqual([]);
-    const restored = calculatePageGeometry({ layout: { ...layout, previousMini: { ...layout.previousMini, visible: true } } });
+    const restored = calculatePageGeometry({ layout: { ...layout, miniEnabled: true } });
     expect(restored.previousMini).toMatchObject({ x: -500, y: -500 });
     expect(restored.warnings).toHaveLength(1);
   });
@@ -44,15 +39,16 @@ describe("page layout", () => {
     expect(calculatePageGeometry({ layout, mainSize: { width: 200, height: 100 } }).main).toEqual({ x: x + 12, y: y - 8, width: 200, height: 100 });
   });
   it("keeps the two Mini regions independent", () => {
-    const before = calculatePageGeometry({ layout: DEFAULT_PAGE_LAYOUT });
-    const layout = { ...DEFAULT_PAGE_LAYOUT, previousMini: { position: { anchor: "bottom-right" as const, offsetX: -10, offsetY: -20 } } };
+    const enabled = { ...DEFAULT_PAGE_LAYOUT, miniEnabled: true };
+    const before = calculatePageGeometry({ layout: enabled });
+    const layout = { ...enabled, previousMini: { position: { anchor: "bottom-right" as const, offsetX: -10, offsetY: -20 } } };
     const after = calculatePageGeometry({ layout });
     expect(after.main).toEqual(before.main);
     expect(after.nextMini).toEqual(before.nextMini);
     expect(after.previousMini).toEqual({ x: 1110, y: 670, width: 280, height: 210 });
   });
   it("uses shared Mini sizes while preserving independent positions", () => {
-    const geometry = calculatePageGeometry({ layout: DEFAULT_PAGE_LAYOUT, miniSize: { width: 400, height: 300 } });
+    const geometry = calculatePageGeometry({ layout: { ...DEFAULT_PAGE_LAYOUT, miniEnabled: true }, miniSize: { width: 400, height: 300 } });
     expect(geometry.previousMini).toMatchObject({ width: 400, height: 300, x: 40, y: 40 });
     expect(geometry.nextMini).toMatchObject({ width: 400, height: 300, x: 40, y: 294 });
   });

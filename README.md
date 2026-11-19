@@ -8,13 +8,13 @@ Built for precision calendar design, Monthloom features customizable Main and Mi
 
 ## Features
 
-- **Full-Year Output Scope**: Generates **41 SVGs** (13 full pages + 13 Main months + 15 Mini months, including $Y+1$ February). Full pages retain preview dimensions and calendar positions. Preview background images are excluded from SVG exports.
+- **Full-Year Output Scope**: Exports 13 full-page SVGs and 13 Main calendar SVGs. Enable Mini calendars in the Mini Calendar tab to add the adjacent months to full pages and make 15 standalone Mini SVGs available, through February of the following year. Full pages retain preview dimensions and calendar positions. Preview background images are excluded from SVG exports.
 - **Template Editor**: Interactive canvas for both Main and Mini calendar templates with anchor alignments, typography, colors, borders, and image markers.
 - **Holiday System**: Native support for China (Timor/NianJia format with workday shift overrides) and Japan (Holidays JP format) with real-time coverage diagnostics.
 - **Font Engine & Glyph Outlining**: Google Fonts integration with Fontkit outline extraction, ensuring SVGs render with 100% vector fidelity even offline and in Figma.
 - **13-Page Full-Year Preview**: Real-time streaming preview of the entire 13-page calendar with configurable background image, margins, and padding.
 - **Browser-Native Persistence**: Local project and template storage in IndexedDB, plus portable `.monthloom` zip backup/restore with zero backend required.
-- **Batch Export**: Client-side generation of `Monthloom_<Year>.zip` with three directories (`full/`, `main/`, and `mini/`).
+- **Batch Export**: Client-side generation of `Monthloom_<Year>.zip` with directories for the selected outputs, including `mini/` when standalone Mini calendars are selected.
 
 ---
 

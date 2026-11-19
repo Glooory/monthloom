@@ -26,12 +26,15 @@ export function getMiniMonths(targetYear: number): readonly YearMonth[] {
   return months;
 }
 
-export function calculateRequiredHolidayRange(targetYear: number): DateRange {
+export function calculateRequiredHolidayRange(
+  targetYear: number,
+  { includeMini = true, mainStartOfWeek = 0 }: { includeMini?: boolean; mainStartOfWeek?: 0 | 1 } = {},
+): DateRange {
   const dates: LocalDate[] = [];
 
   // 1. Formal Main months (including visible adjacent cells)
   for (const month of getMainMonths(targetYear)) {
-    const calendarMonth = generateCalendarMonth(month.year, month.month);
+    const calendarMonth = generateCalendarMonth(month.year, month.month, undefined, mainStartOfWeek);
     for (const week of calendarMonth.weeks) {
       for (const cell of week) {
         dates.push(cell.date);
@@ -39,8 +42,8 @@ export function calculateRequiredHolidayRange(targetYear: number): DateRange {
     }
   }
 
-  // 2. Formal Mini months (first and last days, 15 months)
-  for (const month of getMiniMonths(targetYear)) {
+  // 2. Formal Mini months, when enabled
+  for (const month of includeMini ? getMiniMonths(targetYear) : []) {
     dates.push({ year: month.year, month: month.month, day: 1 });
     dates.push({
       year: month.year,

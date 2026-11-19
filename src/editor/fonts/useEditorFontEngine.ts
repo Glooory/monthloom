@@ -52,12 +52,14 @@ export function useEditorFontEngine(args: {
   document: EditorDocument;
   activeTemplate?: "main" | "mini";
   targetYear?: number;
+  enabled?: boolean;
   weekdays?: readonly string[];
   assetResolver: BinaryAssetResolver;
   fetchImpl?: typeof fetch;
 }): EditorFontEngineState {
   const library = useHolidayLibraryStore((state) => state.snapshot);
   const requirements = useMemo(() => {
+    if (args.enabled === false) return new Map();
     const { document, calendar, activeTemplate } = args;
     const holidayIndex = resolveHolidayIndex({
       targetYear: args.targetYear ?? calendar.year,
@@ -68,6 +70,7 @@ export function useEditorFontEngine(args: {
       targetYear: args.targetYear ?? calendar.year,
       holidayIndex,
       mainStartOfWeek: document.mainTemplate.weekdayRow.startOfWeek,
+      includeMini: activeTemplate !== "main",
       miniStartOfWeek: document.miniTemplate.weekdayRow.startOfWeek,
     });
     const entries = [computeFontRequirementKey(args).requirements];
@@ -98,6 +101,7 @@ export function useEditorFontEngine(args: {
     args.calendar,
     args.document,
     args.activeTemplate,
+    args.enabled,
     args.targetYear,
     args.weekdays,
     library,

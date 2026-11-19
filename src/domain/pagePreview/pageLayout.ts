@@ -3,7 +3,7 @@ import type { CalendarPlacement, PageGeometry, PageLayout, PageLayoutWarning, Pl
 export function calculatePageGeometry(args: {
   layout: PageLayout;
   mainSize: Readonly<{ width: number; height: number }>;
-  miniSize: Readonly<{ width: number; height: number }>;
+  miniSize?: Readonly<{ width: number; height: number }>;
 }): PageGeometry {
   const { layout, mainSize, miniSize } = args;
   const page = { x: 0, y: 0, width: layout.width, height: layout.height };
@@ -21,11 +21,12 @@ export function calculatePageGeometry(args: {
     }
     return { x, y, width, height };
   };
+  const visibleMiniSize = layout.miniEnabled ? miniSize : undefined;
   return {
     page,
     main: place(layout.main, mainSize, "Main calendar"),
-    previousMini: layout.previousMini.visible === false ? null : place(layout.previousMini, miniSize, "Previous month mini calendar"),
-    nextMini: layout.nextMini.visible === false ? null : place(layout.nextMini, miniSize, "Next month mini calendar"),
+    previousMini: visibleMiniSize ? place(layout.previousMini, visibleMiniSize, "Previous month mini calendar") : null,
+    nextMini: visibleMiniSize ? place(layout.nextMini, visibleMiniSize, "Next month mini calendar") : null,
     warnings,
   };
 }

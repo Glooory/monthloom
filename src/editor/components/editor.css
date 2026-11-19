@@ -89,6 +89,56 @@
   color: #ffffff;
 }
 
+.editor-mini-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.editor-mini-toggle input {
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--accent-primary);
+  cursor: inherit;
+}
+
+@media (forced-colors: none) {
+  .editor-mini-toggle input {
+    appearance: none;
+    display: grid;
+    align-items: center;
+    width: 34px;
+    height: 20px;
+    padding: 2px;
+    border: 1px solid var(--text-muted);
+    border-radius: 999px;
+    background: var(--bg-input);
+  }
+
+  .editor-mini-toggle input::before {
+    content: "";
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--text-primary);
+  }
+
+  .editor-mini-toggle input:checked {
+    justify-items: end;
+    border-color: var(--accent-primary);
+    background: var(--accent-primary);
+  }
+
+  .editor-mini-toggle input:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+  }
+}
+
 /* Editor Body (3-column layout: Layers Sidebar | Canvas Stage | Inspector) */
 .editor-body {
   display: flex;

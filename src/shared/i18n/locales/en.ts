@@ -23,7 +23,7 @@ export const en: TranslationDictionary = {
       },
       {
         title: "Arrange and preview",
-        description: "Enable Full-page preview. In page settings, add monthly backgrounds and adjust calendar sizes and positions. Mini calendars show neighboring months; turn both off to keep only the large grid.",
+        description: "Enable Full-page preview. In page settings, add monthly backgrounds and adjust calendar sizes and positions. To show neighboring months, turn on Enable mini calendars in the Mini Calendar tab.",
         detail: "Use Calendar Overview to check all 13 pages: January through December, plus January of the following year.",
       },
       {
@@ -51,6 +51,7 @@ export const en: TranslationDictionary = {
   toolbar: {
     mainTemplate: "Main Calendar",
     miniTemplate: "Mini Calendar",
+    enableMiniCalendars: "Enable mini calendars",
     pagePreview: "Full-page preview",
     resizePagePreview: "Resize preview (double-click to reset)",
     gridBorder: "Grid Lines",
@@ -234,7 +235,6 @@ export const en: TranslationDictionary = {
     calendarLabel: "Calendar",
     mainLabel: "Main calendar",
     previousMiniLabel: "Previous month Mini",
-    miniVisibilityLabel: "Show Mini calendars on all pages",
     nextMiniLabel: "Next month Mini",
     calendarWidthLabel: "Width (px)",
     calendarHeightLabel: "Height (px)",

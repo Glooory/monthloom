@@ -1,7 +1,5 @@
-import {
-  calculateRequiredHolidayRange,
-  createCalendarCoverageDiagnostics,
-} from "../../domain/holiday/coverage";
+import { calculateRequiredHolidayRange } from "../../domain/calendar/monthSequence";
+import { createCalendarCoverageDiagnostics } from "../../domain/holiday/coverage";
 import type {
   HolidayDiagnostic,
   HolidayLibrarySnapshot,
@@ -12,10 +10,12 @@ export function getWorkspaceHolidayDiagnostics(args: {
   targetYear: number;
   library: HolidayLibrarySnapshot;
   layers: readonly HolidayLayer[];
+  includeMini?: boolean;
+  mainStartOfWeek?: 0 | 1;
 }): readonly HolidayDiagnostic[] {
   const { targetYear, library, layers } = args;
   const diagnostics: HolidayDiagnostic[] = [];
-  const requiredRange = calculateRequiredHolidayRange(targetYear);
+  const requiredRange = calculateRequiredHolidayRange(targetYear, args);
 
   for (const layer of layers) {
     if (!layer.enabled) continue;

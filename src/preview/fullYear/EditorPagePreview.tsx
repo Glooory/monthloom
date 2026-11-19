@@ -22,10 +22,11 @@ export function EditorPagePreview({ targetYear, month, holidayIndex, assetResolv
   const { t } = useI18n();
   // Follow committed edits; pointer movement stays local to the editing canvas.
   const document = useDocumentStore((state) => state.document);
+  const miniEnabled = document.pagePreview.layout.miniEnabled;
   const mainStartOfWeek = document.mainTemplate.weekdayRow.startOfWeek ?? 0;
   const miniStartOfWeek = document.miniTemplate.weekdayRow.startOfWeek ?? 0;
   const calendarSet = useMemo(() => {
-    const all = createFullYearCalendarSet({ targetYear, holidayIndex, mainStartOfWeek, miniStartOfWeek });
+    const all = createFullYearCalendarSet({ targetYear, holidayIndex, mainStartOfWeek, miniStartOfWeek, includeMini: miniEnabled });
     const matches = (candidate: YearMonth) => candidate.year === month.year && candidate.month === month.month;
     // Boundary Mini months belong to the first or last complete page.
     const page = all.pages.find((page) => matches(page.mainMonth))
@@ -38,7 +39,7 @@ export function EditorPagePreview({ targetYear, month, holidayIndex, assetResolv
       mainCalendars: new Map([...all.mainCalendars].filter(([value]) => value === key(page.mainMonth))),
       miniCalendars: new Map([...all.miniCalendars].filter(([value]) => miniKeys.has(value))),
     };
-  }, [targetYear, month.year, month.month, holidayIndex, mainStartOfWeek, miniStartOfWeek]);
+  }, [targetYear, month.year, month.month, holidayIndex, mainStartOfWeek, miniStartOfWeek, miniEnabled]);
   const requirements = useMemo(() => collectFullYearPreviewFontRequirements({
     calendarSet, mainTemplate: document.mainTemplate, miniTemplate: document.miniTemplate,
     holidayLayers: document.holidayLayers,
@@ -57,7 +58,7 @@ export function EditorPagePreview({ targetYear, month, holidayIndex, assetResolv
     const mainDocument = documents.main.get(`${definition.mainMonth.year}-${definition.mainMonth.month}`);
     const previousMiniDocument = documents.previousMini.get(`${definition.previousMiniMonth.year}-${definition.previousMiniMonth.month}`);
     const nextMiniDocument = documents.nextMini.get(`${definition.nextMiniMonth.year}-${definition.nextMiniMonth.month}`);
-    if (!mainDocument || !previousMiniDocument || !nextMiniDocument) throw new Error(`Incomplete preview page: ${definition.label}`);
+    if (!mainDocument || (miniEnabled && (!previousMiniDocument || !nextMiniDocument))) throw new Error(`Incomplete preview page: ${definition.label}`);
     return {
       definition, mainDocument, previousMiniDocument, nextMiniDocument,
       geometry: calculatePageGeometry({ layout: renderKey.pageLayout, mainSize: renderKey.mainTemplate, miniSize: renderKey.miniTemplate }),

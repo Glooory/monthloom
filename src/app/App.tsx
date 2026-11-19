@@ -18,7 +18,7 @@ import { BatchExportPanel } from "../export/components/BatchExportPanel";
 import { getWorkspaceHolidayDiagnostics } from "../workspace/holiday/holidayWorkspace";
 import { resolveHolidayIndex } from "../domain/holiday/resolveHolidayIndex";
 import { generateCalendarMonth } from "../domain/calendar/generateCalendarMonth";
-import { getMiniMonths } from "../domain/calendar/monthSequence";
+import { getMainMonths, getMiniMonths } from "../domain/calendar/monthSequence";
 import { useI18n } from "../shared/i18n/i18nStore";
 
 type ActiveView = "editor" | "gallery" | "workspace";
@@ -146,30 +146,42 @@ export const App: React.FC = () => {
     [targetYear, holidayLibrary, document.holidayLayers],
   );
 
+  const miniEnabled = document.pagePreview.layout.miniEnabled;
+  const mainStartOfWeek = document.mainTemplate.weekdayRow.startOfWeek ?? 0;
   const diagnostics = useMemo(
     () =>
       getWorkspaceHolidayDiagnostics({
         targetYear,
         library: holidayLibrary,
         layers: document.holidayLayers ?? [],
+        includeMini: miniEnabled,
+        mainStartOfWeek,
       }),
-    [targetYear, holidayLibrary, document.holidayLayers],
+    [targetYear, holidayLibrary, document.holidayLayers, miniEnabled, mainStartOfWeek],
   );
 
   const activeTemplate = useUiStore((state) => state.activeTemplate);
+  const editorEnabled = activeTemplate === "main" || miniEnabled;
+  const editorMonths = miniEnabled ? getMiniMonths(targetYear) : getMainMonths(targetYear);
+  const firstMonth = editorMonths[0];
+  const lastMonth = editorMonths[editorMonths.length - 1];
+  const selectedOrdinal = editingMonth.year * 12 + editingMonth.month;
+  const displayedMonth = selectedOrdinal < firstMonth.year * 12 + firstMonth.month ? firstMonth
+    : selectedOrdinal > lastMonth.year * 12 + lastMonth.month ? lastMonth
+    : editingMonth;
   const currentStartOfWeek =
     activeTemplate === "main"
-      ? (document.mainTemplate.weekdayRow.startOfWeek ?? 0)
+      ? mainStartOfWeek
       : (document.miniTemplate.weekdayRow.startOfWeek ?? 0);
 
   const editorCalendar = useMemo(
     () => generateCalendarMonth(
-      editingMonth.year,
-      editingMonth.month,
+      displayedMonth.year,
+      displayedMonth.month,
       holidayIndex,
       currentStartOfWeek,
     ),
-    [editingMonth.year, editingMonth.month, holidayIndex, currentStartOfWeek],
+    [displayedMonth.year, displayedMonth.month, holidayIndex, currentStartOfWeek],
   );
 
   const header = (
@@ -295,7 +307,7 @@ export const App: React.FC = () => {
       {/* Right Action Bar */}
       <div className="monthloom-header-right">
         <GettingStartedGuide onNavigate={setActiveView} />
-        {activeView === "editor" && (
+        {activeView === "editor" && editorEnabled && (
           <label
             style={{
               display: "flex",
@@ -315,7 +327,7 @@ export const App: React.FC = () => {
                 width: "auto",
                 cursor: "pointer",
               }}
-              value={`${editingMonth.year}-${editingMonth.month}`}
+              value={`${displayedMonth.year}-${displayedMonth.month}`}
               onChange={(e) => {
                 const [y, m] = e.target.value
                   .split("-")
@@ -323,7 +335,7 @@ export const App: React.FC = () => {
                 setEditingMonth({ year: y, month: m });
               }}
             >
-              {getMiniMonths(targetYear).map(({ year, month }) => (
+              {editorMonths.map(({ year, month }) => (
                 <option key={`${year}-${month}`} value={`${year}-${month}`}>
                   {t.nav.previewMonth(year, month)}
                 </option>
@@ -425,7 +437,7 @@ export const App: React.FC = () => {
         <>
           <EditorPagePreview
             targetYear={targetYear}
-            month={editingMonth}
+            month={displayedMonth}
             holidayIndex={holidayIndex}
             assetResolver={persistentAssetStore}
           />

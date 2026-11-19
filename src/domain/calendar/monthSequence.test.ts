@@ -64,6 +64,13 @@ describe("monthSequence", () => {
     });
   });
 
+  it("requires only Main calendar dates and their adjacent cells when Mini calendars are disabled", () => {
+    expect(calculateRequiredHolidayRange(2027, { includeMini: false, mainStartOfWeek: 1 })).toEqual({
+      start: { year: 2026, month: 12, day: 28 },
+      end: { year: 2028, month: 2, day: 6 },
+    });
+  });
+
   it("locks repository-wide formal scope: 13 Main + 15 Mini = 28 total with Y+1 February included", () => {
     const mainMonths = getMainMonths(2027);
     const miniMonths = getMiniMonths(2027);

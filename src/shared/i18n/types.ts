@@ -25,6 +25,7 @@ export interface TranslationDictionary {
   toolbar: {
     mainTemplate: string;
     miniTemplate: string;
+    enableMiniCalendars: string;
     pagePreview: string;
     resizePagePreview: string;
     gridBorder: string;
@@ -183,7 +184,6 @@ export interface TranslationDictionary {
     calendarLabel: string;
     mainLabel: string;
     previousMiniLabel: string;
-    miniVisibilityLabel: string;
     nextMiniLabel: string;
     calendarWidthLabel: string;
     calendarHeightLabel: string;

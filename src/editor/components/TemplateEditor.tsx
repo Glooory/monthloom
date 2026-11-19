@@ -73,6 +73,9 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     setDrag,
   } = useUiStore();
 
+  const miniEnabled = document.pagePreview.layout.miniEnabled;
+  const editorEnabled = activeTemplate === "main" || miniEnabled;
+
   const fontSelection = usePreparedFontSelection({ targetYear, assetResolver, fetchImpl });
 
   // Derive transient effective document
@@ -91,6 +94,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     activeTemplate,
     weekdays,
     document: effectiveDocument,
+    enabled: editorEnabled,
     assetResolver,
     fetchImpl,
   });
@@ -100,7 +104,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const preview = usePreviewResource({
     resourceKey: renderKey,
     load: async () => {
-      if (!fontEngine) return null;
+      if (!editorEnabled || !fontEngine) return null;
       const scene = activeTemplate === "main"
         ? layoutMain({ calendar, template: effectiveDocument.mainTemplate, textMeasurer: fontEngine, weekdays, holidayLayers: effectiveDocument.holidayLayers })
         : layoutMini({ calendar, template: effectiveDocument.miniTemplate, textMeasurer: fontEngine, weekdays, holidayLayers: effectiveDocument.holidayLayers });
@@ -227,7 +231,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         } else if (!shouldIgnoreKeyboardShortcut(e.target)) {
           clearSelection();
         }
-      } else if ((e.metaKey || e.ctrlKey) && !shouldIgnoreKeyboardShortcut(e.target)) {
+      } else if (editorEnabled && (e.metaKey || e.ctrlKey) && !shouldIgnoreKeyboardShortcut(e.target)) {
         if (e.key === "=" || e.key === "+") {
           e.preventDefault();
           setZoom((z) => Math.min(4.0, Math.round((z + 0.1) * 100) / 100));
@@ -245,7 +249,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [canUndo, canRedo, drag, clearSelection]);
+  }, [canUndo, canRedo, drag, clearSelection, editorEnabled]);
 
   const [zoom, setZoom] = useState(1);
   const [showPagePreview, setShowPagePreview] = useState(
@@ -309,7 +313,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   return (
     <FontSelectionContext.Provider value={fontSelection}>
     <div className="monthloom-editor">
-      {fontSelection.job && (
+      {editorEnabled && fontSelection.job && (
         <div className="font-error-banner" role={fontSelection.error ? "alert" : "status"}>
           <div className="font-error-message">
             <span>{fontSelection.coverageError
@@ -326,12 +330,12 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
           </div>
         </div>
       )}
-      <PreviewStatusBanner error={previewError} issues={issues} loading={fontLoading || (preview.loading && displayedPreview?.fontEngine !== fontEngine)}
-        retained={!!svgDocument} retry={() => { retryFonts(); preview.retry(); }} />
+      {editorEnabled && <PreviewStatusBanner error={previewError} issues={issues} loading={fontLoading || (preview.loading && displayedPreview?.fontEngine !== fontEngine)}
+        retained={!!svgDocument} retry={() => { retryFonts(); preview.retry(); }} />}
 
       <EditorToolbar
         showPagePreview={showPagePreview}
-        onTogglePagePreview={pagePreview ? togglePagePreview : undefined}
+        onTogglePagePreview={editorEnabled && pagePreview ? togglePagePreview : undefined}
         activeTemplate={activeTemplate}
         canUndo={canUndo}
         canRedo={canRedo}
@@ -339,7 +343,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         onUndo={handleUndo}
         onRedo={handleRedo}
         zoom={zoom}
-        onZoomChange={setZoom}
+        onZoomChange={editorEnabled ? setZoom : undefined}
       />
 
       <div className="editor-body">
@@ -352,47 +356,51 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
             }
           }}
         >
-          <div className="layers-header">
-            <span>{t.layers.title}</span>
-            <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>
-              {activeTemplate === "main" ? t.layers.mainBadge : t.layers.miniBadge}
-            </span>
-          </div>
-          <div
-            className="layers-list"
-            onPointerDown={(e) => {
-              if (e.target === e.currentTarget) {
-                setSelection(null);
-              }
-            }}
-          >
-            {/* Canvas Root Item */}
-            <button
-              type="button"
-              className={`layer-item ${selection === null ? "active" : ""}`}
-              onClick={() => setSelection(null)}
-            >
-              <svg
-                className="layer-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
+          {activeTemplate === "mini" && (
+            <label className="editor-mini-toggle">
+              <input
+                type="checkbox"
+                role="switch"
+                checked={miniEnabled}
+                onChange={(event) => {
+                  const enabled = event.target.checked;
+                  commitDocument({
+                    ...document,
+                    pagePreview: {
+                      ...document.pagePreview,
+                      layout: { ...document.pagePreview.layout, miniEnabled: enabled },
+                    },
+                  });
+                  if (!enabled) {
+                    clearSelection();
+                    useUiStore.getState().setPageSelection(null);
+                  }
+                }}
+              />
+              {t.toolbar.enableMiniCalendars}
+            </label>
+          )}
+          {editorEnabled && (
+            <>
+              <div className="layers-header">
+                <span>{t.layers.title}</span>
+                <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>
+                  {activeTemplate === "main" ? t.layers.mainBadge : t.layers.miniBadge}
+                </span>
+              </div>
+              <div
+                className="layers-list"
+                onPointerDown={(e) => {
+                  if (e.target === e.currentTarget) {
+                    setSelection(null);
+                  }
+                }}
               >
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <path d="M3 9h18M9 21V9" />
-              </svg>
-              <span>{t.layers.canvasRoot}</span>
-            </button>
-
-            {currentLayers.map((layer) => {
-              const isSelected = selection?.semanticId === layer.id;
-              return (
+                {/* Canvas Root Item */}
                 <button
-                  key={layer.id}
                   type="button"
-                  className={`layer-item ${isSelected ? "active" : ""}`}
-                  onClick={() => setSelection({ semanticId: layer.id as any, instanceKey: layer.key })}
+                  className={`layer-item ${selection === null ? "active" : ""}`}
+                  onClick={() => setSelection(null)}
                 >
                   <svg
                     className="layer-icon"
@@ -401,112 +409,140 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                     stroke="currentColor"
                     strokeWidth="2"
                   >
-                    {layer.id.includes("date") && <path d="M4 7V4h16v3M9 20h6M12 4v16" />}
-                    {layer.id.includes("weekday") && <path d="M3 6h18M3 12h18M3 18h18" />}
-                    {layer.id.includes("grid") && <rect x="3" y="3" width="18" height="18" rx="2" strokeDasharray="3 3" />}
-                    {layer.id.includes("monthLabel") && <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />}
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <path d="M3 9h18M9 21V9" />
                   </svg>
-                  <span>{layer.label}</span>
+                  <span>{t.layers.canvasRoot}</span>
                 </button>
-              );
-            })}
 
-            <HolidayLayerTree
-              document={document}
-              activeTemplate={activeTemplate}
-              selection={selection}
-              calendars={holidayCalendars}
-              onSelect={setSelection}
-              onCommitDocument={commitDocument}
-            />
-          </div>
-        </div>
+                {currentLayers.map((layer) => {
+                  const isSelected = selection?.semanticId === layer.id;
+                  return (
+                    <button
+                      key={layer.id}
+                      type="button"
+                      className={`layer-item ${isSelected ? "active" : ""}`}
+                      onClick={() => setSelection({ semanticId: layer.id as any, instanceKey: layer.key })}
+                    >
+                      <svg
+                        className="layer-icon"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        {layer.id.includes("date") && <path d="M4 7V4h16v3M9 20h6M12 4v16" />}
+                        {layer.id.includes("weekday") && <path d="M3 6h18M3 12h18M3 18h18" />}
+                        {layer.id.includes("grid") && <rect x="3" y="3" width="18" height="18" rx="2" strokeDasharray="3 3" />}
+                        {layer.id.includes("monthLabel") && <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />}
+                      </svg>
+                      <span>{layer.label}</span>
+                    </button>
+                  );
+                })}
 
-        {/* Center canvas and optional full-page preview */}
-        <div className="editor-canvas-area">
-          <EditorCanvas
-            svgDocument={svgDocument}
-            scene={canvasScene}
-            interactive={!previewPending}
-            emptyMessage={previewError ? t.errors.fontPreviewUnavailable : undefined}
-            selection={selection}
-            activeTemplate={activeTemplate}
-            zoom={zoom}
-            onZoomChange={setZoom}
-            onSelect={setSelection}
-            onSelectAnchor={handleSelectAnchor}
-            onStartDrag={handleStartDrag}
-            onMoveDrag={handleMoveDrag}
-            onEndDrag={handleEndDrag}
-            onCancelDrag={handleCancelDrag}
-          />
-
-          {showPagePreview && pagePreview && (
-            <>
-              <div
-                className="editor-preview-divider"
-                role="separator"
-                tabIndex={0}
-                aria-label={t.toolbar.resizePagePreview}
-                aria-orientation="vertical"
-                aria-valuemin={20}
-                aria-valuemax={70}
-                aria-valuenow={Math.round(pagePreviewWidth)}
-                title={t.toolbar.resizePagePreview}
-                onPointerDown={(e) => {
-                  if (e.button !== 0) return;
-                  const container = e.currentTarget.parentElement;
-                  if (!container) return;
-                  const containerWidth = container.getBoundingClientRect().width;
-                  if (containerWidth <= 0) return;
-                  e.preventDefault();
-                  e.currentTarget.focus();
-                  e.currentTarget.setPointerCapture(e.pointerId);
-                  previewResizeRef.current = {
-                    pointerId: e.pointerId,
-                    clientX: e.clientX,
-                    containerWidth,
-                    previewWidth: pagePreviewWidth,
-                  };
-                }}
-                onPointerMove={(e) => {
-                  const resize = previewResizeRef.current;
-                  if (!resize || resize.pointerId !== e.pointerId) return;
-                  resizePagePreview(resize.previewWidth - (e.clientX - resize.clientX) / resize.containerWidth * 100);
-                }}
-                onPointerUp={() => { previewResizeRef.current = null; }}
-                onPointerCancel={() => { previewResizeRef.current = null; }}
-                onLostPointerCapture={() => { previewResizeRef.current = null; }}
-                onDoubleClick={() => resizePagePreview(38)}
-                onKeyDown={(e) => {
-                  if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
-                    e.preventDefault();
-                    resizePagePreview(pagePreviewWidth + (e.key === "ArrowLeft" ? 2 : -2));
-                  } else if (e.key === "Home" || e.key === "End") {
-                    e.preventDefault();
-                    resizePagePreview(e.key === "Home" ? 20 : 70);
-                  }
-                }}
-              />
-              <aside className="editor-page-preview" aria-label={t.toolbar.pagePreview}
-                style={{ flexBasis: `${pagePreviewWidth}%` }}>
-                <div className="editor-page-preview-title">{t.toolbar.pagePreview}</div>
-                {pagePreview}
-              </aside>
+                <HolidayLayerTree
+                  document={document}
+                  activeTemplate={activeTemplate}
+                  selection={selection}
+                  calendars={holidayCalendars}
+                  onSelect={setSelection}
+                  onCommitDocument={commitDocument}
+                />
+              </div>
             </>
           )}
         </div>
-        {/* Right Inspector */}
-        <Inspector
-          key={selection?.semanticId ?? "canvas"}
-          document={document}
-          selection={selection}
-          activeTemplate={activeTemplate}
-          onCommitDocument={commitDocument}
-          getCurrentDocument={() => useDocumentStore.getState().document}
-          onAnchorChange={handleSelectAnchor}
-          fontAssetStore={"setAsset" in assetResolver ? assetResolver as BinaryAssetResolver & BinaryAssetWriter : undefined}
-        />
+
+        {editorEnabled && (
+          <>
+            {/* Center canvas and optional full-page preview */}
+            <div className="editor-canvas-area">
+              <EditorCanvas
+                svgDocument={svgDocument}
+                scene={canvasScene}
+                interactive={!previewPending}
+                emptyMessage={previewError ? t.errors.fontPreviewUnavailable : undefined}
+                selection={selection}
+                activeTemplate={activeTemplate}
+                zoom={zoom}
+                onZoomChange={setZoom}
+                onSelect={setSelection}
+                onSelectAnchor={handleSelectAnchor}
+                onStartDrag={handleStartDrag}
+                onMoveDrag={handleMoveDrag}
+                onEndDrag={handleEndDrag}
+                onCancelDrag={handleCancelDrag}
+              />
+
+              {showPagePreview && pagePreview && (
+                <>
+                  <div
+                    className="editor-preview-divider"
+                    role="separator"
+                    tabIndex={0}
+                    aria-label={t.toolbar.resizePagePreview}
+                    aria-orientation="vertical"
+                    aria-valuemin={20}
+                    aria-valuemax={70}
+                    aria-valuenow={Math.round(pagePreviewWidth)}
+                    title={t.toolbar.resizePagePreview}
+                    onPointerDown={(e) => {
+                      if (e.button !== 0) return;
+                      const container = e.currentTarget.parentElement;
+                      if (!container) return;
+                      const containerWidth = container.getBoundingClientRect().width;
+                      if (containerWidth <= 0) return;
+                      e.preventDefault();
+                      e.currentTarget.focus();
+                      e.currentTarget.setPointerCapture(e.pointerId);
+                      previewResizeRef.current = {
+                        pointerId: e.pointerId,
+                        clientX: e.clientX,
+                        containerWidth,
+                        previewWidth: pagePreviewWidth,
+                      };
+                    }}
+                    onPointerMove={(e) => {
+                      const resize = previewResizeRef.current;
+                      if (!resize || resize.pointerId !== e.pointerId) return;
+                      resizePagePreview(resize.previewWidth - (e.clientX - resize.clientX) / resize.containerWidth * 100);
+                    }}
+                    onPointerUp={() => { previewResizeRef.current = null; }}
+                    onPointerCancel={() => { previewResizeRef.current = null; }}
+                    onLostPointerCapture={() => { previewResizeRef.current = null; }}
+                    onDoubleClick={() => resizePagePreview(38)}
+                    onKeyDown={(e) => {
+                      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+                        e.preventDefault();
+                        resizePagePreview(pagePreviewWidth + (e.key === "ArrowLeft" ? 2 : -2));
+                      } else if (e.key === "Home" || e.key === "End") {
+                        e.preventDefault();
+                        resizePagePreview(e.key === "Home" ? 20 : 70);
+                      }
+                    }}
+                  />
+                  <aside className="editor-page-preview" aria-label={t.toolbar.pagePreview}
+                    style={{ flexBasis: `${pagePreviewWidth}%` }}>
+                    <div className="editor-page-preview-title">{t.toolbar.pagePreview}</div>
+                    {pagePreview}
+                  </aside>
+                </>
+              )}
+            </div>
+            {/* Right Inspector */}
+            <Inspector
+              key={selection?.semanticId ?? "canvas"}
+              document={document}
+              selection={selection}
+              activeTemplate={activeTemplate}
+              onCommitDocument={commitDocument}
+              getCurrentDocument={() => useDocumentStore.getState().document}
+              onAnchorChange={handleSelectAnchor}
+              fontAssetStore={"setAsset" in assetResolver ? assetResolver as BinaryAssetResolver & BinaryAssetWriter : undefined}
+            />
+          </>
+        )}
       </div>
     </div>
     </FontSelectionContext.Provider>

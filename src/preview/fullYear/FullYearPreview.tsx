@@ -36,6 +36,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
   // Subscribe only to canonical committed document
   const document = useDocumentStore((state) => state.document);
 
+  const miniEnabled = document.pagePreview.layout.miniEnabled;
   const mainStartOfWeek = document.mainTemplate.weekdayRow.startOfWeek ?? 0;
   const miniStartOfWeek = document.miniTemplate.weekdayRow.startOfWeek ?? 0;
 
@@ -46,8 +47,9 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
       holidayIndex,
       mainStartOfWeek,
       miniStartOfWeek,
+      includeMini: miniEnabled,
     });
-  }, [targetYear, holidayIndex, mainStartOfWeek, miniStartOfWeek]);
+  }, [targetYear, holidayIndex, mainStartOfWeek, miniStartOfWeek, miniEnabled]);
 
   // 2. Full-year merged font requirements
   const fontRequirements = useMemo(() => {
@@ -87,11 +89,12 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
   const preview = usePreviewResource({ resourceKey: previewKey, load: async () => {
     if (!fontEngine) return null;
     const documents = await renderFullYearPreviewDocuments({ ...renderInputs, fontEngine });
-    return { documents, calendarSet, geometry: nextGeometry, targetYear };
+    return { documents, calendarSet, geometry: nextGeometry, targetYear, miniEnabled };
   } });
   const lastPreview = useRef<NonNullable<typeof preview.value> | null>(null);
   if (preview.value) lastPreview.current = preview.value;
-  const displayed = lastPreview.current?.targetYear === targetYear ? lastPreview.current : null;
+  const displayed = lastPreview.current?.targetYear === targetYear && lastPreview.current.miniEnabled === miniEnabled
+    ? lastPreview.current : null;
   const documents = displayed?.documents ?? null;
   const displayedCalendarSet = displayed?.calendarSet ?? calendarSet;
   const geometry = displayed?.geometry ?? nextGeometry;
@@ -253,7 +256,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
               const prevDoc = documents.previousMini.get(prevKey);
               const nextDoc = documents.nextMini.get(nextKey);
 
-              if (!mainDoc || !prevDoc || !nextDoc) return null;
+              if (!mainDoc || (miniEnabled && (!prevDoc || !nextDoc))) return null;
 
               return (
                 <div
@@ -297,7 +300,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
               const prevDoc = documents.previousMini.get(prevKey);
               const nextDoc = documents.nextMini.get(nextKey);
 
-              if (!mainDoc || !prevDoc || !nextDoc) return null;
+              if (!mainDoc || (miniEnabled && (!prevDoc || !nextDoc))) return null;
 
               return (
                 <>
@@ -368,7 +371,7 @@ export const FullYearPreview: React.FC<FullYearPreviewProps> = ({
               const prevDoc = documents.previousMini.get(prevKey);
               const nextDoc = documents.nextMini.get(nextKey);
 
-              if (!mainDoc || !prevDoc || !nextDoc) return null;
+              if (!mainDoc || (miniEnabled && (!prevDoc || !nextDoc))) return null;
 
               return (
                 <PagePreview

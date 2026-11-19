@@ -11,10 +11,10 @@ Monthloom is a client-side web application for creating and batch-exporting prod
    - Click **节假日资料库** in the workspace header to view and manage calendars.
    - Sync or import holiday data (China Timor format, Japan Holidays JP format, or native Monthloom JSON).
    - Add or edit manual date overrides directly within any calendar.
-   - Review holiday coverage status across the required 15-month span ($Y-1$ December through $Y+1$ February).
+   - Review holiday coverage for the months used by your project.
 
 3. **Customize Templates & Holiday Layers**
-   - Switch between **Main Template** (full-size monthly page) and **Mini Template** (compact monthly thumbnail).
+   - Edit the full-size calendar in **Main Calendar**. To add adjacent months to each page, open **Mini Calendar** and turn on **Enable mini calendars**. The switch is off by default.
    - In the **节假日图层 (Holiday Layers)** panel:
      - Add, remove, reorder, or toggle holiday layers bound to specific calendars.
      - Customize holiday name typography, holiday markers, workday markers, and date color highlights for each layer.
@@ -26,22 +26,23 @@ Monthloom is a client-side web application for creating and batch-exporting prod
 
 5. **Review the 13-Page Full-Year Stream**
    - Scroll through the 13 generated calendar pages ($Y$ January through $Y+1$ January).
-   - Each page displays one Main calendar month and two Mini calendar months.
+   - Each page displays a Main calendar. Enable Mini calendars to also show the previous and next months.
 
 6. **Save Project & Backup**
    - Click **Save Project** under Project Persistence to save your current work to browser IndexedDB.
    - Click **Backup (.monthloom)** to download a complete bundle containing your project, templates, full holiday library snapshot, and image assets.
 
-7. **Export Formal SVGs**
-   - Under **Formal Batch Export**, select **Outlined (Production Default)** or **Editable**.
-   - Click **Export 41 SVGs** to download `Monthloom_<Year>.zip`. All three sets are included automatically.
+7. **Export Calendars**
+   - Choose the outputs you want. For SVGs, choose **Outlined** or **Editable Text**.
+   - Click **Export ZIP** to download `Monthloom_<Year>.zip`.
 
 ## Output Scope
 
-Monthloom exports **41 SVG files**:
+The ZIP includes the output sets you select.
 
-- **13 Full-Page SVGs**: `full/<Year>_1_full.svg` through `full/<Year>_12_full.svg`, plus `full/<Year+1>_1_full.svg`. Each page uses the preview's layout dimensions, Main and adjacent Mini calendar positions, and a transparent page background. The preview background image is excluded from SVG exports. Both outlined and editable text modes apply to all three sets.
+- **13 Full-Page SVGs**: `full-svg/<Year>_1_full.svg` through `full-svg/<Year>_12_full.svg`, plus `full-svg/<Year+1>_1_full.svg`. Each page uses the preview's layout dimensions, positions for the Main calendar and any enabled Mini calendars, and a transparent page background. The preview background image is excluded from SVG exports. SVG text can be outlined or editable.
 - **13 Main Month SVGs**: `main/<Year>_1.svg` through `main/<Year>_12.svg`, plus `main/<Year+1>_1.svg`.
-- **15 Mini Month SVGs**: `mini/<Year-1>_12_mini.svg`, `mini/<Year>_1_mini.svg` through `mini/<Year>_12_mini.svg`, `mini/<Year+1>_1_mini.svg`, and `mini/<Year+1>_2_mini.svg`.
+- **13 Full-Page PNGs**: `full/` contains the composed pages with their backgrounds.
+- **15 Mini Month SVGs** (available when Mini calendars are enabled): `mini/<Year-1>_12_mini.svg`, `mini/<Year>_1_mini.svg` through `mini/<Year>_12_mini.svg`, `mini/<Year+1>_1_mini.svg`, and `mini/<Year+1>_2_mini.svg`.
 
 SVG badge assets are embedded as vector shapes in the exported files. Raster badges remain embedded images.

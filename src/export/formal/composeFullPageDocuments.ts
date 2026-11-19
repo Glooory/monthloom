@@ -33,10 +33,11 @@ export async function composeFullPageDocuments(args: {
 
   for (const definition of getFullYearPageDefinitions(targetYear)) {
     const main = requireDocument(documents.main, definition.mainMonth);
-    const previousMini = requireDocument(documents.mini, definition.previousMiniMonth);
-    const nextMini = requireDocument(documents.mini, definition.nextMiniMonth);
+    const { layout } = pagePreview;
+    const previousMini = layout.miniEnabled ? requireDocument(documents.mini, definition.previousMiniMonth) : undefined;
+    const nextMini = layout.miniEnabled ? requireDocument(documents.mini, definition.nextMiniMonth) : undefined;
     const geometry = calculatePageGeometry({
-      layout: pagePreview.layout,
+      layout,
       mainSize: main,
       miniSize: previousMini,
     });
@@ -52,8 +53,8 @@ export async function composeFullPageDocuments(args: {
     const children: SvgNode[] = [
       ...backgroundNodes,
       place(main, geometry.main),
-      ...(geometry.previousMini ? [place(previousMini, geometry.previousMini)] : []),
-      ...(geometry.nextMini ? [place(nextMini, geometry.nextMini)] : []),
+      ...(previousMini && geometry.previousMini ? [place(previousMini, geometry.previousMini)] : []),
+      ...(nextMini && geometry.nextMini ? [place(nextMini, geometry.nextMini)] : []),
     ];
     full.set(definition.label, createSvgDocument(width, height, children));
   }

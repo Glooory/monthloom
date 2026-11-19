@@ -9,8 +9,9 @@ export function createFormalExportCalendarSet(args: {
   holidayIndex?: HolidayIndex;
   mainStartOfWeek?: 0 | 1;
   miniStartOfWeek?: 0 | 1;
+  includeMini?: boolean;
 }): FormalExportCalendarSet {
-  const { targetYear, holidayIndex, mainStartOfWeek = 0, miniStartOfWeek = 0 } = args;
+  const { targetYear, holidayIndex, mainStartOfWeek = 0, miniStartOfWeek = 0, includeMini = true } = args;
 
   const mainCalendars = new Map<string, CalendarMonth>();
   const miniCalendars = new Map<string, CalendarMonth>();
@@ -25,7 +26,7 @@ export function createFormalExportCalendarSet(args: {
   }
 
   // 2. Exactly 15 Mini months (including Y-1 Dec, Y 1..12, Y+1 Jan, Y+1 Feb)
-  for (const ym of getMiniMonths(targetYear)) {
+  for (const ym of includeMini ? getMiniMonths(targetYear) : []) {
     const key = `${ym.year}-${ym.month}`;
     miniCalendars.set(
       key,
