@@ -306,7 +306,6 @@ export const App: React.FC = () => {
 
       {/* Right Action Bar */}
       <div className="monthloom-header-right">
-        <GettingStartedGuide onNavigate={setActiveView} />
         {activeView === "editor" && editorEnabled && (
           <label
             style={{
@@ -360,6 +359,7 @@ export const App: React.FC = () => {
         >
           {locale === "zh" ? "EN" : "中"}
         </button>
+        <GettingStartedGuide onNavigate={setActiveView} />
 
         <button
           type="button"

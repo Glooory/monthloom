@@ -26,7 +26,9 @@ export const GettingStartedGuide: React.FC<{
       <button
         ref={triggerRef}
         type="button"
-        className="studio-btn studio-btn-secondary"
+        className="studio-btn studio-btn-secondary studio-btn-icon-only"
+        aria-label={guide.button}
+        title={guide.button}
         aria-haspopup="dialog"
         onClick={openGuide}
       >
@@ -35,7 +37,6 @@ export const GettingStartedGuide: React.FC<{
           <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.8-2.5 2-2.5 4" />
           <circle cx="12" cy="16.8" r="1" fill="currentColor" stroke="none" />
         </svg>
-        {guide.button}
       </button>
       <dialog
         ref={dialogRef}
