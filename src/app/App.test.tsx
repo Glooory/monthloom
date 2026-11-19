@@ -31,7 +31,7 @@ describe("App Integration Smoke Test", () => {
     expect(screen.getAllByText(/目标年份/).length).toBeGreaterThan(0);
 
     // Section: Editor Canvas
-    expect(screen.getByRole("button", { name: /附日历/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: "迷你日历" })).toBeDefined();
 
     // Section: Page Preview Settings
     expect(screen.getByText("页面布局与背景")).toBeDefined();

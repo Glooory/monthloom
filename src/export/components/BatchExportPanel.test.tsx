@@ -18,7 +18,7 @@ describe("BatchExportPanel", () => {
     expect(screen.getByLabelText(/保留文字/i)).toBeDefined();
     expect(screen.getAllByRole("checkbox")).toHaveLength(4);
     expect(screen.getByRole("checkbox", { name: "主日历（13 个 SVG）", checked: true })).toBeDefined();
-    expect(screen.getByRole("checkbox", { name: "附日历（15 个 SVG）", checked: true })).toBeDefined();
+    expect(screen.getByRole("checkbox", { name: "迷你日历（15 个 SVG）", checked: true })).toBeDefined();
     expect(screen.getByRole("checkbox", { name: "整页排版（13 个 SVG，无背景图）", checked: true })).toBeDefined();
     expect(screen.getByRole("checkbox", { name: "整页预览（13 个 PNG，含背景图）", checked: true })).toBeDefined();
 
